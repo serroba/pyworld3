@@ -1,8 +1,22 @@
+from typing import NamedTuple
+
 import numpy as np
 
 from pyworld3 import World3
 
 from .models import SimulationRequest, SimulationResponse, TimeSeriesOutput
+
+
+class ConstantMeta(NamedTuple):
+    full_name: str
+    unit: str
+    sector: str
+
+
+class VariableMeta(NamedTuple):
+    full_name: str
+    unit: str
+    sector: str
 
 
 class SimulationValidationError(ValueError):
@@ -85,6 +99,124 @@ CONSTANT_DEFAULTS: dict[str, float] = {
     "nri": 1e12,
     "nruf1": 1,
     "nruf2": 1,
+}
+
+CONSTANT_META: dict[str, ConstantMeta] = {
+    # Population sector
+    "p1i": ConstantMeta("Initial population 0-14", "people", "Population"),
+    "p2i": ConstantMeta("Initial population 15-44", "people", "Population"),
+    "p3i": ConstantMeta("Initial population 45-64", "people", "Population"),
+    "p4i": ConstantMeta("Initial population 65+", "people", "Population"),
+    "dcfsn": ConstantMeta(
+        "Desired completed family size normal", "children", "Population"
+    ),
+    "fcest": ConstantMeta(
+        "Fertility control effectiveness set time", "year", "Population"
+    ),
+    "hsid": ConstantMeta("Health services impact delay", "years", "Population"),
+    "ieat": ConstantMeta("Income expectation averaging time", "years", "Population"),
+    "len": ConstantMeta("Life expectancy normal", "years", "Population"),
+    "lpd": ConstantMeta("Lifetime perception delay", "years", "Population"),
+    "mtfn": ConstantMeta("Maximum total fertility normal", "children", "Population"),
+    "pet": ConstantMeta("Population equilibrium time", "year", "Population"),
+    "rlt": ConstantMeta("Reproductive lifetime", "years", "Population"),
+    "sad": ConstantMeta("Social adjustment delay", "years", "Population"),
+    "zpgt": ConstantMeta("Zero population growth time", "year", "Population"),
+    # Capital sector
+    "ici": ConstantMeta("Initial industrial capital", "$", "Capital"),
+    "sci": ConstantMeta("Initial service capital", "$", "Capital"),
+    "iet": ConstantMeta("Industrial equilibrium time", "year", "Capital"),
+    "iopcd": ConstantMeta(
+        "Industrial output per capita desired", "$/person/yr", "Capital"
+    ),
+    "lfpf": ConstantMeta("Labor force participation fraction", "-", "Capital"),
+    "lufdt": ConstantMeta("Labor utilization fraction delay time", "years", "Capital"),
+    "icor1": ConstantMeta("Industrial capital-output ratio 1", "years", "Capital"),
+    "icor2": ConstantMeta("Industrial capital-output ratio 2", "years", "Capital"),
+    "scor1": ConstantMeta("Service capital-output ratio 1", "years", "Capital"),
+    "scor2": ConstantMeta("Service capital-output ratio 2", "years", "Capital"),
+    "alic1": ConstantMeta("Avg lifetime industrial capital 1", "years", "Capital"),
+    "alic2": ConstantMeta("Avg lifetime industrial capital 2", "years", "Capital"),
+    "alsc1": ConstantMeta("Avg lifetime service capital 1", "years", "Capital"),
+    "alsc2": ConstantMeta("Avg lifetime service capital 2", "years", "Capital"),
+    "fioac1": ConstantMeta(
+        "Fraction industrial output for consumption 1", "-", "Capital"
+    ),
+    "fioac2": ConstantMeta(
+        "Fraction industrial output for consumption 2", "-", "Capital"
+    ),
+    # Agriculture sector
+    "ali": ConstantMeta("Initial arable land", "ha", "Agriculture"),
+    "pali": ConstantMeta("Initial potentially arable land", "ha", "Agriculture"),
+    "lfh": ConstantMeta("Land fraction harvested", "-", "Agriculture"),
+    "palt": ConstantMeta("Potentially arable land total", "ha", "Agriculture"),
+    "pl": ConstantMeta("Processing loss", "-", "Agriculture"),
+    "alai1": ConstantMeta("Avg lifetime agricultural input 1", "years", "Agriculture"),
+    "alai2": ConstantMeta("Avg lifetime agricultural input 2", "years", "Agriculture"),
+    "io70": ConstantMeta("Industrial output in 1970", "$/yr", "Agriculture"),
+    "lyf1": ConstantMeta("Land yield factor 1", "-", "Agriculture"),
+    "lyf2": ConstantMeta("Land yield factor 2", "-", "Agriculture"),
+    "sd": ConstantMeta("Social discount", "-", "Agriculture"),
+    "uili": ConstantMeta("Initial urban-industrial land", "ha", "Agriculture"),
+    "alln": ConstantMeta("Average life of land normal", "years", "Agriculture"),
+    "uildt": ConstantMeta(
+        "Urban-industrial land development time", "years", "Agriculture"
+    ),
+    "lferti": ConstantMeta("Initial land fertility", "kg/ha/yr", "Agriculture"),
+    "ilf": ConstantMeta("Inherent land fertility", "kg/ha/yr", "Agriculture"),
+    "fspd": ConstantMeta("Food shortage perception delay", "years", "Agriculture"),
+    "sfpc": ConstantMeta("Subsistence food per capita", "kg/yr", "Agriculture"),
+    # Pollution sector
+    "ppoli": ConstantMeta(
+        "Initial persistent pollution", "pollution units", "Pollution"
+    ),
+    "ppol70": ConstantMeta("Pollution level in 1970", "pollution units", "Pollution"),
+    "ahl70": ConstantMeta("Assimilation half-life in 1970", "years", "Pollution"),
+    "amti": ConstantMeta("Agricultural material toxicity index", "-", "Pollution"),
+    "imti": ConstantMeta("Industrial material toxicity index", "-", "Pollution"),
+    "imef": ConstantMeta("Industrial material emission factor", "-", "Pollution"),
+    "fipm": ConstantMeta("Fraction industrial pollution manageable", "-", "Pollution"),
+    "frpm": ConstantMeta("Fraction resources as pollution material", "-", "Pollution"),
+    "ppgf1": ConstantMeta("Persistent pollution gen factor 1", "-", "Pollution"),
+    "ppgf2": ConstantMeta("Persistent pollution gen factor 2", "-", "Pollution"),
+    "ppgf21": ConstantMeta(
+        "Persistent pollution gen factor 2 (post-policy)", "-", "Pollution"
+    ),
+    "pptd1": ConstantMeta("Pollution transmission delay 1", "years", "Pollution"),
+    "pptd2": ConstantMeta("Pollution transmission delay 2", "years", "Pollution"),
+    # Resource sector
+    "nri": ConstantMeta(
+        "Initial nonrenewable resources", "resource units", "Resources"
+    ),
+    "nruf1": ConstantMeta("Nonrenewable resource usage factor 1", "-", "Resources"),
+    "nruf2": ConstantMeta("Nonrenewable resource usage factor 2", "-", "Resources"),
+}
+
+VARIABLE_META: dict[str, VariableMeta] = {
+    "pop": VariableMeta("Total population", "people", "Population"),
+    "nr": VariableMeta(
+        "Nonrenewable resources remaining", "resource units", "Resources"
+    ),
+    "nrfr": VariableMeta("Nonrenewable resource fraction remaining", "-", "Resources"),
+    "io": VariableMeta("Industrial output", "$/yr", "Capital"),
+    "iopc": VariableMeta("Industrial output per capita", "$/person/yr", "Capital"),
+    "fpc": VariableMeta("Food per capita", "kg/person/yr", "Agriculture"),
+    "f": VariableMeta("Total food production", "kg/yr", "Agriculture"),
+    "so": VariableMeta("Service output", "$/yr", "Capital"),
+    "sopc": VariableMeta("Service output per capita", "$/person/yr", "Capital"),
+    "ppolx": VariableMeta("Pollution index", "-", "Pollution"),
+    "ppol": VariableMeta("Persistent pollution", "pollution units", "Pollution"),
+    "al": VariableMeta("Arable land", "ha", "Agriculture"),
+    "ly": VariableMeta("Land yield", "kg/ha/yr", "Agriculture"),
+    "le": VariableMeta("Life expectancy", "years", "Population"),
+    "cbr": VariableMeta("Crude birth rate", "births/1000/yr", "Population"),
+    "cdr": VariableMeta("Crude death rate", "deaths/1000/yr", "Population"),
+    "fioaa": VariableMeta("Fraction industrial output for agriculture", "-", "Capital"),
+    "fcaor": VariableMeta(
+        "Fraction capital allocated to obtaining resources", "-", "Resources"
+    ),
+    "tai": VariableMeta("Total agricultural investment", "$/yr", "Agriculture"),
+    "aiph": VariableMeta("Agricultural inputs per hectare", "$/ha/yr", "Agriculture"),
 }
 
 # (min, max) bounds for each constant. None means unbounded on that side.

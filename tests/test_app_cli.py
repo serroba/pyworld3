@@ -105,3 +105,49 @@ def test_simulate_year_min_out_of_bounds():
 def test_simulate_year_max_out_of_bounds():
     result = runner.invoke(app, ["simulate", "--year-max", "3000"])
     assert result.exit_code == 1
+
+
+# --- Describe / summary tests ---
+
+
+def test_constants_describe():
+    result = runner.invoke(app, ["constants", "--describe"])
+    assert result.exit_code == 0
+    assert "Population" in result.stdout
+    assert "Capital" in result.stdout
+    assert "Initial population 0-14" in result.stdout
+    assert "Initial industrial capital" in result.stdout
+
+
+def test_variables_describe():
+    result = runner.invoke(app, ["variables", "--describe"])
+    assert result.exit_code == 0
+    assert "Population" in result.stdout
+    assert "Resources" in result.stdout
+    assert "Total population" in result.stdout
+    assert "Life expectancy" in result.stdout
+
+
+def test_simulate_summary():
+    result = runner.invoke(app, ["simulate", "--summary"])
+    assert result.exit_code == 0
+    assert "World3 Simulation Summary" in result.stdout
+    assert "pop" in result.stdout
+    # Should NOT be valid JSON
+    try:
+        json.loads(result.stdout)
+        is_json = True
+    except json.JSONDecodeError:
+        is_json = False
+    assert not is_json
+
+
+def test_simulate_summary_with_output_is_error(tmp_path):
+    outfile = tmp_path / "result.json"
+    result = runner.invoke(app, ["simulate", "--summary", "--output", str(outfile)])
+    assert result.exit_code == 1
+
+
+def test_simulate_summary_with_pretty_is_error():
+    result = runner.invoke(app, ["simulate", "--summary", "--pretty"])
+    assert result.exit_code == 1

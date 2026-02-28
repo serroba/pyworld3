@@ -3,7 +3,9 @@ import pytest
 from app.engine import (
     CONSTANT_CONSTRAINTS,
     CONSTANT_DEFAULTS,
+    CONSTANT_META,
     DEFAULT_OUTPUT_VARIABLES,
+    VARIABLE_META,
     SimulationValidationError,
     run_simulation,
 )
@@ -133,3 +135,13 @@ def test_year_max_out_of_bounds():
 def test_dt_too_large():
     with pytest.raises(ValueError, match="less than or equal to 100"):
         SimulationRequest(dt=200)
+
+
+def test_all_constants_have_metadata():
+    """Every constant in CONSTANT_DEFAULTS should have a CONSTANT_META entry."""
+    assert set(CONSTANT_META) == set(CONSTANT_DEFAULTS)
+
+
+def test_all_variables_have_metadata():
+    """Every variable in DEFAULT_OUTPUT_VARIABLES should have a VARIABLE_META entry."""
+    assert set(VARIABLE_META) == set(DEFAULT_OUTPUT_VARIABLES)
