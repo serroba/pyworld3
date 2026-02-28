@@ -101,7 +101,7 @@ class Agriculture:
     uili : float, optional
         urban-industrial land initial [hectares]. The default is 8.2e6.
     alln : float, optional
-        average life of land normal [years]. The default is 6000.
+        average life of land normal [years]. The default is 1000.
     uildt : float, optional
         urban-industrial land development time [years]. The default is 10.
     lferti : float, optional
@@ -249,7 +249,7 @@ class Agriculture:
     def init_agriculture_constants(self, ali=0.9e9, pali=2.3e9, lfh=0.7,
                                    palt=3.2e9, pl=0.1, alai1=2, alai2=2,
                                    io70=7.9e11, lyf1=1, lyf2=1, sd=0.07,
-                                   uili=8.2e6, alln=6000, uildt=10,
+                                   uili=8.2e6, alln=1000, uildt=10,
                                    lferti=600, ilf=600, fspd=2, sfpc=230):
         """
         Initialize the constant parameters of the agriculture sector.

@@ -86,7 +86,7 @@ class Population:
     p4i : float, optional
         p4 initial [persons]. The default is 6e7.
     dcfsn : float, optional
-        desired completed family size normal []. The default is 4.
+        desired completed family size normal []. The default is 3.8.
     fcest : float, optional
         fertility control effectiveness set time [year]. The default is 4000.
     hsid : float, optional
@@ -228,7 +228,7 @@ class Population:
         self.time = np.arange(self.year_min, self.year_max, self.dt)
 
     def init_population_constants(self, p1i=65e7, p2i=70e7, p3i=19e7, p4i=6e7,
-                                  dcfsn=4, fcest=4000, hsid=20, ieat=3, len=28,
+                                  dcfsn=3.8, fcest=4000, hsid=20, ieat=3, len=28,
                                   lpd=20, mtfn=12, pet=4000, rlt=30, sad=20,
                                   zpgt=4000):
         """

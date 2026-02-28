@@ -292,7 +292,7 @@ Over **100 lookup tables** define nonlinear relationships (stored in `functions_
 | `p2i` | Initial population 15-44 | $7.0 \times 10^8$ | people |
 | `p3i` | Initial population 45-64 | $1.9 \times 10^8$ | people |
 | `p4i` | Initial population 65+ | $6.0 \times 10^7$ | people |
-| `dcfsn` | Desired completed family size normal | $4.0$ | children |
+| `dcfsn` | Desired completed family size normal | $3.8$ | children |
 | `len` | Life expectancy normal | $28$ | years |
 | `hsid` | Health services impact delay | $20$ | years |
 | `lpd` | Lifetime perception delay | $20$ | years |
