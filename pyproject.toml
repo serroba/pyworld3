@@ -28,6 +28,17 @@ dependencies = [
     "matplotlib",
 ]
 
+[project.optional-dependencies]
+app = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.34",
+    "typer>=0.15",
+    "pydantic>=2.0",
+]
+
+[project.scripts]
+pyworld3 = "app.cli:app"
+
 [project.urls]
 Homepage = "https://github.com/serroba/pyworld3"
 Repository = "https://github.com/serroba/pyworld3"
@@ -37,16 +48,20 @@ dev = [
     "pytest",
     "pytest-cov",
     "ruff",
+    "httpx",
 ]
 
 [tool.hatch.version]
 path = "pyworld3/__init__.py"
 
+[tool.hatch.build.targets.wheel]
+packages = ["pyworld3", "app"]
+
 [tool.pytest.ini_options]
-addopts = "--cov=pyworld3 --cov-report=term-missing"
+addopts = "--cov=pyworld3 --cov=app --cov-report=term-missing"
 
 [tool.coverage.run]
-source = ["pyworld3"]
+source = ["pyworld3", "app"]
 
 [tool.coverage.report]
 show_missing = true
