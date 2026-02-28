@@ -3,7 +3,7 @@ import logging
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 
-from pyworld3.application.simulate import SimulationService
+from pyworld3.application.container import get_service
 from pyworld3.domain.constants import CONSTANT_DEFAULTS, DEFAULT_OUTPUT_VARIABLES
 from pyworld3.domain.exceptions import SimulationValidationError
 
@@ -13,15 +13,14 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(title="PyWorld3 API", description="Run World3 what-if simulations")
 
-_service = SimulationService()
-
 
 @app.post("/simulate", response_model=SimulationResponse)
 def simulate(request: SimulationRequest | None = None):
     if request is None:
         request = SimulationRequest()
     try:
-        result = _service.run(request.to_params())
+        service = get_service()
+        result = service.run(request.to_params())
         return SimulationResponse.from_result(result)
     except SimulationValidationError as exc:
         return JSONResponse(status_code=422, content={"detail": exc.safe_message})

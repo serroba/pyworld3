@@ -8,7 +8,7 @@ from pyworld3.domain.exceptions import SimulationValidationError
 from pyworld3.domain.validation import validate_constants, validate_output_variables
 from pyworld3.domain.world3 import World3
 
-from .ports import SimulationParams, SimulationResult, TimeSeriesResult
+from .ports import SimulationParams, SimulationPort, SimulationResult, TimeSeriesResult
 
 
 class SimulationService:
@@ -79,3 +79,6 @@ class SimulationService:
             constants_used=merged,
             series=series,
         )
+
+
+_: type[SimulationPort] = SimulationService
