@@ -35,11 +35,22 @@ Repository = "https://github.com/serroba/pyworld3"
 [dependency-groups]
 dev = [
     "pytest",
+    "pytest-cov",
     "ruff",
 ]
 
 [tool.hatch.version]
 path = "pyworld3/__init__.py"
+
+[tool.pytest.ini_options]
+addopts = "--cov=pyworld3 --cov-report=term-missing"
+
+[tool.coverage.run]
+source = ["pyworld3"]
+
+[tool.coverage.report]
+show_missing = true
+fail_under = 0
 
 [tool.ruff]
 line-length = 88

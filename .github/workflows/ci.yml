@@ -22,7 +22,15 @@ jobs:
         run: uv sync
 
       - name: Run tests
-        run: uv run pytest tests/
+        run: uv run pytest tests/ --cov=pyworld3 --cov-report=xml:coverage.xml
+
+      - name: Coverage report
+        if: github.event_name == 'pull_request'
+        uses: orgoro/coverage@v3.2
+        with:
+          coverageFile: coverage.xml
+          token: ${{ secrets.GITHUB_TOKEN }}
+          thresholdAll: 0.6
 
       - name: Run linter
         run: uv run ruff check pyworld3/
