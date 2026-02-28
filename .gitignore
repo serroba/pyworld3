@@ -17,6 +17,10 @@ uv.lock
 # Node artifact files
 node_modules/
 
+# Coverage reports
+.coverage
+htmlcov/
+
 # pdf files
 *.pdf
 !docs/*.pdf
