@@ -36,8 +36,8 @@ from pathlib import Path
 import numpy as np
 from scipy.interpolate import interp1d
 
+from .requires import requires
 from .specials import Smooth, clip
-from .utils import requires
 
 
 class Agriculture:

@@ -32,12 +32,12 @@
 
 from numpy.testing import assert_approx_equal
 
-from pyworld3.agriculture import Agriculture
-from pyworld3.capital import Capital
-from pyworld3.pollution import Pollution
-from pyworld3.population import Population
-from pyworld3.resource import Resource
-from pyworld3.world3 import World3
+from pyworld3.domain.agriculture import Agriculture
+from pyworld3.domain.capital import Capital
+from pyworld3.domain.pollution import Pollution
+from pyworld3.domain.population import Population
+from pyworld3.domain.resource import Resource
+from pyworld3.domain.world3 import World3
 
 
 def test_population_sector():

@@ -512,7 +512,7 @@ def hello_world3():
     """
     from matplotlib.pyplot import rcParams, show
 
-    from .utils import plot_world_variables
+    from pyworld3.adapters.plotting import plot_world_variables
 
     params = {"lines.linewidth": "3"}
     rcParams.update(params)

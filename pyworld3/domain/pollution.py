@@ -36,8 +36,8 @@ from pathlib import Path
 import numpy as np
 from scipy.interpolate import interp1d
 
+from .requires import requires
 from .specials import Delay3, Dlinf3, clip, switch
-from .utils import requires
 
 
 class Pollution:

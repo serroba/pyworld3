@@ -1,6 +1,6 @@
 import numpy as np
 
-from pyworld3.utils import requires
+from pyworld3.domain.requires import requires
 
 
 class FakeSector:

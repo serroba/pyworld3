@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 
 from pyworld3 import World3
-from pyworld3.utils import plot_world_variables
+from pyworld3.adapters.plotting import plot_world_variables
 
 params = {"lines.linewidth": "3"}
 plt.rcParams.update(params)

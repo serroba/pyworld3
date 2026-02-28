@@ -15,7 +15,7 @@ repos:
 
       - id: mypy
         name: mypy
-        entry: uv run mypy app/
+        entry: uv run mypy pyworld3/adapters/ pyworld3/application/
         language: system
         types: [python]
         pass_filenames: false

@@ -30,57 +30,9 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL license and that you accept its terms.
 
-from functools import wraps
-
 import matplotlib.pyplot as plt
 from matplotlib.image import imread
 from matplotlib.ticker import EngFormatter
-from numpy import isnan
-
-verbose_debug = False
-
-
-def requires(outputs=None, inputs=None, check_at_init=True, check_after_init=True):
-    """
-    Decorator generator to reschedule all updates of current loop, if all
-    required inputs of the current update are not known.
-
-    """
-
-    def requires_decorator(updater):
-
-        if verbose_debug:
-            print(
-                f"""Define the update requirements...
-                  - inputs:  {inputs}
-                  - outputs: {outputs}
-                  - check at init [k=0]:    {check_at_init}
-                  - check after init [k>0]: {check_after_init}"""
-            )
-            print(
-                "... and create a requires decorator for the update function",
-                updater.__name__,
-            )
-
-        @wraps(updater)
-        def requires_and_update(self, *args):
-            k = args[0]
-            go_grant = ((k == 0) and check_at_init) or ((k > 0) and check_after_init)
-            if inputs is not None and go_grant:
-                for input_ in inputs:
-                    input_arr = getattr(self, input_.lower())
-                    if isnan(input_arr[k]):
-                        if self.verbose:
-                            warn_msg = "Warning, {} unknown for current k={} -"
-                            print(warn_msg.format(input_, k), updater.__name__)
-                            print("Rescheduling current loop")
-                        self.redo_loop = True
-
-            return updater(self, *args)
-
-        return requires_and_update
-
-    return requires_decorator
 
 
 def plot_world_variables(
@@ -122,7 +74,7 @@ def plot_world_variables(
         axs[0].imshow(
             im,
             aspect="auto",
-            extent=[time[0], time[-1], var_lims[0][0], var_lims[0][1]],
+            extent=(time[0], time[-1], var_lims[0][0], var_lims[0][1]),
             cmap="gray",
         )
 
@@ -145,7 +97,7 @@ def plot_world_variables(
     axs[0].set_xlabel("time [years]")
     axs[0].tick_params(axis="x", **tkw)
     for i, (ax, p) in enumerate(zip(axs, ps)):
-        ax.set_ylabel(p.get_label(), rotation="horizontal")
+        ax.set_ylabel(str(p.get_label()), rotation="horizontal")
         ax.yaxis.label.set_color(p.get_color())
         ax.tick_params(axis="y", colors=p.get_color(), **tkw)
         ax.yaxis.set_label_coords(-i * dist_spines, 1.01)

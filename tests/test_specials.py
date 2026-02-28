@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from pyworld3.specials import Delay3, Dlinf3, Smooth, clip, ramp, switch
+from pyworld3.domain.specials import Delay3, Dlinf3, Smooth, clip, ramp, switch
 
 # ── switch ──────────────────────────────────────────────────────────────
 

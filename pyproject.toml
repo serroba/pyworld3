@@ -37,7 +37,7 @@ app = [
 ]
 
 [project.scripts]
-pyworld3 = "app._entrypoint:main"
+pyworld3 = "pyworld3.adapters._entrypoint:main"
 
 [project.urls]
 Homepage = "https://github.com/serroba/pyworld3"
@@ -57,13 +57,13 @@ dev = [
 path = "pyworld3/__init__.py"
 
 [tool.hatch.build.targets.wheel]
-packages = ["pyworld3", "app"]
+packages = ["pyworld3"]
 
 [tool.pytest.ini_options]
-addopts = "--cov=pyworld3 --cov=app --cov-report=term-missing"
+addopts = "--cov=pyworld3 --cov-report=term-missing"
 
 [tool.coverage.run]
-source = ["pyworld3", "app"]
+source = ["pyworld3"]
 
 [tool.coverage.report]
 show_missing = true
@@ -93,10 +93,10 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S101"]           # allow assert in tests
-"app/cli.py" = ["T201"]         # allow print in CLI
-"app/_entrypoint.py" = ["T201"] # allow print for user-facing error
-"example_*.py" = ["T201"]       # allow print in examples
-"pyworld3/*.py" = ["T201"]      # verbose/debug prints are intentional
+"pyworld3/adapters/cli.py" = ["T201"]          # allow print in CLI
+"pyworld3/adapters/_entrypoint.py" = ["T201"]  # allow print for user-facing error
+"example_*.py" = ["T201"]                      # allow print in examples
+"pyworld3/**/*.py" = ["T201"]                  # verbose/debug prints are intentional
 
 [tool.mypy]
 python_version = "3.13"
