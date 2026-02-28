@@ -5,7 +5,7 @@ on:
     branches: [main]
 
 permissions:
-  contents: read
+  contents: write
   pull-requests: write
 
 jobs:
@@ -14,6 +14,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install uv
         uses: astral-sh/setup-uv@v4
@@ -28,50 +31,71 @@ jobs:
           uv run pyworld3 simulate --summary > sim_summary.txt
           uv run pyworld3 simulate --plot world3_bau.png
 
-      - name: Post PR comment
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Commit plot to branch
         run: |
-          PR_NUMBER=${{ github.event.pull_request.number }}
-          ARTIFACT_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          mkdir -p .github/assets
+          cp world3_bau.png .github/assets/simulation-bau.png
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .github/assets/simulation-bau.png
+          git diff --cached --quiet && echo "No changes to commit" || \
+            git commit -m "Update BAU simulation plot [skip ci]" && git push
 
-          {
-            echo "## Simulation Check"
-            echo ""
-            echo "BAU scenario executed successfully on this branch."
-            echo ""
-            echo "<details>"
-            echo "<summary><strong>Simulation Summary</strong> (click to expand)</summary>"
-            echo ""
-            echo '```'
-            cat sim_summary.txt
-            echo '```'
-            echo ""
-            echo "</details>"
-            echo ""
-            echo "### BAU Scenario Plot"
-            echo ""
-            echo "Normalized overlay of key World3 variables (1900-2100)."
-            echo "Download from the [**bau-simulation-plot** artifact]($ARTIFACT_URL)."
-            echo ""
-            echo "---"
-            echo "_Generated automatically by CI on commit \`${GITHUB_SHA::7}\`_"
-          } > sim_comment.md
+      - name: Post PR comment with inline image
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const { owner, repo } = context.repo;
+            const prNumber = context.payload.pull_request.number;
+            const sha = context.sha.substring(0, 7);
+            const branch = context.payload.pull_request.head.ref;
 
-          # Update existing comment or create new one
-          EXISTING_COMMENT_ID=$(gh api \
-            "repos/${{ github.repository }}/issues/${PR_NUMBER}/comments" \
-            --jq '.[] | select(.body | startswith("## Simulation Check")) | .id' \
-            | head -1)
+            const imgUrl = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/.github/assets/simulation-bau.png`;
+            const summary = fs.readFileSync('sim_summary.txt', 'utf8');
 
-          if [ -n "$EXISTING_COMMENT_ID" ]; then
-            gh api \
-              "repos/${{ github.repository }}/issues/comments/${EXISTING_COMMENT_ID}" \
-              --method PATCH \
-              -f body="$(cat sim_comment.md)"
-          else
-            gh pr comment "$PR_NUMBER" --body-file sim_comment.md
-          fi
+            const body = [
+              '## Simulation Check',
+              '',
+              'BAU scenario executed successfully on this branch.',
+              '',
+              '<details>',
+              '<summary><strong>Simulation Summary</strong> (click to expand)</summary>',
+              '',
+              '```',
+              summary.trim(),
+              '```',
+              '',
+              '</details>',
+              '',
+              '### BAU Scenario Plot',
+              '',
+              `![World3 BAU Simulation](${imgUrl})`,
+              '',
+              '---',
+              `_Generated automatically by CI on commit \`${sha}\`_`
+            ].join('\n');
+
+            const comments = await github.rest.issues.listComments({
+              owner, repo, issue_number: prNumber
+            });
+            const existing = comments.data.find(c =>
+              c.body.startsWith('## Simulation Check')
+            );
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner, repo,
+                comment_id: existing.id,
+                body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner, repo,
+                issue_number: prNumber,
+                body
+              });
+            }
 
       - name: Upload plot artifact
         uses: actions/upload-artifact@v4
