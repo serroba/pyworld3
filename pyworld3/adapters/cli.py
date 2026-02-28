@@ -6,7 +6,7 @@ from typing import Annotated
 
 import typer
 
-from pyworld3.application.simulate import SimulationService
+from pyworld3.application.container import get_service
 from pyworld3.domain.constants import (
     CONSTANT_DEFAULTS,
     CONSTANT_META,
@@ -18,8 +18,6 @@ from pyworld3.domain.exceptions import SimulationValidationError
 from .schemas import SimulationRequest, SimulationResponse
 
 app = typer.Typer(name="pyworld3", help="Run World3 what-if simulations")
-
-_service = SimulationService()
 
 
 # ---------------------------------------------------------------------------
@@ -231,7 +229,8 @@ def simulate(
         raise typer.Exit(code=1) from exc
 
     try:
-        result = _service.run(request.to_params())
+        service = get_service()
+        result = service.run(request.to_params())
         response = SimulationResponse.from_result(result)
     except SimulationValidationError as exc:
         typer.echo(f"Error: {exc.safe_message}", err=True)
