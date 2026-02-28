@@ -151,3 +151,11 @@ def test_simulate_summary_with_output_is_error(tmp_path):
 def test_simulate_summary_with_pretty_is_error():
     result = runner.invoke(app, ["simulate", "--summary", "--pretty"])
     assert result.exit_code == 1
+
+
+def test_simulate_plot(tmp_path):
+    plot_file = tmp_path / "test_plot.png"
+    result = runner.invoke(app, ["simulate", "--plot", str(plot_file)])
+    assert result.exit_code == 0
+    assert plot_file.exists()
+    assert plot_file.stat().st_size > 0

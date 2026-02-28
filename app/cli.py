@@ -54,6 +54,54 @@ def _format_variables_table() -> str:
     return "\n".join(lines).lstrip("\n")
 
 
+def _generate_plot(response: SimulationResponse, output_path: Path) -> None:
+    """Generate a normalized overlay plot of key simulation variables."""
+    import matplotlib
+
+    matplotlib.use("Agg")
+
+    import matplotlib.pyplot as plt
+    import numpy as np
+
+    time = np.array(response.time)
+
+    plot_vars = {
+        "pop": ("Population", "#2196F3"),
+        "nr": ("Resources", "#4CAF50"),
+        "iopc": ("Industrial output/cap", "#F44336"),
+        "fpc": ("Food/capita", "#FF9800"),
+        "ppolx": ("Pollution index", "#9C27B0"),
+    }
+
+    _fig, ax = plt.subplots(figsize=(10, 6))
+
+    for var_name, (label, color) in plot_vars.items():
+        if var_name not in response.series:
+            continue
+        vals = np.array(response.series[var_name].values)
+        vmin, vmax = vals.min(), vals.max()
+        normalized = (
+            (vals - vmin) / (vmax - vmin) if vmax > vmin else np.zeros_like(vals)
+        )
+        ax.plot(time, normalized, label=label, color=color, linewidth=2.5)
+
+    ax.set_xlabel("Year", fontsize=12)
+    ax.set_ylabel("Normalized value (0\u20131)", fontsize=12)
+    ax.set_title(
+        f"World3 Simulation \u2014 Key Variables "
+        f"({response.year_min:.0f}\u2013{response.year_max:.0f})",
+        fontsize=14,
+    )
+    ax.legend(loc="upper left", fontsize=11)
+    ax.set_xlim(response.year_min, response.year_max)
+    ax.set_ylim(-0.05, 1.1)
+    ax.grid(True, alpha=0.3)
+
+    plt.tight_layout()
+    plt.savefig(str(output_path), dpi=150)
+    plt.close()
+
+
 def _format_simulation_summary(response: SimulationResponse) -> str:
     """Format a compact simulation summary with trends."""
     header = (
@@ -134,6 +182,10 @@ def simulate(
     summary: Annotated[
         bool, typer.Option(help="Print compact summary instead of JSON")
     ] = False,
+    plot: Annotated[
+        Path | None,
+        typer.Option(help="Save a plot of key variables to this path (png)"),
+    ] = None,
 ):
     """Run a World3 simulation and output results as JSON."""
     if summary and (output is not None or pretty):
@@ -180,6 +232,10 @@ def simulate(
     except SimulationValidationError as exc:
         typer.echo(f"Error: {exc}", err=True)
         raise typer.Exit(code=1) from exc
+
+    if plot is not None:
+        _generate_plot(response, plot)
+        typer.echo(f"Plot saved to {plot}", err=True)
 
     if summary:
         sys.stdout.write(_format_simulation_summary(response))

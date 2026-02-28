@@ -1,0 +1,80 @@
+name: Simulation Check
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  simulation-visual:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: uv sync --extra app
+
+      - name: Run BAU simulation with summary and plot
+        run: |
+          uv run pyworld3 simulate --summary > sim_summary.txt
+          uv run pyworld3 simulate --plot world3_bau.png
+
+      - name: Post PR comment
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_NUMBER=${{ github.event.pull_request.number }}
+          ARTIFACT_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+          {
+            echo "## Simulation Check"
+            echo ""
+            echo "BAU scenario executed successfully on this branch."
+            echo ""
+            echo "<details>"
+            echo "<summary><strong>Simulation Summary</strong> (click to expand)</summary>"
+            echo ""
+            echo '```'
+            cat sim_summary.txt
+            echo '```'
+            echo ""
+            echo "</details>"
+            echo ""
+            echo "### BAU Scenario Plot"
+            echo ""
+            echo "Normalized overlay of key World3 variables (1900-2100)."
+            echo "Download from the [**bau-simulation-plot** artifact]($ARTIFACT_URL)."
+            echo ""
+            echo "---"
+            echo "_Generated automatically by CI on commit \`${GITHUB_SHA::7}\`_"
+          } > sim_comment.md
+
+          # Update existing comment or create new one
+          EXISTING_COMMENT_ID=$(gh api \
+            "repos/${{ github.repository }}/issues/${PR_NUMBER}/comments" \
+            --jq '.[] | select(.body | startswith("## Simulation Check")) | .id' \
+            | head -1)
+
+          if [ -n "$EXISTING_COMMENT_ID" ]; then
+            gh api \
+              "repos/${{ github.repository }}/issues/comments/${EXISTING_COMMENT_ID}" \
+              --method PATCH \
+              -f body="$(cat sim_comment.md)"
+          else
+            gh pr comment "$PR_NUMBER" --body-file sim_comment.md
+          fi
+
+      - name: Upload plot artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: bau-simulation-plot
+          path: world3_bau.png
