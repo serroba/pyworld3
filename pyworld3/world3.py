@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 # © Copyright Charles Vanwynsberghe (2021)
 
 # Pyworld3 is a computer program whose purpose is to run configurable
@@ -91,8 +89,15 @@ class World3(Population, Capital, Agriculture, Pollution, Resource):
 
     """
 
-    def __init__(self, year_min=1900, year_max=2100, dt=0.5, pyear=1975,
-                 iphst=1940, verbose=False):
+    def __init__(
+        self,
+        year_min=1900,
+        year_max=2100,
+        dt=0.5,
+        pyear=1975,
+        iphst=1940,
+        verbose=False,
+    ):
         self.iphst = iphst
         self.pyear = pyear
         self.dt = dt
@@ -103,40 +108,150 @@ class World3(Population, Capital, Agriculture, Pollution, Resource):
         self.time = arange(self.year_min, self.year_max + self.dt, self.dt)
         self.verbose = False
 
-    def init_world3_constants(self, p1i=65e7, p2i=70e7, p3i=19e7, p4i=6e7,
-                              dcfsn=3.8, fcest=4000, hsid=20, ieat=3, len=28,
-                              lpd=20, mtfn=12, pet=4000, rlt=30, sad=20,
-                              zpgt=4000,
-                              ici=2.1e11, sci=1.44e11, iet=4000, iopcd=400,
-                              lfpf=0.75, lufdt=2, icor1=3, icor2=3, scor1=1,
-                              scor2=1, alic1=14, alic2=14, alsc1=20, alsc2=20,
-                              fioac1=0.43, fioac2=0.43,
-                              ali=0.9e9, pali=2.3e9, lfh=0.7, palt=3.2e9,
-                              pl=0.1, alai1=2, alai2=2, io70=7.9e11, lyf1=1,
-                              lyf2=1, sd=0.07, uili=8.2e6, alln=1000, uildt=10,
-                              lferti=600, ilf=600, fspd=2, sfpc=230,
-                              ppoli=2.5e7, ppol70=1.36e8, ahl70=1.5, amti=1,
-                              imti=10, imef=0.1, fipm=0.001, frpm=0.02,
-                              ppgf1=1, ppgf2=1, ppgf21=1, pptd1=20, pptd2=20,
-                              nri=1e12, nruf1=1, nruf2=1):
+    def init_world3_constants(
+        self,
+        p1i=65e7,
+        p2i=70e7,
+        p3i=19e7,
+        p4i=6e7,
+        dcfsn=3.8,
+        fcest=4000,
+        hsid=20,
+        ieat=3,
+        len=28,
+        lpd=20,
+        mtfn=12,
+        pet=4000,
+        rlt=30,
+        sad=20,
+        zpgt=4000,
+        ici=2.1e11,
+        sci=1.44e11,
+        iet=4000,
+        iopcd=400,
+        lfpf=0.75,
+        lufdt=2,
+        icor1=3,
+        icor2=3,
+        scor1=1,
+        scor2=1,
+        alic1=14,
+        alic2=14,
+        alsc1=20,
+        alsc2=20,
+        fioac1=0.43,
+        fioac2=0.43,
+        ali=0.9e9,
+        pali=2.3e9,
+        lfh=0.7,
+        palt=3.2e9,
+        pl=0.1,
+        alai1=2,
+        alai2=2,
+        io70=7.9e11,
+        lyf1=1,
+        lyf2=1,
+        sd=0.07,
+        uili=8.2e6,
+        alln=1000,
+        uildt=10,
+        lferti=600,
+        ilf=600,
+        fspd=2,
+        sfpc=230,
+        ppoli=2.5e7,
+        ppol70=1.36e8,
+        ahl70=1.5,
+        amti=1,
+        imti=10,
+        imef=0.1,
+        fipm=0.001,
+        frpm=0.02,
+        ppgf1=1,
+        ppgf2=1,
+        ppgf21=1,
+        pptd1=20,
+        pptd2=20,
+        nri=1e12,
+        nruf1=1,
+        nruf2=1,
+    ):
         """
         Initialize the constant parameters of the 5 sectors. Constants and
         their unit are defined in the documentation of the corresponding
         sectors.
 
         """
-        self.init_population_constants(p1i, p2i, p3i, p4i, dcfsn, fcest, hsid,
-                                       ieat, len, lpd, mtfn, pet, rlt, sad,
-                                       zpgt)
-        self.init_capital_constants(ici, sci, iet, iopcd, lfpf, lufdt, icor1,
-                                    icor2, scor1, scor2, alic1, alic2, alsc1,
-                                    alsc2, fioac1, fioac2)
-        self.init_agriculture_constants(ali, pali, lfh, palt, pl, alai1, alai2,
-                                        io70, lyf1, lyf2, sd, uili, alln,
-                                        uildt, lferti, ilf, fspd, sfpc)
-        self.init_pollution_constants(ppoli, ppol70, ahl70, amti, imti, imef,
-                                      fipm, frpm, ppgf1, ppgf2, ppgf21, pptd1,
-                                      pptd2)
+        self.init_population_constants(
+            p1i,
+            p2i,
+            p3i,
+            p4i,
+            dcfsn,
+            fcest,
+            hsid,
+            ieat,
+            len,
+            lpd,
+            mtfn,
+            pet,
+            rlt,
+            sad,
+            zpgt,
+        )
+        self.init_capital_constants(
+            ici,
+            sci,
+            iet,
+            iopcd,
+            lfpf,
+            lufdt,
+            icor1,
+            icor2,
+            scor1,
+            scor2,
+            alic1,
+            alic2,
+            alsc1,
+            alsc2,
+            fioac1,
+            fioac2,
+        )
+        self.init_agriculture_constants(
+            ali,
+            pali,
+            lfh,
+            palt,
+            pl,
+            alai1,
+            alai2,
+            io70,
+            lyf1,
+            lyf2,
+            sd,
+            uili,
+            alln,
+            uildt,
+            lferti,
+            ilf,
+            fspd,
+            sfpc,
+        )
+        self.init_pollution_constants(
+            ppoli,
+            ppol70,
+            ahl70,
+            amti,
+            imti,
+            imef,
+            fipm,
+            frpm,
+            ppgf1,
+            ppgf2,
+            ppgf21,
+            pptd1,
+            pptd2,
+        )
         self.init_resource_constants(nri, nruf1, nruf2)
 
     def init_world3_variables(self):
@@ -227,11 +342,11 @@ class World3(Population, Capital, Agriculture, Pollution, Resource):
                 self.redo_loop = False
                 if self.verbose:
                     print("go loop", k_)
-                self.loopk_population(k_-1, k_, k_-1, k_)
-                self.loopk_capital(k_-1, k_, k_-1, k_)
-                self.loopk_agriculture(k_-1, k_, k_-1, k_)
-                self.loopk_pollution(k_-1, k_, k_-1, k_)
-                self.loopk_resource(k_-1, k_, k_-1, k_)
+                self.loopk_population(k_ - 1, k_, k_ - 1, k_)
+                self.loopk_capital(k_ - 1, k_, k_ - 1, k_)
+                self.loopk_agriculture(k_ - 1, k_, k_ - 1, k_)
+                self.loopk_pollution(k_ - 1, k_, k_ - 1, k_)
+                self.loopk_resource(k_ - 1, k_, k_ - 1, k_)
 
     def _run_world3_fast(self):
         """
@@ -251,7 +366,7 @@ class World3(Population, Capital, Agriculture, Pollution, Resource):
         for k_ in range(1, self.n):
             if self.verbose:
                 print("go loop", k_)
-            self._loopk_world3_fast(k_-1, k_, k_-1, k_)  # sorted updates
+            self._loopk_world3_fast(k_ - 1, k_, k_ - 1, k_)  # sorted updates
 
     def _loopk_world3_fast(self, j, k, jk, kl):
         """
@@ -398,7 +513,8 @@ def hello_world3():
     from matplotlib.pyplot import rcParams, show
 
     from .utils import plot_world_variables
-    params = {'lines.linewidth': '3'}
+
+    params = {"lines.linewidth": "3"}
     rcParams.update(params)
 
     world3 = World3()
@@ -408,14 +524,15 @@ def hello_world3():
     world3.set_world3_delay_functions()
     world3.run_world3(fast=True)
 
-    plot_world_variables(world3.time,
-                         [world3.nrfr, world3.iopc, world3.fpc, world3.pop,
-                          world3.ppolx],
-                         ["NRFR", "IOPC", "FPC", "POP", "PPOLX"],
-                         [[0, 1], [0, 1e3], [0, 1e3], [0, 16e9], [0, 32]],
-                         figsize=(7, 5),
-                         grid=1,
-                         title="World3 standard run")
+    plot_world_variables(
+        world3.time,
+        [world3.nrfr, world3.iopc, world3.fpc, world3.pop, world3.ppolx],
+        ["NRFR", "IOPC", "FPC", "POP", "PPOLX"],
+        [[0, 1], [0, 1e3], [0, 1e3], [0, 16e9], [0, 32]],
+        figsize=(7, 5),
+        grid=1,
+        title="World3 standard run",
+    )
     show()
 
 

@@ -3,8 +3,8 @@ import pytest
 
 from pyworld3.specials import Delay3, Dlinf3, Smooth, clip, ramp, switch
 
-
 # ── switch ──────────────────────────────────────────────────────────────
+
 
 class TestSwitch:
     def test_returns_var1_when_false(self):
@@ -28,6 +28,7 @@ class TestSwitch:
 
 # ── clip ────────────────────────────────────────────────────────────────
 
+
 class TestClip:
     def test_returns_func1_before_switch(self):
         assert clip(99, 1, t=1970, t_switch=2000) == 1
@@ -47,6 +48,7 @@ class TestClip:
 
 # ── ramp ────────────────────────────────────────────────────────────────
 
+
 class TestRamp:
     def test_zero_before_offset(self):
         assert ramp(0.5, 2000, t=1999) == 0
@@ -63,8 +65,9 @@ class TestRamp:
 
 # ── Smooth (1st-order delay) ───────────────────────────────────────────
 
+
 class TestSmooth:
-    @pytest.fixture()
+    @pytest.fixture
     def step_input(self):
         """Step from 0 to 10 at k=0 (constant input)."""
         n = 100
@@ -108,8 +111,9 @@ class TestSmooth:
 
 # ── Delay3 (3rd-order delay) ───────────────────────────────────────────
 
+
 class TestDelay3:
-    @pytest.fixture()
+    @pytest.fixture
     def step_input(self):
         n = 200
         t = np.linspace(0, 20, n)
@@ -145,6 +149,7 @@ class TestDelay3:
 
 
 # ── Dlinf3 (different initialization from Delay3) ──────────────────────
+
 
 class TestDlinf3:
     def test_initial_state_equals_input(self):

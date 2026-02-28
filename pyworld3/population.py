@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 # © Copyright Charles Vanwynsberghe (2021)
 
 # Pyworld3 is a computer program whose purpose is to run configurable
@@ -33,7 +31,7 @@
 # knowledge of the CeCILL license and that you accept its terms.
 
 import json
-import os
+from pathlib import Path
 
 import numpy as np
 from scipy.interpolate import interp1d
@@ -216,8 +214,7 @@ class Population:
 
     """
 
-    def __init__(self, year_min=1900, year_max=1975, dt=1, iphst=1940,
-                 verbose=False):
+    def __init__(self, year_min=1900, year_max=1975, dt=1, iphst=1940, verbose=False):
         self.iphst = iphst
         self.dt = dt
         self.year_min = year_min
@@ -227,10 +224,24 @@ class Population:
         self.n = int(self.length / self.dt)
         self.time = np.arange(self.year_min, self.year_max, self.dt)
 
-    def init_population_constants(self, p1i=65e7, p2i=70e7, p3i=19e7, p4i=6e7,
-                                  dcfsn=3.8, fcest=4000, hsid=20, ieat=3, len=28,
-                                  lpd=20, mtfn=12, pet=4000, rlt=30, sad=20,
-                                  zpgt=4000):
+    def init_population_constants(
+        self,
+        p1i=65e7,
+        p2i=70e7,
+        p3i=19e7,
+        p4i=6e7,
+        dcfsn=3.8,
+        fcest=4000,
+        hsid=20,
+        ieat=3,
+        len=28,
+        lpd=20,
+        mtfn=12,
+        pet=4000,
+        rlt=30,
+        sad=20,
+        zpgt=4000,
+    ):
         """
         Initialize the constant parameters of the population sector. Constants
         and their unit are documented above at the class level.
@@ -327,15 +338,17 @@ class Population:
         """
         var_dlinf3 = ["LE", "IOPC", "FCAPC"]
         for var_ in var_dlinf3:
-            func_delay = Dlinf3(getattr(self, var_.lower()),
-                                self.dt, self.time, method=method)
-            setattr(self, "dlinf3_"+var_.lower(), func_delay)
+            func_delay = Dlinf3(
+                getattr(self, var_.lower()), self.dt, self.time, method=method
+            )
+            setattr(self, "dlinf3_" + var_.lower(), func_delay)
 
         var_smooth = ["HSAPC", "IOPC"]
         for var_ in var_smooth:
-            func_delay = Smooth(getattr(self, var_.lower()),
-                                self.dt, self.time, method=method)
-            setattr(self, "smooth_"+var_.lower(), func_delay)
+            func_delay = Smooth(
+                getattr(self, var_.lower()), self.dt, self.time, method=method
+            )
+            setattr(self, "smooth_" + var_.lower(), func_delay)
 
     def set_population_table_functions(self, json_file=None):
         """
@@ -350,24 +363,40 @@ class Population:
 
         """
         if json_file is None:
-            json_file = "./functions_table_world3.json"
-            json_file = os.path.join(os.path.dirname(__file__), json_file)
-        with open(json_file) as fjson:
+            json_file = Path(__file__).parent / "functions_table_world3.json"
+        with Path(json_file).open() as fjson:
             tables = json.load(fjson)
 
-        func_names = ["M1", "M2", "M3", "M4",
-                      "LMF", "HSAPC", "LMHS1", "LMHS2",
-                      "FPU", "CMI", "LMP", "FM", "CMPLE",
-                      "SFSN", "FRSN", "FCE_TOCLIP", "FSAFC"]
+        func_names = [
+            "M1",
+            "M2",
+            "M3",
+            "M4",
+            "LMF",
+            "HSAPC",
+            "LMHS1",
+            "LMHS2",
+            "FPU",
+            "CMI",
+            "LMP",
+            "FM",
+            "CMPLE",
+            "SFSN",
+            "FRSN",
+            "FCE_TOCLIP",
+            "FSAFC",
+        ]
 
         for func_name in func_names:
             for table in tables:
                 if table["y.name"] == func_name:
-                    func = interp1d(table["x.values"], table["y.values"],
-                                    bounds_error=False,
-                                    fill_value=(table["y.values"][0],
-                                                table["y.values"][-1]))
-                    setattr(self, func_name.lower()+"_f", func)
+                    func = interp1d(
+                        table["x.values"],
+                        table["y.values"],
+                        bounds_error=False,
+                        fill_value=(table["y.values"][0], table["y.values"][-1]),
+                    )
+                    setattr(self, func_name.lower() + "_f", func)
 
     def init_exogenous_inputs(self):
         """
@@ -423,26 +452,26 @@ class Population:
 
         """
         # industrial output
-        self.io11[k] = .7e11*np.exp((self.time[k] - self.year_min)*.037)
+        self.io11[k] = 0.7e11 * np.exp((self.time[k] - self.year_min) * 0.037)
         self.io12[k] = self.pop[k] * self.cio
         self.io1[k] = clip(self.io12[k], self.io11[k], self.time[k], self.lt2)
-        self.io2[k] = .7e11 * np.exp(self.lt * .037)
+        self.io2[k] = 0.7e11 * np.exp(self.lt * 0.037)
         self.io[k] = clip(self.io2[k], self.io1[k], self.time[k], self.lt)
         self.iopc[k] = self.io[k] / self.pop[k]
         # index of persistent pollution
         self.ppolx[k] = 1 + ramp(self.ps, self.pt, self.time[k])
         # service output
-        self.so11[k] = 1.5e11 * np.exp((self.time[k] - self.year_min) * .030)
+        self.so11[k] = 1.5e11 * np.exp((self.time[k] - self.year_min) * 0.030)
         self.so12[k] = self.pop[k] * self.cso
         self.so1[k] = clip(self.so12[k], self.so11[k], self.time[k], self.lt2)
-        self.so2[k] = 1.5e11 * np.exp(self.lt * .030)
+        self.so2[k] = 1.5e11 * np.exp(self.lt * 0.030)
         self.so[k] = clip(self.so2[k], self.so1[k], self.time[k], self.lt)
         self.sopc[k] = self.so[k] / self.pop[k]
         # food
-        self.f11[k] = 4e11 * np.exp((self.time[k] - self.year_min) * .020)
+        self.f11[k] = 4e11 * np.exp((self.time[k] - self.year_min) * 0.020)
         self.f12[k] = self.pop[k] * self.cfood
         self.f1[k] = clip(self.f12[k], self.f11[k], self.time[k], self.lt2)
-        self.f2[k] = 4e11 * np.exp(self.lt * .020)
+        self.f2[k] = 4e11 * np.exp(self.lt * 0.020)
         self.f[k] = clip(self.f2[k], self.f1[k], self.time[k], self.lt)
         self.fpc[k] = self.f[k] / self.pop[k]
 
@@ -497,7 +526,7 @@ class Population:
         self._update_d2(0, 0)
         self._update_d3(0, 0)
         self._update_d4(0, 0)
-        self._update_d(0, 0)   # replace (0, -1) by (0, 0) at init
+        self._update_d(0, 0)  # replace (0, -1) by (0, 0) at init
         self._update_cdr(0)
         # Birth rate subsector
         # connect World3 sectors to Population
@@ -608,38 +637,39 @@ class Population:
                 self.redo_loop = False
                 if self.verbose:
                     print("go loop", k_)
-                self.loopk_population(k_-1, k_, k_-1, k_, alone=True)
+                self.loopk_population(k_ - 1, k_, k_ - 1, k_, alone=True)
 
     @requires(["p1"])
     def _update_state_p1(self, k, j, jk):
         """
         State variable, requires previous step only
         """
-        self.p1[k] = self.p1[j] + self.dt*(self.b[jk] - self.d1[jk]
-                                           - self.mat1[jk])
+        self.p1[k] = self.p1[j] + self.dt * (self.b[jk] - self.d1[jk] - self.mat1[jk])
 
     @requires(["p2"])
     def _update_state_p2(self, k, j, jk):
         """
         State variable, requires previous step only
         """
-        self.p2[k] = self.p2[j] + self.dt*(self.mat1[jk] - self.d2[jk]
-                                           - self.mat2[jk])
+        self.p2[k] = self.p2[j] + self.dt * (
+            self.mat1[jk] - self.d2[jk] - self.mat2[jk]
+        )
 
     @requires(["p3"])
     def _update_state_p3(self, k, j, jk):
         """
         State variable, requires previous step only
         """
-        self.p3[k] = self.p3[j] + self.dt*(self.mat2[jk] - self.d3[jk]
-                                           - self.mat3[jk])
+        self.p3[k] = self.p3[j] + self.dt * (
+            self.mat2[jk] - self.d3[jk] - self.mat3[jk]
+        )
 
     @requires(["p4"])
     def _update_state_p4(self, k, j, jk):
         """
         State variable, requires previous step only
         """
-        self.p4[k] = self.p4[j] + self.dt*(self.mat3[jk] - self.d4[jk])
+        self.p4[k] = self.p4[j] + self.dt * (self.mat3[jk] - self.d4[jk])
 
     @requires(["pop"], ["p1", "p2", "p3", "p4"])
     def _update_pop(self, k):
@@ -697,15 +727,14 @@ class Population:
         """
         self.lmhs1[k] = self.lmhs1_f(self.ehspc[k])
         self.lmhs2[k] = self.lmhs2_f(self.ehspc[k])
-        self.lmhs[k] = clip(self.lmhs2[k], self.lmhs1[k],
-                            self.time[k], self.iphst)
+        self.lmhs[k] = clip(self.lmhs2[k], self.lmhs1[k], self.time[k], self.iphst)
 
     @requires(["lmc"], ["cmi", "fpu"])
     def _update_lmc(self, k):
         """
         From step k requires: CMI FPU
         """
-        self.lmc[k] = 1 - self.cmi[k]*self.fpu[k]
+        self.lmc[k] = 1 - self.cmi[k] * self.fpu[k]
 
     @requires(["m1"], ["le"])
     def _update_m1(self, k):
@@ -740,8 +769,7 @@ class Population:
         """
         From step k requires: LMF LMHS LMP LMC
         """
-        self.le[k] = (self.len * self.lmf[k] * self.lmhs[k]
-                      * self.lmp[k] * self.lmc[k])
+        self.le[k] = self.len * self.lmf[k] * self.lmhs[k] * self.lmp[k] * self.lmc[k]
 
     @requires(["mat1"], ["p1", "m1"])
     def _update_mat1(self, k, kl):
@@ -846,8 +874,9 @@ class Population:
         """
         From step k requires: FRSN SFSN
         """
-        self.dcfs[k] = clip(2.0, self.dcfsn*self.frsn[k]*self.sfsn[k],
-                            self.time[k], self.zpgt)
+        self.dcfs[k] = clip(
+            2.0, self.dcfsn * self.frsn[k] * self.sfsn[k], self.time[k], self.zpgt
+        )
 
     @requires(["ple"], ["le"], check_after_init=False)
     def _update_ple(self, k):
@@ -917,16 +946,18 @@ class Population:
         """
         From step k requires: FCFPC
         """
-        self.fce[k] = clip(1.0, self.fce_toclip_f(self.fcfpc[k]),
-                           self.time[k], self.fcest)
+        self.fce[k] = clip(
+            1.0, self.fce_toclip_f(self.fcfpc[k]), self.time[k], self.fcest
+        )
 
     @requires(["tf"], ["mtf", "fce", "dtf"])
     def _update_tf(self, k):
         """
         From step k requires: MTF FCE DTF
         """
-        self.tf[k] = np.minimum(self.mtf[k], (self.mtf[k]*(1-self.fce[k]) +
-                                              self.dtf[k]*self.fce[k]))
+        self.tf[k] = np.minimum(
+            self.mtf[k], (self.mtf[k] * (1 - self.fce[k]) + self.dtf[k] * self.fce[k])
+        )
 
     @requires(["cbr"], ["pop"])
     def _update_cbr(self, k, jk):
@@ -940,6 +971,6 @@ class Population:
         """
         From step k requires: D P2 TF
         """
-        self.b[kl] = clip(self.d[k],
-                          self.tf[k] * self.p2[k] * 0.5 / self.rlt,
-                          self.time[k], self.pet)
+        self.b[kl] = clip(
+            self.d[k], self.tf[k] * self.p2[k] * 0.5 / self.rlt, self.time[k], self.pet
+        )

@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 # © Copyright Charles Vanwynsberghe (2021)
 
 # Pyworld3 is a computer program whose purpose is to run configurable
@@ -42,8 +40,7 @@ from numpy import isnan
 verbose_debug = False
 
 
-def requires(outputs=None, inputs=None,
-             check_at_init=True, check_after_init=True):
+def requires(outputs=None, inputs=None, check_at_init=True, check_after_init=True):
     """
     Decorator generator to reschedule all updates of current loop, if all
     required inputs of the current update are not known.
@@ -53,21 +50,22 @@ def requires(outputs=None, inputs=None,
     def requires_decorator(updater):
 
         if verbose_debug:
-            print("""Define the update requirements...
-                  - inputs:  {}
-                  - outputs: {}
-                  - check at init [k=0]:    {}
-                  - check after init [k>0]: {}""".format(inputs, outputs,
-                                                         check_at_init,
-                                                         check_after_init))
-            print("... and create a requires decorator for the update function",
-                  updater.__name__)
+            print(
+                f"""Define the update requirements...
+                  - inputs:  {inputs}
+                  - outputs: {outputs}
+                  - check at init [k=0]:    {check_at_init}
+                  - check after init [k>0]: {check_after_init}"""
+            )
+            print(
+                "... and create a requires decorator for the update function",
+                updater.__name__,
+            )
 
         @wraps(updater)
         def requires_and_update(self, *args):
             k = args[0]
-            go_grant = ((k == 0) and check_at_init or
-                        (k > 0) and check_after_init)
+            go_grant = ((k == 0) and check_at_init) or ((k > 0) and check_after_init)
             if inputs is not None and go_grant:
                 for input_ in inputs:
                     input_arr = getattr(self, input_.lower())
@@ -85,38 +83,48 @@ def requires(outputs=None, inputs=None,
     return requires_decorator
 
 
-def plot_world_variables(time, var_data, var_names, var_lims,
-                         img_background=None,
-                         title=None,
-                         figsize=None,
-                         dist_spines=0.09,
-                         grid=False):
+def plot_world_variables(
+    time,
+    var_data,
+    var_names,
+    var_lims,
+    img_background=None,
+    title=None,
+    figsize=None,
+    dist_spines=0.09,
+    grid=False,
+):
     """
     Plots world state from an instance of World3 or any single sector.
 
     """
-    prop_cycle = plt.rcParams['axes.prop_cycle']
-    colors = prop_cycle.by_key()['color']
+    prop_cycle = plt.rcParams["axes.prop_cycle"]
+    colors = prop_cycle.by_key()["color"]
 
     var_number = len(var_data)
 
     fig, host = plt.subplots(figsize=figsize)
-    axs = [host, ]
-    for i in range(var_number-1):
+    axs = [
+        host,
+    ]
+    for _i in range(var_number - 1):
         axs.append(host.twinx())
 
-    fig.subplots_adjust(left=dist_spines*2)
+    fig.subplots_adjust(left=dist_spines * 2)
     for i, ax in enumerate(axs[1:]):
-        ax.spines["left"].set_position(("axes", -(i + 1)*dist_spines))
+        ax.spines["left"].set_position(("axes", -(i + 1) * dist_spines))
         ax.spines["left"].set_visible(True)
-        ax.yaxis.set_label_position('left')
-        ax.yaxis.set_ticks_position('left')
+        ax.yaxis.set_label_position("left")
+        ax.yaxis.set_ticks_position("left")
 
     if img_background is not None:
         im = imread(img_background)
-        axs[0].imshow(im, aspect="auto",
-                      extent=[time[0], time[-1],
-                              var_lims[0][0], var_lims[0][1]], cmap="gray")
+        axs[0].imshow(
+            im,
+            aspect="auto",
+            extent=[time[0], time[-1], var_lims[0][0], var_lims[0][1]],
+            cmap="gray",
+        )
 
     ps = []
     for ax, label, ydata, color in zip(axs, var_names, var_data, colors):
@@ -129,18 +137,18 @@ def plot_world_variables(time, var_data, var_names, var_lims,
 
     for ax_ in axs:
         formatter_ = EngFormatter(places=0, sep="\N{THIN SPACE}")
-        ax_.tick_params(axis='y', rotation=90)
+        ax_.tick_params(axis="y", rotation=90)
         ax_.yaxis.set_major_locator(plt.MaxNLocator(5))
         ax_.yaxis.set_major_formatter(formatter_)
 
     tkw = dict(size=4, width=1.5)
     axs[0].set_xlabel("time [years]")
-    axs[0].tick_params(axis='x', **tkw)
+    axs[0].tick_params(axis="x", **tkw)
     for i, (ax, p) in enumerate(zip(axs, ps)):
         ax.set_ylabel(p.get_label(), rotation="horizontal")
         ax.yaxis.label.set_color(p.get_color())
-        ax.tick_params(axis='y', colors=p.get_color(), **tkw)
-        ax.yaxis.set_label_coords(-i*dist_spines, 1.01)
+        ax.tick_params(axis="y", colors=p.get_color(), **tkw)
+        ax.yaxis.set_label_coords(-i * dist_spines, 1.01)
 
     if title is not None:
         fig.suptitle(title, x=0.95, ha="right", fontsize=10)

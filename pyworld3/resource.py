@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 # © Copyright Charles Vanwynsberghe (2021)
 
 # Pyworld3 is a computer program whose purpose is to run configurable
@@ -33,7 +31,7 @@
 # knowledge of the CeCILL license and that you accept its terms.
 
 import json
-import os
+from pathlib import Path
 
 import numpy as np
 from scipy.interpolate import interp1d
@@ -101,8 +99,7 @@ class Resource:
 
     """
 
-    def __init__(self, year_min=1900, year_max=2100, dt=1, pyear=1975,
-                 verbose=False):
+    def __init__(self, year_min=1900, year_max=2100, dt=1, pyear=1975, verbose=False):
         self.pyear = pyear
         self.dt = dt
         self.year_min = year_min
@@ -167,9 +164,8 @@ class Resource:
 
         """
         if json_file is None:
-            json_file = "./functions_table_world3.json"
-            json_file = os.path.join(os.path.dirname(__file__), json_file)
-        with open(json_file) as fjson:
+            json_file = Path(__file__).parent / "functions_table_world3.json"
+        with Path(json_file).open() as fjson:
             tables = json.load(fjson)
 
         func_names = ["PCRUM", "FCAOR1", "FCAOR2"]
@@ -177,11 +173,13 @@ class Resource:
         for func_name in func_names:
             for table in tables:
                 if table["y.name"] == func_name:
-                    func = interp1d(table["x.values"], table["y.values"],
-                                    bounds_error=False,
-                                    fill_value=(table["y.values"][0],
-                                                table["y.values"][-1]))
-                    setattr(self, func_name.lower()+"_f", func)
+                    func = interp1d(
+                        table["x.values"],
+                        table["y.values"],
+                        bounds_error=False,
+                        fill_value=(table["y.values"][0], table["y.values"][-1]),
+                    )
+                    setattr(self, func_name.lower() + "_f", func)
 
     def init_exogenous_inputs(self):
         """
@@ -299,7 +297,7 @@ class Resource:
                 self.redo_loop = False
                 if self.verbose:
                     print("go loop", k_)
-                self.loopk_resource(k_-1, k_, k_-1, k_, alone=True)
+                self.loopk_resource(k_ - 1, k_, k_ - 1, k_, alone=True)
 
     @requires(["nr"])
     def _update_state_nr(self, k, j, jk):
@@ -322,8 +320,7 @@ class Resource:
         """
         self.fcaor1[k] = self.fcaor1_f(self.nrfr[k])
         self.fcaor2[k] = self.fcaor2_f(self.nrfr[k])
-        self.fcaor[k] = clip(self.fcaor2[k], self.fcaor1[k], self.time[k],
-                             self.pyear)
+        self.fcaor[k] = clip(self.fcaor2[k], self.fcaor1[k], self.time[k], self.pyear)
 
     @requires(["nruf"])
     def _update_nruf(self, k):

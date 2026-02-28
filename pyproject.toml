@@ -28,6 +28,17 @@ dependencies = [
     "matplotlib",
 ]
 
+[project.optional-dependencies]
+app = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.34",
+    "typer>=0.15",
+    "pydantic>=2.0",
+]
+
+[project.scripts]
+pyworld3 = "app._entrypoint:main"
+
 [project.urls]
 Homepage = "https://github.com/serroba/pyworld3"
 Repository = "https://github.com/serroba/pyworld3"
@@ -37,23 +48,62 @@ dev = [
     "pytest",
     "pytest-cov",
     "ruff",
+    "httpx",
+    "mypy",
+    "pre-commit",
 ]
 
 [tool.hatch.version]
 path = "pyworld3/__init__.py"
 
+[tool.hatch.build.targets.wheel]
+packages = ["pyworld3", "app"]
+
 [tool.pytest.ini_options]
-addopts = "--cov=pyworld3 --cov-report=term-missing"
+addopts = "--cov=pyworld3 --cov=app --cov-report=term-missing"
 
 [tool.coverage.run]
-source = ["pyworld3"]
+source = ["pyworld3", "app"]
 
 [tool.coverage.report]
 show_missing = true
-fail_under = 0
+fail_under = 90
 
 [tool.ruff]
 line-length = 88
+target-version = "py313"
 
 [tool.ruff.lint]
-select = ["E", "F", "W", "I"]
+select = [
+    "E", "F", "W",    # pycodestyle + pyflakes
+    "I",               # isort
+    "UP",              # pyupgrade — modernize to 3.13+ syntax
+    "B",               # flake8-bugbear — common bugs
+    "SIM",             # flake8-simplify
+    "PTH",             # flake8-use-pathlib
+    "S",               # flake8-bandit — security
+    "T20",             # flake8-print — catch stray prints in library code
+    "RUF",             # ruff-specific rules
+    "PT",              # flake8-pytest-style
+]
+ignore = [
+    "E501",   # line length handled by formatter
+    "B905",   # zip-strict not critical for scientific code
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101"]           # allow assert in tests
+"app/cli.py" = ["T201"]         # allow print in CLI
+"app/_entrypoint.py" = ["T201"] # allow print for user-facing error
+"example_*.py" = ["T201"]       # allow print in examples
+"pyworld3/*.py" = ["T201"]      # verbose/debug prints are intentional
+
+[tool.mypy]
+python_version = "3.13"
+warn_return_any = true
+warn_unused_configs = true
+check_untyped_defs = true
+
+[[tool.mypy.overrides]]
+module = ["numpy.*", "scipy.*", "matplotlib.*", "pydantic.*", "typer.*", "fastapi.*", "uvicorn.*"]
+ignore_missing_imports = true

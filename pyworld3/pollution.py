@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 # © Copyright Charles Vanwynsberghe (2021)
 
 # Pyworld3 is a computer program whose purpose is to run configurable
@@ -33,7 +31,7 @@
 # knowledge of the CeCILL license and that you accept its terms.
 
 import json
-import os
+from pathlib import Path
 
 import numpy as np
 from scipy.interpolate import interp1d
@@ -131,8 +129,7 @@ class Pollution:
 
     """
 
-    def __init__(self, year_min=1900, year_max=2100, dt=1, pyear=1975,
-                 verbose=False):
+    def __init__(self, year_min=1900, year_max=2100, dt=1, pyear=1975, verbose=False):
         self.pyear = pyear
         self.dt = dt
         self.year_min = year_min
@@ -142,10 +139,22 @@ class Pollution:
         self.n = int(self.length / self.dt)
         self.time = np.arange(self.year_min, self.year_max, self.dt)
 
-    def init_pollution_constants(self, ppoli=2.5e7, ppol70=1.36e8, ahl70=1.5,
-                                 amti=1, imti=10, imef=0.1, fipm=0.001,
-                                 frpm=0.02, ppgf1=1, ppgf2=1, ppgf21=1,
-                                 pptd1=20, pptd2=20):
+    def init_pollution_constants(
+        self,
+        ppoli=2.5e7,
+        ppol70=1.36e8,
+        ahl70=1.5,
+        amti=1,
+        imti=10,
+        imef=0.1,
+        fipm=0.001,
+        frpm=0.02,
+        ppgf1=1,
+        ppgf2=1,
+        ppgf21=1,
+        pptd1=20,
+        pptd2=20,
+    ):
         """
         Initialize the constant parameters of the pollution sector. Constants
         and their unit are documented above at the class level.
@@ -200,9 +209,10 @@ class Pollution:
         """
         var_delay3 = ["PPGR"]
         for var_ in var_delay3:
-            func_delay = Delay3(getattr(self, var_.lower()),
-                                self.dt, self.time, method=method)
-            setattr(self, "delay3_"+var_.lower(), func_delay)
+            func_delay = Delay3(
+                getattr(self, var_.lower()), self.dt, self.time, method=method
+            )
+            setattr(self, "delay3_" + var_.lower(), func_delay)
 
     def set_pollution_table_functions(self, json_file=None):
         """
@@ -217,9 +227,8 @@ class Pollution:
 
         """
         if json_file is None:
-            json_file = "./functions_table_world3.json"
-            json_file = os.path.join(os.path.dirname(__file__), json_file)
-        with open(json_file) as fjson:
+            json_file = Path(__file__).parent / "functions_table_world3.json"
+        with Path(json_file).open() as fjson:
             tables = json.load(fjson)
 
         func_names = ["AHLM"]
@@ -227,11 +236,13 @@ class Pollution:
         for func_name in func_names:
             for table in tables:
                 if table["y.name"] == func_name:
-                    func = interp1d(table["x.values"], table["y.values"],
-                                    bounds_error=False,
-                                    fill_value=(table["y.values"][0],
-                                                table["y.values"][-1]))
-                    setattr(self, func_name.lower()+"_f", func)
+                    func = interp1d(
+                        table["x.values"],
+                        table["y.values"],
+                        bounds_error=False,
+                        fill_value=(table["y.values"][0], table["y.values"][-1]),
+                    )
+                    setattr(self, func_name.lower() + "_f", func)
 
     def init_exogenous_inputs(self):
         """
@@ -261,44 +272,54 @@ class Pollution:
         self.lfdr2 = np.full((self.n,), np.nan)
         self.ppgf22 = np.full((self.n,), np.nan)
         # tables
-        func_names = ["PCRUM", "POP", "AIPH", "AL", "PCTCM", "LMP1", "LMP2",
-                      "LFDR1", "LFDR2"]
-        y_values = [[_ * 10**-2 for _ in [17, 30, 52, 78, 138, 280, 480, 660,
-                                          700, 700, 700]],
-                    [_ * 10**8 for _ in [16, 19, 22, 31, 42, 53, 67, 86, 109,
-                                         139, 176]],
-                    [6.6, 11, 20, 34, 57, 97, 168, 290, 495, 845, 1465],
-                    [_ * 10**8 for _ in [9, 10, 11, 13, 16, 20, 24, 26, 27,
-                                         27, 27]],
-                    [0, -0.05],
-                    [1, .99, .97, .95, .90, .85, .75, .65, .55, .40, .20],
-                    [1, .99, .97, .95, .90, .85, .75, .65, .55, .40, .20],
-                    [0, 0.1, 0.3, 0.5],
-                    [0, 0.1, 0.3, 0.5]]
+        func_names = [
+            "PCRUM",
+            "POP",
+            "AIPH",
+            "AL",
+            "PCTCM",
+            "LMP1",
+            "LMP2",
+            "LFDR1",
+            "LFDR2",
+        ]
+        y_values = [
+            [_ * 10**-2 for _ in [17, 30, 52, 78, 138, 280, 480, 660, 700, 700, 700]],
+            [_ * 10**8 for _ in [16, 19, 22, 31, 42, 53, 67, 86, 109, 139, 176]],
+            [6.6, 11, 20, 34, 57, 97, 168, 290, 495, 845, 1465],
+            [_ * 10**8 for _ in [9, 10, 11, 13, 16, 20, 24, 26, 27, 27, 27]],
+            [0, -0.05],
+            [1, 0.99, 0.97, 0.95, 0.90, 0.85, 0.75, 0.65, 0.55, 0.40, 0.20],
+            [1, 0.99, 0.97, 0.95, 0.90, 0.85, 0.75, 0.65, 0.55, 0.40, 0.20],
+            [0, 0.1, 0.3, 0.5],
+            [0, 0.1, 0.3, 0.5],
+        ]
         x_to_2100 = np.linspace(1900, 2100, 11)
         x_0_to_100 = np.linspace(0, 100, 11)
         x_0_to_30 = np.linspace(0, 30, 4)
-        x_values = [x_to_2100,
-                    x_to_2100,
-                    x_to_2100,
-                    x_to_2100,
-                    [0, 10],
-                    x_0_to_100,
-                    x_0_to_100,
-                    x_0_to_30,
-                    x_0_to_30]
+        x_values = [
+            x_to_2100,
+            x_to_2100,
+            x_to_2100,
+            x_to_2100,
+            [0, 10],
+            x_0_to_100,
+            x_0_to_100,
+            x_0_to_30,
+            x_0_to_30,
+        ]
         for func_name, x_vals, y_vals in zip(func_names, x_values, y_values):
-            func = interp1d(x_vals, y_vals,
-                            bounds_error=False,
-                            fill_value=(y_vals[0],
-                                        y_vals[-1]))
-            setattr(self, func_name.lower()+"_f", func)
+            func = interp1d(
+                x_vals, y_vals, bounds_error=False, fill_value=(y_vals[0], y_vals[-1])
+            )
+            setattr(self, func_name.lower() + "_f", func)
         # Delays
         var_dlinf3 = ["PCTI", "LMP"]
         for var_ in var_dlinf3:
-            func_delay = Dlinf3(getattr(self, var_.lower()),
-                                self.dt, self.time, method="euler")
-            setattr(self, "dlinf3_"+var_.lower(), func_delay)
+            func_delay = Dlinf3(
+                getattr(self, var_.lower()), self.dt, self.time, method="euler"
+            )
+            setattr(self, "dlinf3_" + var_.lower(), func_delay)
 
     def loopk_exogenous(self, k):
         """
@@ -324,17 +345,14 @@ class Pollution:
         self.plmp[k] = self.dlinf3_lmp(k, self.pd)
         self.pctcm[k] = self.pctcm_f(1 - self.plmp[k])
 
-        self.pctir[kl] = clip(self.pcti[k] * self.pctcm[k], 0, self.time[k],
-                              self.pyear)
+        self.pctir[kl] = clip(self.pcti[k] * self.pctcm[k], 0, self.time[k], self.pyear)
 
         self.lmp1[k] = self.lmp1_f(self.ppolx[k])
         self.lmp2[k] = self.lmp2_f(self.ppolx[k])
-        self.lmp[k] = clip(self.lmp2[k], self.lmp1[k], self.time[k],
-                           self.pyear)
+        self.lmp[k] = clip(self.lmp2[k], self.lmp1[k], self.time[k], self.pyear)
         self.lfdr1[k] = self.lfdr1_f(self.ppolx[k])
         self.lfdr2[k] = self.lfdr1_f(self.ppolx[k])
-        self.lfdr[k] = clip(self.lfdr2[k], self.lfdr1[k], self.time[k],
-                            self.pyear)
+        self.lfdr[k] = clip(self.lfdr2[k], self.lfdr1[k], self.time[k], self.pyear)
 
     def loop0_exogenous(self):
         """
@@ -353,19 +371,16 @@ class Pollution:
 
         self.lmp1[0] = self.lmp1_f(self.ppolx[0])
         self.lmp2[0] = self.lmp2_f(self.ppolx[0])
-        self.lmp[0] = clip(self.lmp2[0], self.lmp1[0], self.time[0],
-                           self.pyear)
+        self.lmp[0] = clip(self.lmp2[0], self.lmp1[0], self.time[0], self.pyear)
 
         self.plmp[0] = self.dlinf3_lmp(0, self.pd)
         self.pctcm[0] = self.pctcm_f(1 - self.plmp[0])
 
-        self.pctir[0] = clip(self.pcti[0] * self.pctcm[0], 0, self.time[0],
-                             self.pyear)
+        self.pctir[0] = clip(self.pcti[0] * self.pctcm[0], 0, self.time[0], self.pyear)
 
         self.lfdr1[0] = self.lfdr1_f(self.ppolx[0])
         self.lfdr2[0] = self.lfdr1_f(self.ppolx[0])
-        self.lfdr[0] = clip(self.lfdr2[0], self.lfdr1[0], self.time[0],
-                            self.pyear)
+        self.lfdr[0] = clip(self.lfdr2[0], self.lfdr1[0], self.time[0], self.pyear)
 
     def loop0_pollution(self, alone=False):
         """
@@ -434,15 +449,14 @@ class Pollution:
                 self.redo_loop = False
                 if self.verbose:
                     print("go loop", k_)
-                self.loopk_pollution(k_-1, k_, k_-1, k_, alone=True)
+                self.loopk_pollution(k_ - 1, k_, k_ - 1, k_, alone=True)
 
     @requires(["ppol"])
     def _update_state_ppol(self, k, j, jk):
         """
         State variable, requires previous step only
         """
-        self.ppol[k] = self.ppol[j] + self.dt * (self.ppapr[jk] -
-                                                 self.ppasr[jk])
+        self.ppol[k] = self.ppol[j] + self.dt * (self.ppapr[jk] - self.ppasr[jk])
 
     @requires(["ppolx"], ["ppol"])
     def _update_ppolx(self, k):
@@ -456,8 +470,7 @@ class Pollution:
         """
         From step k requires: PCRUM POP
         """
-        self.ppgio[k] = (self.pcrum[k] * self.pop[k] * self.frpm *
-                         self.imef * self.imti)
+        self.ppgio[k] = self.pcrum[k] * self.pop[k] * self.frpm * self.imef * self.imti
 
     @requires(["ppgao"], ["aiph", "al"])
     def _update_ppgao(self, k):
@@ -472,8 +485,7 @@ class Pollution:
         From step k requires: PPGF22
         """
 
-        self.ppgf[k] = clip(self.ppgf2, self.ppgf1, self.time[k],
-                            self.pyear)
+        self.ppgf[k] = clip(self.ppgf2, self.ppgf1, self.time[k], self.pyear)
 
     @requires(["ppgr"], ["ppgio", "ppgao", "ppgf"])
     def _update_ppgr(self, k, kl):

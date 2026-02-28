@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 # © Copyright Charles Vanwynsberghe (2021)
 
 # Pyworld3 is a computer program whose purpose is to run configurable
@@ -168,13 +166,17 @@ class Smooth:
             self.out_arr[k] = self.in_arr[k]
         else:
             if self.method == "odeint":
-                res = odeint(func_delay1, self.out_arr[k-1],
-                             [0, self.dt], args=(self.in_arr[k-1], delay))
+                res = odeint(
+                    func_delay1,
+                    self.out_arr[k - 1],
+                    [0, self.dt],
+                    args=(self.in_arr[k - 1], delay),
+                )
                 self.out_arr[k] = res[1, :]
             elif self.method == "euler":
-                dout = self.in_arr[k-1] - self.out_arr[k-1]
-                dout *= self.dt/delay
-                self.out_arr[k] = self.out_arr[k-1] + dout
+                dout = self.in_arr[k - 1] - self.out_arr[k - 1]
+                dout *= self.dt / delay
+                self.out_arr[k] = self.out_arr[k - 1] + dout
 
         return self.out_arr[k]
 
@@ -233,9 +235,9 @@ class Delay3:
         self.in_arr = in_arr  # use in_arr as reference
         self.method = method
         if self.method == "euler":
-            self.A_norm = np.array([[-1., 0., 0.],
-                                    [1., -1., 0.],
-                                    [0., 1., -1.]])
+            self.A_norm = np.array(
+                [[-1.0, 0.0, 0.0], [1.0, -1.0, 0.0], [0.0, 1.0, -1.0]]
+            )
             self.B_norm = np.array([1, 0, 0])
 
     def _init_out_arr(self, delay):
@@ -246,14 +248,20 @@ class Delay3:
             self._init_out_arr(delay)
         else:
             if self.method == "odeint":
-                res = odeint(func_delay3, self.out_arr[k-1, :],
-                             [0, self.dt], args=(self.in_arr[k-1], delay))
+                res = odeint(
+                    func_delay3,
+                    self.out_arr[k - 1, :],
+                    [0, self.dt],
+                    args=(self.in_arr[k - 1], delay),
+                )
                 self.out_arr[k, :] = res[1, :]
             elif self.method == "euler":
-                dout = (self.A_norm  @ self.out_arr[k-1, :] +
-                        self.B_norm * self.in_arr[k-1])
-                dout *= self.dt*3/delay
-                self.out_arr[k, :] = self.out_arr[k-1, :] + dout
+                dout = (
+                    self.A_norm @ self.out_arr[k - 1, :]
+                    + self.B_norm * self.in_arr[k - 1]
+                )
+                dout *= self.dt * 3 / delay
+                self.out_arr[k, :] = self.out_arr[k - 1, :] + dout
 
         return self.out_arr[k, 2]
 

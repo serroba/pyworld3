@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 # © Copyright Charles Vanwynsberghe (2021)
 
 # Pyworld3 is a computer program whose purpose is to run configurable
@@ -33,7 +31,7 @@
 # knowledge of the CeCILL license and that you accept its terms.
 
 import json
-import os
+from pathlib import Path
 
 import numpy as np
 from scipy.interpolate import interp1d
@@ -235,8 +233,9 @@ class Agriculture:
 
     """
 
-    def __init__(self, year_min=1900, year_max=2100, dt=0.25, pyear=1975,
-                 verbose=False):
+    def __init__(
+        self, year_min=1900, year_max=2100, dt=0.25, pyear=1975, verbose=False
+    ):
         self.pyear = pyear
         self.dt = dt
         self.year_min = year_min
@@ -246,11 +245,27 @@ class Agriculture:
         self.n = int(self.length / self.dt)
         self.time = np.arange(self.year_min, self.year_max, self.dt)
 
-    def init_agriculture_constants(self, ali=0.9e9, pali=2.3e9, lfh=0.7,
-                                   palt=3.2e9, pl=0.1, alai1=2, alai2=2,
-                                   io70=7.9e11, lyf1=1, lyf2=1, sd=0.07,
-                                   uili=8.2e6, alln=1000, uildt=10,
-                                   lferti=600, ilf=600, fspd=2, sfpc=230):
+    def init_agriculture_constants(
+        self,
+        ali=0.9e9,
+        pali=2.3e9,
+        lfh=0.7,
+        palt=3.2e9,
+        pl=0.1,
+        alai1=2,
+        alai2=2,
+        io70=7.9e11,
+        lyf1=1,
+        lyf2=1,
+        sd=0.07,
+        uili=8.2e6,
+        alln=1000,
+        uildt=10,
+        lferti=600,
+        ilf=600,
+        fspd=2,
+        sfpc=230,
+    ):
         """
         Initialize the constant parameters of the agriculture sector.
         Constants and their unit are documented above at the class level.
@@ -358,9 +373,10 @@ class Agriculture:
         """
         var_smooth = ["CAI", "FR"]
         for var_ in var_smooth:
-            func_delay = Smooth(getattr(self, var_.lower()),
-                                self.dt, self.time, method=method)
-            setattr(self, "smooth_"+var_.lower(), func_delay)
+            func_delay = Smooth(
+                getattr(self, var_.lower()), self.dt, self.time, method=method
+            )
+            setattr(self, "smooth_" + var_.lower(), func_delay)
 
     def set_agriculture_table_functions(self, json_file=None):
         """
@@ -375,27 +391,39 @@ class Agriculture:
 
         """
         if json_file is None:
-            json_file = "./functions_table_world3.json"
-            json_file = os.path.join(os.path.dirname(__file__), json_file)
-        with open(json_file) as fjson:
+            json_file = Path(__file__).parent / "functions_table_world3.json"
+        with Path(json_file).open() as fjson:
             tables = json.load(fjson)
 
-        func_names = ["IFPC1", "IFPC2", "FIOAA1", "FIOAA2", "DCPH",
-                      "LYMC", "LYMAP1", "LYMAP2",
-                      "FIALD", "MLYMC",
-                      "LLMY1", "LLMY2", "UILPC",
-                      "LFDR",
-                      "LFRT",
-                      "FALM"]
+        func_names = [
+            "IFPC1",
+            "IFPC2",
+            "FIOAA1",
+            "FIOAA2",
+            "DCPH",
+            "LYMC",
+            "LYMAP1",
+            "LYMAP2",
+            "FIALD",
+            "MLYMC",
+            "LLMY1",
+            "LLMY2",
+            "UILPC",
+            "LFDR",
+            "LFRT",
+            "FALM",
+        ]
 
         for func_name in func_names:
             for table in tables:
                 if table["y.name"] == func_name:
-                    func = interp1d(table["x.values"], table["y.values"],
-                                    bounds_error=False,
-                                    fill_value=(table["y.values"][0],
-                                                table["y.values"][-1]))
-                    setattr(self, func_name.lower()+"_f", func)
+                    func = interp1d(
+                        table["x.values"],
+                        table["y.values"],
+                        bounds_error=False,
+                        fill_value=(table["y.values"][0], table["y.values"][-1]),
+                    )
+                    setattr(self, func_name.lower() + "_f", func)
 
     def init_exogenous_inputs(self):
         """
@@ -429,24 +457,18 @@ class Agriculture:
         previously.
 
         """
-        self.pop1[k] = self.popi * np.exp(0.012 * (self.time[k] -
-                                                   self.year_min))
+        self.pop1[k] = self.popi * np.exp(0.012 * (self.time[k] - self.year_min))
         self.pop2[k] = self.popi * np.exp(0.012 * (self.eyear - self.year_min))
-        self.pop[k] = clip(self.pop2[k], self.pop1[k], self.time[k],
-                           self.eyear)
+        self.pop[k] = clip(self.pop2[k], self.pop1[k], self.time[k], self.eyear)
 
         self.io1[k] = self.ioi * np.exp(0.036 * (self.time[k] - self.year_min))
         self.io2[k] = self.ioi * np.exp(0.036 * (self.eyear - self.year_min))
-        self.io[k] = clip(self.io2[k], self.io1[k], self.time[k],
-                          self.eyear)
+        self.io[k] = clip(self.io2[k], self.io1[k], self.time[k], self.eyear)
         self.iopc[k] = self.io[k] / self.pop[k]
 
-        self.ppolx1[k] = self.ppolxi * np.exp(0.03 * (self.time[k] -
-                                                      self.year_min))
-        self.ppolx2[k] = self.ppolxi * np.exp(0.03 * (self.eyear -
-                                                      self.year_min))
-        self.ppolx[k] = clip(self.ppolx2[k], self.ppolx1[k], self.time[k],
-                             self.eyear)
+        self.ppolx1[k] = self.ppolxi * np.exp(0.03 * (self.time[k] - self.year_min))
+        self.ppolx2[k] = self.ppolxi * np.exp(0.03 * (self.eyear - self.year_min))
+        self.ppolx[k] = clip(self.ppolx2[k], self.ppolx1[k], self.time[k], self.eyear)
 
     def loop0_exogenous(self):
         """
@@ -598,7 +620,7 @@ class Agriculture:
                 self.redo_loop = False
                 if self.verbose:
                     print("go loop", k_)
-                self.loopk_agriculture(k_-1, k_, k_-1, k_, alone=True)
+                self.loopk_agriculture(k_ - 1, k_, k_ - 1, k_, alone=True)
 
     @requires(["lfc"], ["al"])
     def _update_lfc(self, k):
@@ -612,8 +634,9 @@ class Agriculture:
         """
         State variable, requires previous step only
         """
-        self.al[k] = self.al[j] + self.dt * (self.ldr[jk] - self.ler[jk] -
-                                             self.lrui[jk])
+        self.al[k] = self.al[j] + self.dt * (
+            self.ldr[jk] - self.ler[jk] - self.lrui[jk]
+        )
 
     @requires(["pal"])
     def _update_state_pal(self, k, j, jk):
@@ -643,8 +666,7 @@ class Agriculture:
         """
         self.ifpc1[k] = self.ifpc1_f(self.iopc[k])
         self.ifpc2[k] = self.ifpc2_f(self.iopc[k])
-        self.ifpc[k] = clip(self.ifpc2[k], self.ifpc1[k], self.time[k],
-                            self.pyear)
+        self.ifpc[k] = clip(self.ifpc2[k], self.ifpc1[k], self.time[k], self.pyear)
 
     @requires(["tai"], ["io", "fioaa"])
     def _update_tai(self, k):
@@ -660,8 +682,7 @@ class Agriculture:
         """
         self.fioaa1[k] = self.fioaa1_f(self.fpc[k] / self.ifpc[k])
         self.fioaa2[k] = self.fioaa2_f(self.fpc[k] / self.ifpc[k])
-        self.fioaa[k] = clip(self.fioaa2[k], self.fioaa1[k], self.time[k],
-                             self.pyear)
+        self.fioaa[k] = clip(self.fioaa2[k], self.fioaa1[k], self.time[k], self.pyear)
 
     @requires(["ldr"], ["tai", "fiald", "dcph"])
     def _update_ldr(self, k, kl):
@@ -697,8 +718,7 @@ class Agriculture:
         """
         From step k requires: nothing
         """
-        self.alai[k] = clip(self.alai2, self.alai1, self.time[k],
-                            self.pyear)
+        self.alai[k] = clip(self.alai2, self.alai1, self.time[k], self.pyear)
 
     @requires(["aiph"], ["ai", "falm", "al"])
     def _update_aiph(self, k):
@@ -726,8 +746,7 @@ class Agriculture:
         """
         From step k requires: nothing
         """
-        self.lyf[k] = clip(self.lyf2, self.lyf1, self.time[k],
-                           self.pyear)
+        self.lyf[k] = clip(self.lyf2, self.lyf1, self.time[k], self.pyear)
 
     @requires(["lymap1", "lymap2", "lymap"], ["io"])
     def _update_lymap(self, k):
@@ -736,8 +755,7 @@ class Agriculture:
         """
         self.lymap1[k] = self.lymap1_f(self.io[k] / self.io70)
         self.lymap2[k] = self.lymap2_f(self.io[k] / self.io70)
-        self.lymap[k] = clip(self.lymap2[k], self.lymap1[k], self.time[k],
-                             self.pyear)
+        self.lymap[k] = clip(self.lymap2[k], self.lymap1[k], self.time[k], self.pyear)
 
     @requires(["fiald"], ["mpld", "mpai"])
     def _update_fiald(self, k):
@@ -781,8 +799,7 @@ class Agriculture:
         """
         self.llmy1[k] = self.llmy1_f(self.ly[k] / self.ilf)
         self.llmy2[k] = self.llmy2_f(self.ly[k] / self.ilf)
-        self.llmy[k] = clip(self.llmy2[k], self.llmy1[k], self.time[k],
-                            self.pyear)
+        self.llmy[k] = clip(self.llmy2[k], self.llmy1[k], self.time[k], self.pyear)
 
     @requires(["ler"], ["al", "all"])
     def _update_ler(self, k, kl):
@@ -810,8 +827,7 @@ class Agriculture:
         """
         From step k requires: UILR UIL
         """
-        self.lrui[kl] = np.maximum(0,
-                                   (self.uilr[k] - self.uil[k]) / self.uildt)
+        self.lrui[kl] = np.maximum(0, (self.uilr[k] - self.uil[k]) / self.uildt)
 
     @requires(["uil"])
     def _update_state_uil(self, k, j, jk):

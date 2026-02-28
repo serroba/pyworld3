@@ -1,0 +1,9 @@
+.git
+__pycache__
+.venv
+.coverage
+.idea
+*.pyc
+tests/
+docs/
+img/
