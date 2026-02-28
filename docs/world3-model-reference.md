@@ -1,8 +1,34 @@
 # World3 Model Reference
 
-Mathematical and domain reference for the PyWorld3 simulation, drawn from Nebel et al. (2024) "Recalibration of limits to growth: An update of the World3 model" and the original technical description (Meadows et al., 1974).
+Mathematical and domain reference for the PyWorld3 simulation, for use in validating and testing model behaviour.
 
-> **Source**: Nebel, A., Kling, A., Willamowski, R., & Schell, T. (2024). *Journal of Industrial Ecology*, 28, 87-99. DOI: 10.1111/jiec.13442
+---
+
+## Acknowledgements
+
+### Original World3 Model
+
+The World3 model was created by **Donella H. Meadows, Dennis L. Meadows, Jørgen Randers, and William W. Behrens III** as part of the *Limits to Growth* study for the Club of Rome (1972). The full technical description was published in:
+
+> Meadows, D. L., Behrens, W. W., Meadows, D. H., Naill, R. F., Randers, J., & Zahn, E. K. O. (1974). *Dynamics of Growth in a Finite World*. Wright-Allen Press Inc.
+
+The model was updated to World3-03 in:
+
+> Meadows, D. H., Randers, J., & Meadows, D. L. (2005). *Limits to Growth: The 30-Year Update*. Earthscan.
+
+### PyWorld3
+
+This Python implementation of World3 was created by **Charles Vanwynsberghe**:
+
+> Vanwynsberghe, C. (2021). PyWorld3 — The World3 model revisited in Python. [hal-03414394](https://hal.archives-ouvertes.fr/hal-03414394)
+
+### Recalibration (Nebel et al., 2024)
+
+The recalibration data and methodology referenced in this document come from:
+
+> Nebel, A., Kling, A., Willamowski, R., & Schell, T. (2024). Recalibration of limits to growth: An update of the World3 model. *Journal of Industrial Ecology*, 28, 87–99. DOI: [10.1111/jiec.13442](https://onlinelibrary.wiley.com/doi/epdf/10.1111/jiec.13442)
+
+Their updated PyWorld3-03 implementation is available at [github.com/TimSchell98/PyWorld3-03](https://github.com/TimSchell98/PyWorld3-03).
 
 ---
 
