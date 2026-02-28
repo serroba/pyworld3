@@ -124,14 +124,20 @@ def run_simulation(request: SimulationRequest) -> SimulationResponse:
     world3.run_world3(fast=True)
 
     output_vars = request.output_variables or DEFAULT_OUTPUT_VARIABLES
-    unknown_vars = [v for v in output_vars if not hasattr(world3, v)]
+    all_valid = set(DEFAULT_OUTPUT_VARIABLES) | set(CONSTANT_DEFAULTS)
+    unknown_vars = [v for v in output_vars if v not in all_valid or not hasattr(world3, v)]
     if unknown_vars:
         raise ValueError(f"Unknown output variables: {', '.join(unknown_vars)}")
 
     series: dict[str, TimeSeriesOutput] = {}
     for var_name in output_vars:
         raw = getattr(world3, var_name)
-        values = np.nan_to_num(raw, nan=0.0).tolist()
+        arr = np.asarray(raw, dtype=float)
+        if np.any(np.isinf(arr)):
+            raise ValueError(
+                f"Infinite values encountered in simulation output for '{var_name}'"
+            )
+        values = np.nan_to_num(arr, nan=0.0).tolist()
         series[var_name] = TimeSeriesOutput(name=var_name, values=values)
 
     return SimulationResponse(

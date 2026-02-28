@@ -68,7 +68,7 @@ def simulate(
 
     if output:
         output.write_text(json_str)
-        typer.echo(f"Written to {output}")
+        typer.echo(f"Written to {output}", err=True)
     else:
         sys.stdout.write(json_str)
         sys.stdout.write("\n")

@@ -37,7 +37,7 @@ app = [
 ]
 
 [project.scripts]
-pyworld3 = "app.cli:app"
+pyworld3 = "app._entrypoint:main"
 
 [project.urls]
 Homepage = "https://github.com/serroba/pyworld3"
