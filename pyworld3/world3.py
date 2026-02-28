@@ -34,10 +34,10 @@
 
 from numpy import arange
 
-from .population import Population
-from .capital import Capital
 from .agriculture import Agriculture
+from .capital import Capital
 from .pollution import Pollution
+from .population import Population
 from .resource import Resource
 
 
@@ -395,8 +395,9 @@ def hello_world3():
     "Hello world" example with the well-known standard run of World3.
 
     """
-    from .utils import plot_world_variables
     from matplotlib.pyplot import rcParams, show
+
+    from .utils import plot_world_variables
     params = {'lines.linewidth': '3'}
     rcParams.update(params)
 

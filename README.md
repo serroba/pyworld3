@@ -32,11 +32,14 @@ Install pyworld3 either via:
 pip install pyworld3
 ```
 
-or by cloning the repository, installing the requirements ``numpy``, ``scipy``
-and ``matplotlib`` and do:
-
+or using [uv](https://docs.astral.sh/uv/):
 ```
-python setup.py install
+uv add pyworld3
+```
+
+For development, clone the repository and run:
+```
+uv sync
 ```
 
 Run the provided example to simulate the standard run, known as the *Business

@@ -32,13 +32,13 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL license and that you accept its terms.
 
-import os
 import json
+import os
 
-from scipy.interpolate import interp1d
 import numpy as np
+from scipy.interpolate import interp1d
 
-from .specials import Dlinf3, clip, switch, Delay3
+from .specials import Delay3, Dlinf3, clip, switch
 from .utils import requires
 
 

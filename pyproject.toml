@@ -1,0 +1,48 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pyworld3"
+dynamic = ["version"]
+description = "The World3 model revisited in Python."
+readme = "README.md"
+license = "CECILL-2.1"
+requires-python = ">=3.13"
+authors = [
+    { name = "Charles Vanwynsberghe" },
+]
+classifiers = [
+    "Programming Language :: Python",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Education",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Education",
+    "License :: OSI Approved :: CEA CNRS Inria Logiciel Libre License, version 2.1 (CeCILL-2.1)",
+]
+dependencies = [
+    "numpy",
+    "scipy",
+    "matplotlib",
+]
+
+[project.urls]
+Homepage = "https://github.com/serroba/pyworld3"
+Repository = "https://github.com/serroba/pyworld3"
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "ruff",
+]
+
+[tool.hatch.version]
+path = "pyworld3/__init__.py"
+
+[tool.ruff]
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]

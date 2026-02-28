@@ -35,8 +35,8 @@
 from functools import wraps
 
 import matplotlib.pyplot as plt
-from matplotlib.ticker import EngFormatter
 from matplotlib.image import imread
+from matplotlib.ticker import EngFormatter
 from numpy import isnan
 
 verbose_debug = False
