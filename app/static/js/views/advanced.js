@@ -12,6 +12,19 @@ const AdvancedView = (() => {
 
   let editedConstants = {};
 
+  /** Compute a sensible slider range from a default value. */
+  function sliderRange(defaultVal) {
+    if (defaultVal === 0) return { min: 0, max: 1, step: 0.01 };
+    const abs = Math.abs(defaultVal);
+    // Fractions (0–1): allow 0 to 2
+    if (abs <= 1) return { min: 0, max: Math.max(2, defaultVal * 5), step: 0.01 };
+    // Small values (1–100): 0 to 5×
+    if (abs <= 100) return { min: 0, max: defaultVal * 5, step: 0.1 };
+    // Large values: 0 to 5× with magnitude-appropriate step
+    const magnitude = Math.pow(10, Math.floor(Math.log10(abs)) - 1);
+    return { min: 0, max: defaultVal * 5, step: magnitude };
+  }
+
   function buildAccordions(container) {
     container.innerHTML = "";
     editedConstants = {};
@@ -36,6 +49,7 @@ const AdvancedView = (() => {
       names.forEach((name) => {
         const meta = State.constantMeta[name];
         const defaultVal = State.constantDefaults[name];
+        const range = sliderRange(defaultVal);
 
         const group = UI.el("div", "input-group");
 
@@ -47,20 +61,13 @@ const AdvancedView = (() => {
         const desc = UI.el("div", "input-desc", `${name} — default: ${defaultVal}`);
         group.appendChild(desc);
 
+        // Number input row
         const row = UI.el("div", "input-row");
         const input = document.createElement("input");
         input.type = "number";
         input.id = `const-${name}`;
         input.value = defaultVal;
         input.step = "any";
-        input.addEventListener("change", () => {
-          const val = parseFloat(input.value);
-          if (!isNaN(val) && val !== defaultVal) {
-            editedConstants[name] = val;
-          } else {
-            delete editedConstants[name];
-          }
-        });
         row.appendChild(input);
 
         const unit = UI.el("span", "unit", meta.unit);
@@ -69,13 +76,56 @@ const AdvancedView = (() => {
         const resetBtn = document.createElement("button");
         resetBtn.className = "btn-reset";
         resetBtn.textContent = "Reset";
-        resetBtn.addEventListener("click", () => {
-          input.value = defaultVal;
-          delete editedConstants[name];
-        });
         row.appendChild(resetBtn);
 
         group.appendChild(row);
+
+        // Slider row
+        const sliderRow = UI.el("div", "slider-row");
+        const minLabel = UI.el("span", "slider-bounds slider-bounds--min", UI.formatNumber(range.min));
+        const slider = document.createElement("input");
+        slider.type = "range";
+        slider.min = range.min;
+        slider.max = range.max;
+        slider.step = range.step;
+        slider.value = defaultVal;
+        slider.setAttribute("aria-label", `${meta.full_name} slider`);
+        const maxLabel = UI.el("span", "slider-bounds slider-bounds--max", UI.formatNumber(range.max));
+        sliderRow.appendChild(minLabel);
+        sliderRow.appendChild(slider);
+        sliderRow.appendChild(maxLabel);
+        group.appendChild(sliderRow);
+
+        // Sync slider → number input
+        function onValueChange(val) {
+          if (!isNaN(val) && val !== defaultVal) {
+            editedConstants[name] = val;
+          } else {
+            delete editedConstants[name];
+          }
+        }
+
+        slider.addEventListener("input", () => {
+          const val = parseFloat(slider.value);
+          input.value = val;
+          onValueChange(val);
+        });
+
+        input.addEventListener("change", () => {
+          const val = parseFloat(input.value);
+          if (!isNaN(val)) {
+            // Clamp slider to range but allow number input to exceed
+            slider.value = Math.min(Math.max(val, range.min), range.max);
+            onValueChange(val);
+          }
+        });
+
+        resetBtn.addEventListener("click", () => {
+          input.value = defaultVal;
+          slider.value = defaultVal;
+          delete editedConstants[name];
+        });
+
         body.appendChild(group);
       });
 
