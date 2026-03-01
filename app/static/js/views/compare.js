@@ -33,7 +33,7 @@ const CompareView = (() => {
         <th>Delta</th>
       </tr></thead><tbody>`;
     metrics.forEach((m) => {
-      const delta = m.delta_pct != null ? m.delta_pct.toFixed(1) + "%" : "—";
+      const delta = m.delta_pct !== null && m.delta_pct !== undefined ? m.delta_pct.toFixed(1) + "%" : "—";
       let cls = "delta-neutral";
       if (m.delta_pct > 0) cls = "delta-positive";
       if (m.delta_pct < 0) cls = "delta-negative";

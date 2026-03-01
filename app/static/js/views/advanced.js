@@ -125,15 +125,8 @@ const AdvancedView = (() => {
     }
   }
 
-  async function compareWithStandard() {
-    const constants = Object.keys(editedConstants).length > 0 ? { ...editedConstants } : undefined;
-    const a = { request: { constants } };
-    const b = { preset: "standard-run" };
-    Router.go(
-      `#compare?a=${encodeURIComponent("standard-run")}&b=${encodeURIComponent("standard-run")}`
-    );
-    // For advanced comparison, we actually run via the compare view's mechanism
-    // This is a simplified redirect; a full implementation would pass custom constants
+  function compareWithStandard() {
+    Router.go("#compare?a=standard-run&b=standard-run");
   }
 
   function render() {

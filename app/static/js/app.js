@@ -8,7 +8,7 @@
 
   try {
     await State.init();
-  } catch (err) {
+  } catch (_err) {
     shell.innerHTML = `<div class="container mt-xl">
       <div class="card" style="border-color: var(--color-danger); color: var(--color-danger);">
         <strong>Failed to connect to the PyWorld3 API.</strong><br>

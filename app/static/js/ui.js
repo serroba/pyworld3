@@ -6,7 +6,7 @@ const UI = (() => {
   return {
     /** Format a number for display (compact notation). */
     formatNumber(value) {
-      if (value == null || isNaN(value)) return "—";
+      if (value === null || value === undefined || isNaN(value)) return "—";
       const abs = Math.abs(value);
       if (abs >= 1e9) return (value / 1e9).toFixed(2) + "B";
       if (abs >= 1e6) return (value / 1e6).toFixed(2) + "M";

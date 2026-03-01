@@ -1,0 +1,51 @@
+name: UI Validation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "app/static/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - "app/static/**"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Validate HTML
+        run: npx --yes htmlhint@latest app/static/index.html
+
+      - name: Lint JavaScript
+        working-directory: app/static
+        run: npx --yes eslint@latest js/
+
+      - name: Check referenced assets exist
+        run: |
+          cd app/static
+          status=0
+          for path in $(grep -oP '(?:src|href)="/\K[^"]+' index.html); do
+            if [ ! -f "./${path}" ]; then
+              echo "::error::Missing asset referenced in index.html: /${path}"
+              status=1
+            fi
+          done
+          exit $status
+
+      - name: Verify no console.log left in production code
+        run: |
+          if grep -rn 'console\.log' app/static/js/ --include='*.js'; then
+            echo "::warning::Found console.log statements in JS files"
+          fi
