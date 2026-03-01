@@ -1,3 +1,5 @@
+import math
+
 import pytest
 
 from pyworld3.adapters.schemas import SimulationRequest
@@ -71,7 +73,7 @@ def test_no_nan_in_output():
     response = _service.run(params)
     for ts in response.series.values():
         for v in ts.values:
-            assert v == v  # NaN != NaN
+            assert not math.isnan(v), f"NaN found in series '{ts.name}'"
 
 
 def test_constants_dict_complete():
@@ -83,61 +85,69 @@ def test_all_constants_have_constraints():
     assert set(CONSTANT_CONSTRAINTS) == set(CONSTANT_DEFAULTS)
 
 
-# --- Validation tests ---
+# --- Validation: negative values rejected for non-negative constants ---
 
 
-def test_negative_constant_rejected():
-    params = SimulationParams(constants={"nri": -1})
-    with pytest.raises(SimulationValidationError, match="nri"):
+@pytest.mark.parametrize(
+    "constant",
+    ["nri", "p1i", "p2i", "p3i", "p4i", "ici", "sci", "ali", "ppoli", "dcfsn"],
+    ids=lambda c: f"negative_{c}",
+)
+def test_negative_constant_rejected(constant):
+    """Constants with lower bound >= 0 must reject negative values."""
+    params = SimulationParams(constants={constant: -1})
+    with pytest.raises(SimulationValidationError, match=constant):
         _service.run(params)
 
 
-def test_negative_population_rejected():
-    params = SimulationParams(constants={"p1i": -100})
-    with pytest.raises(SimulationValidationError, match="p1i"):
-        _service.run(params)
+# --- Validation: fractions must be in [0, 1] ---
 
 
-def test_fraction_above_one_rejected():
-    params = SimulationParams(constants={"lfpf": 1.5})
-    with pytest.raises(SimulationValidationError, match="lfpf"):
-        _service.run(params)
+@pytest.mark.parametrize(
+    "constant",
+    ["lfpf", "fioac1", "fioac2", "lfh", "pl"],
+    ids=lambda c: f"fraction_{c}",
+)
+class TestFractionBounds:
+    def test_above_one_rejected(self, constant):
+        params = SimulationParams(constants={constant: 1.5})
+        with pytest.raises(SimulationValidationError, match=constant):
+            _service.run(params)
+
+    def test_negative_rejected(self, constant):
+        params = SimulationParams(constants={constant: -0.1})
+        with pytest.raises(SimulationValidationError, match=constant):
+            _service.run(params)
 
 
-def test_fraction_negative_rejected():
-    params = SimulationParams(constants={"fioac1": -0.1})
-    with pytest.raises(SimulationValidationError, match="fioac1"):
-        _service.run(params)
+# --- Validation: SimulationRequest schema bounds ---
 
 
-def test_pyear_outside_range_rejected():
-    with pytest.raises(ValueError, match="pyear"):
-        SimulationRequest(year_min=1900, year_max=2100, pyear=2200)
+@pytest.mark.parametrize(
+    ("kwargs", "match"),
+    [
+        ({"year_min": 1900, "year_max": 2100, "pyear": 2200}, "pyear"),
+        ({"year_min": 1900, "year_max": 2100, "iphst": 1800}, "iphst"),
+        ({"year_min": 1900, "year_max": 2100, "dt": 0.001}, "Too many time steps"),
+        ({"year_min": 1000}, "greater than or equal to 1900"),
+        ({"year_max": 3000}, "less than or equal to 2500"),
+        ({"dt": 200}, "less than or equal to 100"),
+    ],
+    ids=[
+        "pyear_above_range",
+        "iphst_below_range",
+        "dt_too_small",
+        "year_min_too_low",
+        "year_max_too_high",
+        "dt_too_large",
+    ],
+)
+def test_request_schema_validation(kwargs, match):
+    with pytest.raises(ValueError, match=match):
+        SimulationRequest(**kwargs)
 
 
-def test_iphst_outside_range_rejected():
-    with pytest.raises(ValueError, match="iphst"):
-        SimulationRequest(year_min=1900, year_max=2100, iphst=1800)
-
-
-def test_excessive_array_size_rejected():
-    with pytest.raises(ValueError, match="Too many time steps"):
-        SimulationRequest(year_min=1900, year_max=2100, dt=0.001)
-
-
-def test_year_min_out_of_bounds():
-    with pytest.raises(ValueError, match="greater than or equal to 1900"):
-        SimulationRequest(year_min=1000)
-
-
-def test_year_max_out_of_bounds():
-    with pytest.raises(ValueError, match="less than or equal to 2500"):
-        SimulationRequest(year_max=3000)
-
-
-def test_dt_too_large():
-    with pytest.raises(ValueError, match="less than or equal to 100"):
-        SimulationRequest(dt=200)
+# --- Metadata consistency ---
 
 
 def test_all_constants_have_metadata():
