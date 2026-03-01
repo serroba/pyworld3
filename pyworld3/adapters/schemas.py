@@ -6,8 +6,11 @@ from typing import Any
 from pydantic import BaseModel, Field, model_validator
 
 from pyworld3.application.ports import (
+    CalibrationParams,
+    CalibrationResult,
     SimulationParams,
     SimulationResult,
+    ValidationResult,
 )
 
 
@@ -215,3 +218,125 @@ class CompareResponse(BaseModel):
     results_a: SimulationResponse
     results_b: SimulationResponse
     metrics: list[CompareMetric]
+
+
+# ---------------------------------------------------------------------------
+# OWID calibration / validation schemas
+# ---------------------------------------------------------------------------
+
+
+class CalibrationRequest(BaseModel):
+    """Request to calibrate World3 constants from OWID observed data."""
+
+    reference_year: int = Field(
+        default=1970,
+        ge=1900,
+        le=2025,
+        description="Reference year for calibration",
+    )
+    entity: str = Field(
+        default="World",
+        description="Entity to calibrate against (default: World)",
+    )
+    parameters: list[str] | None = Field(
+        default=None,
+        description="Specific constants to calibrate (default: all available)",
+    )
+
+    def to_params(self) -> CalibrationParams:
+        return CalibrationParams(
+            reference_year=self.reference_year,
+            entity=self.entity,
+            parameters=self.parameters,
+        )
+
+
+class CalibratedConstantOutput(BaseModel):
+    name: str
+    value: float
+    confidence: str
+    owid_indicator: str
+    description: str
+    default_value: float
+
+
+class CalibrationResponse(BaseModel):
+    reference_year: int
+    entity: str
+    constants: dict[str, CalibratedConstantOutput]
+    warnings: list[str]
+
+    @staticmethod
+    def from_result(result: CalibrationResult) -> "CalibrationResponse":
+        return CalibrationResponse(
+            reference_year=result.reference_year,
+            entity=result.entity,
+            constants={
+                name: CalibratedConstantOutput(
+                    name=cc.name,
+                    value=cc.value,
+                    confidence=cc.confidence,
+                    owid_indicator=cc.owid_indicator,
+                    description=cc.description,
+                    default_value=cc.default_value,
+                )
+                for name, cc in result.constants.items()
+            },
+            warnings=result.warnings,
+        )
+
+
+class ValidationRequest(BaseModel):
+    """Request to validate simulation output against OWID data."""
+
+    entity: str = Field(
+        default="World",
+        description="Entity to validate against (default: World)",
+    )
+    variables: list[str] | None = Field(
+        default=None,
+        description="Specific variables to validate (default: all available)",
+    )
+
+
+class ValidationMetricOutput(BaseModel):
+    variable: str
+    owid_indicator: str
+    confidence: str
+    description: str
+    overlap_years: list[float]
+    n_points: int
+    rmse: float
+    mape: float
+    correlation: float
+
+
+class ValidationResponse(BaseModel):
+    entity: str
+    overlap_start: float
+    overlap_end: float
+    metrics: dict[str, ValidationMetricOutput]
+    warnings: list[str]
+
+    @staticmethod
+    def from_result(result: ValidationResult) -> "ValidationResponse":
+        return ValidationResponse(
+            entity=result.entity,
+            overlap_start=result.overlap_start,
+            overlap_end=result.overlap_end,
+            metrics={
+                name: ValidationMetricOutput(
+                    variable=vm.variable,
+                    owid_indicator=vm.owid_indicator,
+                    confidence=vm.confidence,
+                    description=vm.description,
+                    overlap_years=list(vm.overlap_years),
+                    n_points=vm.n_points,
+                    rmse=vm.rmse,
+                    mape=vm.mape,
+                    correlation=vm.correlation,
+                )
+                for name, vm in result.metrics.items()
+            },
+            warnings=result.warnings,
+        )

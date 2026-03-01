@@ -1,8 +1,13 @@
+from __future__ import annotations
+
 import json
 import sys
 from collections import defaultdict
 from pathlib import Path
-from typing import Annotated
+from typing import TYPE_CHECKING, Annotated
+
+if TYPE_CHECKING:
+    from pyworld3.application.ports import ValidationResult
 
 import typer
 
@@ -609,6 +614,254 @@ def compare(
             scenario_a.name, scenario_b.name, resp_a, resp_b, plot
         )
         typer.echo(f"Comparison plot saved to {plot}", err=True)
+
+
+@app.command()
+def calibrate(
+    reference_year: Annotated[
+        int, typer.Option(help="Reference year for calibration")
+    ] = 1970,
+    entity: Annotated[str, typer.Option(help="Entity to calibrate against")] = "World",
+    param: Annotated[
+        list[str] | None,
+        typer.Option(help="Specific constant to calibrate (repeatable)"),
+    ] = None,
+    output: Annotated[
+        Path | None,
+        typer.Option("--output", "-o", help="Output file (default: stdout)"),
+    ] = None,
+    pretty: Annotated[bool, typer.Option(help="Pretty-print JSON")] = False,
+):
+    """Calibrate World3 constants from OWID observed data.
+
+    Fetches real-world data from Our World in Data and derives calibrated
+    values for World3 model constants.
+
+    Requires: pip install pyworld3[owid]
+    """
+    try:
+        from pyworld3.application.calibrate import CalibrationService
+        from pyworld3.application.ports import CalibrationParams
+    except ImportError:
+        typer.echo(
+            "Error: OWID dependencies not installed. "
+            "Install with: pip install pyworld3[owid]",
+            err=True,
+        )
+        raise typer.Exit(code=1) from None
+
+    params = CalibrationParams(
+        reference_year=reference_year,
+        entity=entity,
+        parameters=param or None,
+    )
+
+    try:
+        service = CalibrationService()
+        result = service.calibrate(params)
+    except Exception as exc:
+        typer.echo(f"Error: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+
+    # Format output
+    output_data: dict[str, object] = {
+        "reference_year": result.reference_year,
+        "entity": result.entity,
+        "constants": {
+            name: {
+                "value": cc.value,
+                "default_value": cc.default_value,
+                "confidence": cc.confidence,
+                "owid_indicator": cc.owid_indicator,
+                "description": cc.description,
+            }
+            for name, cc in result.constants.items()
+        },
+    }
+    if result.warnings:
+        output_data["warnings"] = result.warnings
+
+    indent = 2 if pretty else None
+    json_str = json.dumps(output_data, indent=indent)
+
+    if output:
+        output.write_text(json_str)
+        typer.echo(f"Written to {output}", err=True)
+    else:
+        sys.stdout.write(json_str)
+        sys.stdout.write("\n")
+
+
+@app.command(name="validate")
+def validate_cmd(
+    from_file: Annotated[
+        Path | None,
+        typer.Option("--from", help="Load scenario from a TOML file"),
+    ] = None,
+    preset: Annotated[
+        str | None,
+        typer.Option(help="Use a built-in preset scenario"),
+    ] = None,
+    entity: Annotated[str, typer.Option(help="Entity to validate against")] = "World",
+    var: Annotated[
+        list[str] | None,
+        typer.Option(help="Specific variable to validate (repeatable)"),
+    ] = None,
+    output: Annotated[
+        Path | None,
+        typer.Option("--output", "-o", help="Output file (default: stdout)"),
+    ] = None,
+    pretty: Annotated[bool, typer.Option(help="Pretty-print JSON")] = False,
+    summary: Annotated[
+        bool, typer.Option(help="Print compact summary instead of JSON")
+    ] = False,
+):
+    """Validate a simulation against OWID observed data.
+
+    Runs a simulation and compares its outputs to real-world data from
+    Our World in Data, computing error metrics (RMSE, MAPE, correlation).
+
+    Requires: pip install pyworld3[owid]
+    """
+    try:
+        from pyworld3.application.ports import ValidationParams
+        from pyworld3.application.validate import ValidationService
+    except ImportError:
+        typer.echo(
+            "Error: OWID dependencies not installed. "
+            "Install with: pip install pyworld3[owid]",
+            err=True,
+        )
+        raise typer.Exit(code=1) from None
+
+    if from_file is not None and preset is not None:
+        typer.echo(
+            "Error: --from and --preset are mutually exclusive",
+            err=True,
+        )
+        raise typer.Exit(code=1)
+
+    # Build simulation request
+    scenario: ScenarioFile | None = None
+    if from_file is not None:
+        scenario = _load_scenario_file(from_file)
+    elif preset is not None:
+        available = _list_presets()
+        if preset not in available:
+            typer.echo(
+                f"Error: unknown preset '{preset}'. Available: {', '.join(available)}",
+                err=True,
+            )
+            raise typer.Exit(code=1)
+        scenario = _load_preset(preset)
+
+    if scenario is not None:
+        request = scenario.to_simulation_request()
+    else:
+        request = SimulationRequest()
+
+    # Run simulation
+    try:
+        response = _run_request(request)
+    except SimulationValidationError as exc:
+        typer.echo(f"Error: {exc.safe_message}", err=True)
+        raise typer.Exit(code=1) from exc
+
+    # Convert to SimulationResult for the validation service
+    from pyworld3.application.ports import SimulationResult, TimeSeriesResult
+
+    sim_result = SimulationResult(
+        year_min=response.year_min,
+        year_max=response.year_max,
+        dt=response.dt,
+        time=response.time,
+        constants_used=response.constants_used,
+        series={
+            name: TimeSeriesResult(name=ts.name, values=ts.values)
+            for name, ts in response.series.items()
+        },
+    )
+
+    # Validate
+    try:
+        service = ValidationService()
+        result = service.validate(
+            sim_result,
+            ValidationParams(entity=entity, variables=var or None),
+        )
+    except Exception as exc:
+        typer.echo(f"Error: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+
+    if summary:
+        _print_validation_summary(result)
+        return
+
+    # Format output
+    output_data: dict[str, object] = {
+        "entity": result.entity,
+        "overlap_start": result.overlap_start,
+        "overlap_end": result.overlap_end,
+        "metrics": {
+            name: {
+                "variable": vm.variable,
+                "owid_indicator": vm.owid_indicator,
+                "confidence": vm.confidence,
+                "overlap_years": list(vm.overlap_years),
+                "n_points": vm.n_points,
+                "rmse": vm.rmse,
+                "mape": vm.mape,
+                "correlation": vm.correlation,
+            }
+            for name, vm in result.metrics.items()
+        },
+    }
+    if result.warnings:
+        output_data["warnings"] = result.warnings
+
+    indent = 2 if pretty else None
+    json_str = json.dumps(output_data, indent=indent)
+
+    if output:
+        output.write_text(json_str)
+        typer.echo(f"Written to {output}", err=True)
+    else:
+        sys.stdout.write(json_str)
+        sys.stdout.write("\n")
+
+
+def _print_validation_summary(result: ValidationResult) -> None:
+    """Print a human-readable validation summary."""
+    print(f"Validation Summary (entity: {result.entity})")
+    print(f"Overlap: {result.overlap_start:.0f} - {result.overlap_end:.0f}")
+    print()
+
+    if not result.metrics:
+        print("  No metrics computed.")
+        if result.warnings:
+            print()
+            for w in result.warnings:
+                print(f"  Warning: {w}")
+        return
+
+    header = f"  {'Variable':<10s} {'RMSE':>12s} {'MAPE':>8s} {'Corr':>8s} {'Points':>8s} {'Confidence':<10s}"
+    print(header)
+    print("  " + "-" * (len(header) - 2))
+
+    for name, vm in result.metrics.items():
+        mape_str = f"{vm.mape:.1f}%" if vm.mape == vm.mape else "N/A"
+        corr_str = (
+            f"{vm.correlation:.3f}" if vm.correlation == vm.correlation else "N/A"
+        )
+        print(
+            f"  {name:<10s} {vm.rmse:>12.4g} {mape_str:>8s} {corr_str:>8s} "
+            f"{vm.n_points:>8d} {vm.confidence:<10s}"
+        )
+
+    if result.warnings:
+        print()
+        for w in result.warnings:
+            print(f"  Warning: {w}")
 
 
 if __name__ == "__main__":

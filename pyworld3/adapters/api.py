@@ -15,6 +15,8 @@ from pyworld3.domain.constants import (
 from pyworld3.domain.exceptions import SimulationValidationError
 
 from .schemas import (
+    CalibrationRequest,
+    CalibrationResponse,
     CompareMetric,
     CompareRequest,
     CompareResponse,
@@ -22,6 +24,8 @@ from .schemas import (
     ScenarioSpec,
     SimulationRequest,
     SimulationResponse,
+    ValidationRequest,
+    ValidationResponse,
     list_presets,
     load_preset,
 )
@@ -214,6 +218,102 @@ def compare(body: CompareRequest):
         results_b=resp_b,
         metrics=metrics,
     )
+
+
+# ---------------------------------------------------------------------------
+# OWID calibration / validation endpoints
+# ---------------------------------------------------------------------------
+
+
+@app.post("/calibrate", response_model=CalibrationResponse)
+def calibrate(request: CalibrationRequest | None = None):
+    """Calibrate World3 constants from OWID observed data.
+
+    Requires the ``owid`` optional dependency group.
+    """
+    if request is None:
+        request = CalibrationRequest()
+    try:
+        from pyworld3.application.calibrate import CalibrationService
+
+        service = CalibrationService()
+        result = service.calibrate(request.to_params())
+        return CalibrationResponse.from_result(result)
+    except ImportError:
+        return JSONResponse(
+            status_code=501,
+            content={
+                "detail": "OWID dependencies not installed. "
+                "Install with: pip install pyworld3[owid]"
+            },
+        )
+    except Exception:
+        logger.exception("Unexpected error during calibration")
+        return JSONResponse(
+            status_code=500,
+            content={"detail": "Internal server error"},
+        )
+
+
+@app.post("/validate", response_model=ValidationResponse)
+def validate_simulation(
+    simulation_request: SimulationRequest | None = None,
+    validation_request: ValidationRequest | None = None,
+):
+    """Run a simulation and validate its outputs against OWID data.
+
+    If no simulation_request is provided, runs with defaults.
+    Requires the ``owid`` optional dependency group.
+    """
+    if simulation_request is None:
+        simulation_request = SimulationRequest()
+    if validation_request is None:
+        validation_request = ValidationRequest()
+    try:
+        from pyworld3.application.validate import ValidationService
+
+        sim_response = _run(simulation_request)
+        # Convert SimulationResponse back to SimulationResult for validation
+        from pyworld3.application.ports import SimulationResult, TimeSeriesResult
+
+        sim_result = SimulationResult(
+            year_min=sim_response.year_min,
+            year_max=sim_response.year_max,
+            dt=sim_response.dt,
+            time=sim_response.time,
+            constants_used=sim_response.constants_used,
+            series={
+                name: TimeSeriesResult(name=ts.name, values=ts.values)
+                for name, ts in sim_response.series.items()
+            },
+        )
+        from pyworld3.application.ports import ValidationParams
+
+        service = ValidationService()
+        result = service.validate(
+            sim_result,
+            ValidationParams(
+                entity=validation_request.entity,
+                variables=validation_request.variables,
+            ),
+        )
+        return ValidationResponse.from_result(result)
+    except ImportError:
+        return JSONResponse(
+            status_code=501,
+            content={
+                "detail": "OWID dependencies not installed. "
+                "Install with: pip install pyworld3[owid]"
+            },
+        )
+    except SimulationValidationError as exc:
+        return JSONResponse(status_code=422, content={"detail": exc.safe_message})
+    except Exception:
+        logger.exception("Unexpected error during validation")
+        return JSONResponse(
+            status_code=500,
+            content={"detail": "Internal server error"},
+        )
 
 
 # ---------------------------------------------------------------------------
