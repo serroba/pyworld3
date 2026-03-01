@@ -1,5 +1,9 @@
 /**
- * Advanced view — constant editor with accordion sections + simulation runner.
+ * Advanced view — constant editor with accordion sections + auto-simulation.
+ *
+ * Moving any slider (or changing a number input) automatically triggers a
+ * debounced simulation.  The "Run simulation" button bypasses the debounce
+ * for an immediate run.
  */
 
 const AdvancedView = (() => {
@@ -10,7 +14,11 @@ const AdvancedView = (() => {
     { id: "adv-chart-res", title: "Resources", vars: ["nrfr"] },
   ];
 
+  const DEBOUNCE_MS = 400;
+
   let editedConstants = {};
+  let debounceTimer = null;
+  let abortController = null;
 
   /** Compute a sensible slider range from a default value. */
   function sliderRange(defaultVal) {
@@ -24,6 +32,28 @@ const AdvancedView = (() => {
     const magnitude = Math.pow(10, Math.floor(Math.log10(abs)) - 1);
     return { min: 0, max: defaultVal * 5, step: magnitude };
   }
+
+  // ---------------------------------------------------------------------------
+  // Loading overlay
+  // ---------------------------------------------------------------------------
+
+  function setChartsLoading(loading) {
+    document.querySelectorAll("#advanced-charts .chart-loading-overlay")
+      .forEach((el) => el.classList.toggle("active", loading));
+  }
+
+  // ---------------------------------------------------------------------------
+  // Debounced simulation trigger
+  // ---------------------------------------------------------------------------
+
+  function triggerSimulation() {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(runSimulation, DEBOUNCE_MS);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Accordion builder
+  // ---------------------------------------------------------------------------
 
   function buildAccordions(container) {
     container.innerHTML = "";
@@ -103,6 +133,7 @@ const AdvancedView = (() => {
           } else {
             delete editedConstants[name];
           }
+          triggerSimulation();
         }
 
         slider.addEventListener("input", () => {
@@ -124,6 +155,7 @@ const AdvancedView = (() => {
           input.value = defaultVal;
           slider.value = defaultVal;
           delete editedConstants[name];
+          triggerSimulation();
         });
 
         body.appendChild(group);
@@ -133,6 +165,10 @@ const AdvancedView = (() => {
       container.appendChild(details);
     }
   }
+
+  // ---------------------------------------------------------------------------
+  // Chart grid (rendered once per view init, not per simulation)
+  // ---------------------------------------------------------------------------
 
   function renderChartGrid(container) {
     container.innerHTML = "";
@@ -144,6 +180,11 @@ const AdvancedView = (() => {
       const canvas = document.createElement("canvas");
       canvas.id = group.id;
       wrap.appendChild(canvas);
+
+      // Loading overlay (sits on top of canvas inside chart-container)
+      const overlay = UI.el("div", "chart-loading-overlay");
+      wrap.appendChild(overlay);
+
       panel.appendChild(header);
       panel.appendChild(wrap);
       Charts.renderExplainer(panel, group.id);
@@ -151,48 +192,78 @@ const AdvancedView = (() => {
     });
   }
 
+  // ---------------------------------------------------------------------------
+  // Simulation runner (cancels any in-flight request)
+  // ---------------------------------------------------------------------------
+
   async function runSimulation() {
     const chartsEl = document.getElementById("advanced-charts");
     const statusEl = document.getElementById("advanced-status");
     if (!chartsEl) return;
 
-    if (statusEl) statusEl.innerHTML = '<div class="spinner">Running simulation\u2026</div>';
-    renderChartGrid(chartsEl);
+    // Abort any in-flight request
+    if (abortController) abortController.abort();
+    abortController = new AbortController();
+    const { signal } = abortController;
+
+    setChartsLoading(true);
+    if (statusEl) statusEl.innerHTML = "";
 
     try {
       const request = {};
       if (Object.keys(editedConstants).length > 0) {
         request.constants = { ...editedConstants };
       }
-      const result = await API.simulate(request);
-      if (statusEl) statusEl.innerHTML = "";
+      const result = await API.simulate(request, { signal });
+
+      setChartsLoading(false);
 
       CHART_GROUPS.forEach((group) => {
         const canvas = document.getElementById(group.id);
         if (canvas) Charts.renderSingle(canvas, result.time, result.series, group.vars);
       });
     } catch (err) {
+      if (err.name === "AbortError") return; // superseded by newer request
+      setChartsLoading(false);
       if (statusEl) UI.showError(statusEl, err.message);
     }
   }
+
+  // ---------------------------------------------------------------------------
+  // Navigation helpers
+  // ---------------------------------------------------------------------------
 
   function compareWithStandard() {
     Router.go("#compare?a=standard-run&b=standard-run");
   }
 
+  // ---------------------------------------------------------------------------
+  // View entry point
+  // ---------------------------------------------------------------------------
+
   function render() {
     const accordionEl = document.getElementById("advanced-accordions");
     if (accordionEl) buildAccordions(accordionEl);
 
+    // Render chart grid once (charts update in-place on each simulation)
+    const chartsEl = document.getElementById("advanced-charts");
+    if (chartsEl) renderChartGrid(chartsEl);
+
     const runBtn = document.getElementById("advanced-run");
     if (runBtn) {
-      runBtn.onclick = runSimulation;
+      runBtn.onclick = () => {
+        clearTimeout(debounceTimer);
+        runSimulation();
+      };
     }
 
     const compareBtn = document.getElementById("advanced-compare");
     if (compareBtn) {
       compareBtn.onclick = compareWithStandard;
     }
+
+    // Auto-run with defaults on view init
+    triggerSimulation();
   }
 
   return { render };

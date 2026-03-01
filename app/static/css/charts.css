@@ -28,3 +28,18 @@
     height: 300px;
   }
 }
+
+.chart-loading-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.55);
+  z-index: 2;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s;
+}
+
+.chart-loading-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
