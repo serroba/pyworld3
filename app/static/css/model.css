@@ -1,0 +1,31 @@
+/* Model page sections */
+.model-section { margin-bottom: var(--space-xl); }
+.model-section__question { font-size: var(--text-xl); font-weight: 700; margin-bottom: var(--space-sm); }
+.model-section__summary { color: var(--color-text-muted); line-height: 1.6; margin-bottom: var(--space-md); max-width: 65ch; }
+
+/* Concept definitions */
+.model-concepts { margin-bottom: var(--space-md); }
+.model-concept { margin-bottom: var(--space-sm); font-size: var(--text-sm); line-height: 1.5; }
+.model-concept strong { color: var(--color-text); }
+.model-concept p { color: var(--color-text-muted); margin: var(--space-xs) 0 0; }
+
+/* Feedback callout */
+.model-section__feedback { margin-top: var(--space-md); padding: var(--space-sm) var(--space-md); border-left: 3px solid var(--color-primary); color: var(--color-text-muted); font-size: var(--text-sm); line-height: 1.5; }
+
+/* Mini chart */
+.chart-container--mini { height: 200px; }
+@media (min-width: 640px) { .chart-container--mini { height: 220px; } }
+
+/* Sources */
+.model-section__sources { margin-top: var(--space-md); font-size: var(--text-xs); color: var(--color-text-muted); }
+.model-section__sources a { color: var(--color-primary); }
+.model-section__sources ul { list-style: none; padding: 0; margin: var(--space-xs) 0 0; display: flex; flex-direction: column; gap: var(--space-xs); }
+
+/* Section-level details styling (reuse math-explainer patterns) */
+.model-section details summary { cursor: pointer; font-weight: 600; color: var(--color-primary); padding: var(--space-xs) 0; user-select: none; }
+.model-section details summary:hover { opacity: 0.8; }
+.model-section details { border-top: 1px solid var(--color-border); padding-top: var(--space-xs); }
+
+/* On-page nav (sticky section jumps) */
+.model-nav { display: flex; gap: var(--space-sm); overflow-x: auto; padding-bottom: var(--space-sm); margin-bottom: var(--space-lg); scrollbar-width: none; }
+.model-nav::-webkit-scrollbar { display: none; }

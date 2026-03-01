@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="/css/components.css">
   <link rel="stylesheet" href="/css/charts.css">
   <link rel="stylesheet" href="/css/math.css">
+  <link rel="stylesheet" href="/css/model.css">
 </head>
 <body>
 
@@ -17,6 +18,7 @@
     <span class="site-nav__brand">PyWorld3</span>
     <ul class="site-nav__links">
       <li><a href="#intro">Home</a></li>
+      <li><a href="#model">Model</a></li>
       <li><a href="#explore">Explore</a></li>
       <li><a href="#compare">Compare</a></li>
       <li><a href="#advanced">Advanced</a></li>
@@ -63,6 +65,23 @@
           Licensed under <a href="https://opensource.org/licenses/CECILL-2.1" target="_blank" rel="noopener">CeCILL 2.1</a> (GPL-compatible).
         </p>
       </footer>
+    </div>
+
+    <!-- MODEL VIEW -->
+    <div id="view-model" class="view">
+      <div class="hero">
+        <h1>How does the World3 model work?</h1>
+        <p>
+          In 1972, researchers built a computer model of civilization's trajectory.
+          It tracks five things: people, industrial output, food, pollution, and
+          natural resources. Below, we walk through the big questions it answers —
+          and show you exactly what it assumes.
+        </p>
+      </div>
+      <div id="model-nav-pills" class="model-nav"></div>
+      <div id="model-sections"></div>
+      <div id="model-assumptions"></div>
+      <div id="model-sources"></div>
     </div>
 
     <!-- EXPLORE VIEW -->
@@ -177,7 +196,9 @@
 <script src="/js/math-explainers.js"></script>
 <script src="/js/charts.js"></script>
 <script src="/js/router.js"></script>
+<script src="/js/model-sections.js"></script>
 <script src="/js/views/intro.js"></script>
+<script src="/js/views/model.js"></script>
 <script src="/js/views/explore.js"></script>
 <script src="/js/views/compare.js"></script>
 <script src="/js/views/advanced.js"></script>
