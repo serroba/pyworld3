@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PyWorld3 — World3 Scenario Explorer</title>
+  <link rel="stylesheet" href="/css/variables.css">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/charts.css">
+</head>
+<body>
+
+<nav class="site-nav">
+  <div class="container">
+    <span class="site-nav__brand">PyWorld3</span>
+    <ul class="site-nav__links">
+      <li><a href="#intro">Home</a></li>
+      <li><a href="#explore">Explore</a></li>
+      <li><a href="#compare">Compare</a></li>
+      <li><a href="#advanced">Advanced</a></li>
+    </ul>
+  </div>
+</nav>
+
+<div id="app-shell">
+  <div class="container">
+
+    <!-- INTRO VIEW -->
+    <div id="view-intro" class="view">
+      <div class="hero">
+        <h1>What happens to civilization by 2100?</h1>
+        <p>
+          In 1972, a team of researchers at MIT built <strong>World3</strong> — a computer
+          model that simulates how population, industrial output, food production, pollution,
+          and natural resources interact over time. Their findings, published in
+          <em>The Limits to Growth</em>, showed that business-as-usual leads to overshoot
+          and decline.
+        </p>
+        <p>
+          This tool lets you explore those scenarios yourself. Pick a preset to see what
+          happens under different assumptions about technology, policy, and resources — or
+          tweak individual parameters in the Advanced editor.
+        </p>
+        <a href="#explore" class="btn btn-primary">Start exploring</a>
+      </div>
+
+      <h2 class="section-title">Choose a scenario</h2>
+      <div id="intro-presets" class="grid-2"></div>
+    </div>
+
+    <!-- EXPLORE VIEW -->
+    <div id="view-explore" class="view">
+      <h2 class="section-title">Explore a scenario</h2>
+      <div id="explore-pills" class="pill-group mb-lg"></div>
+      <div id="explore-status"></div>
+      <div id="explore-charts" class="grid-2"></div>
+      <div class="view-links">
+        <a href="#compare" class="btn btn-outline btn-sm">Compare scenarios</a>
+        <a href="#advanced" class="btn btn-outline btn-sm">Advanced editor</a>
+      </div>
+    </div>
+
+    <!-- COMPARE VIEW -->
+    <div id="view-compare" class="view">
+      <h2 class="section-title">Compare scenarios</h2>
+      <div class="grid-2 mb-lg">
+        <div>
+          <label for="compare-select-a" class="text-muted" style="font-size:var(--text-sm);">Scenario A</label>
+          <select id="compare-select-a"></select>
+        </div>
+        <div>
+          <label for="compare-select-b" class="text-muted" style="font-size:var(--text-sm);">Scenario B</label>
+          <select id="compare-select-b"></select>
+        </div>
+      </div>
+      <div id="compare-status"></div>
+      <div id="compare-metrics" class="card mb-lg"></div>
+      <div id="compare-charts" class="grid-2"></div>
+    </div>
+
+    <!-- ADVANCED VIEW -->
+    <div id="view-advanced" class="view">
+      <h2 class="section-title">Advanced: edit constants</h2>
+      <p class="text-muted mb-lg">
+        Adjust any of the World3 model constants below, then run a simulation
+        to see the effect. Each constant controls a specific aspect of the model.
+      </p>
+      <div id="advanced-accordions"></div>
+      <div class="mt-lg" style="display:flex;gap:var(--space-md);flex-wrap:wrap;">
+        <button id="advanced-run" class="btn btn-primary">Run simulation</button>
+        <button id="advanced-compare" class="btn btn-outline">Compare with Standard Run</button>
+      </div>
+      <div id="advanced-status" class="mt-lg"></div>
+      <div id="advanced-charts" class="grid-2 mt-lg"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Vendor -->
+<script src="/vendor/chart.min.js"></script>
+<!-- App modules (order matters: dependencies first) -->
+<script src="/js/api.js"></script>
+<script src="/js/state.js"></script>
+<script src="/js/ui.js"></script>
+<script src="/js/charts.js"></script>
+<script src="/js/router.js"></script>
+<script src="/js/views/intro.js"></script>
+<script src="/js/views/explore.js"></script>
+<script src="/js/views/compare.js"></script>
+<script src="/js/views/advanced.js"></script>
+<script src="/js/app.js"></script>
+
+</body>
+</html>

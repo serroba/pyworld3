@@ -175,6 +175,58 @@
         }
       }
     },
+    "/metadata/constants": {
+      "get": {
+        "summary": "Constant Metadata",
+        "description": "Return metadata (full name, unit, sector) for every tunable constant.",
+        "operationId": "constant_metadata_metadata_constants_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "type": "object"
+                  },
+                  "type": "object",
+                  "title": "Response Constant Metadata Metadata Constants Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/metadata/variables": {
+      "get": {
+        "summary": "Variable Metadata",
+        "description": "Return metadata (full name, unit, sector) for every output variable.",
+        "operationId": "variable_metadata_metadata_variables_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "type": "object"
+                  },
+                  "type": "object",
+                  "title": "Response Variable Metadata Metadata Variables Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/compare": {
       "post": {
         "summary": "Compare",

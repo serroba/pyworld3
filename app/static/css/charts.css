@@ -1,0 +1,30 @@
+.chart-panel {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--space-md);
+  box-shadow: var(--shadow);
+}
+
+.chart-panel__header {
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--space-sm);
+}
+
+.chart-panel__title {
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.chart-container {
+  position: relative;
+  height: 250px;
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .chart-container {
+    height: 300px;
+  }
+}

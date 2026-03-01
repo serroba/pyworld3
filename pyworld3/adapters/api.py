@@ -1,10 +1,17 @@
 import logging
+from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from pyworld3.application.container import get_service
-from pyworld3.domain.constants import CONSTANT_DEFAULTS, DEFAULT_OUTPUT_VARIABLES
+from pyworld3.domain.constants import (
+    CONSTANT_DEFAULTS,
+    CONSTANT_META,
+    DEFAULT_OUTPUT_VARIABLES,
+    VARIABLE_META,
+)
 from pyworld3.domain.exceptions import SimulationValidationError
 
 from .schemas import (
@@ -142,6 +149,24 @@ def simulate_preset(
         )
 
 
+@app.get("/metadata/constants")
+def constant_metadata() -> dict[str, dict[str, str]]:
+    """Return metadata (full name, unit, sector) for every tunable constant."""
+    return {
+        name: {"full_name": meta.full_name, "unit": meta.unit, "sector": meta.sector}
+        for name, meta in CONSTANT_META.items()
+    }
+
+
+@app.get("/metadata/variables")
+def variable_metadata() -> dict[str, dict[str, str]]:
+    """Return metadata (full name, unit, sector) for every output variable."""
+    return {
+        name: {"full_name": meta.full_name, "unit": meta.unit, "sector": meta.sector}
+        for name, meta in VARIABLE_META.items()
+    }
+
+
 @app.post("/compare", response_model=CompareResponse)
 def compare(body: CompareRequest):
     """Compare two scenarios side by side."""
@@ -189,3 +214,12 @@ def compare(body: CompareRequest):
         results_b=resp_b,
         metrics=metrics,
     )
+
+
+# ---------------------------------------------------------------------------
+# Static files (must be registered after all API routes)
+# ---------------------------------------------------------------------------
+
+_static_dir = Path(__file__).resolve().parent.parent.parent / "app" / "static"
+if _static_dir.is_dir():
+    app.mount("/", StaticFiles(directory=_static_dir, html=True), name="static")

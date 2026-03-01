@@ -199,3 +199,54 @@ def test_compare_inline_requests():
 def test_compare_must_specify_scenario_a():
     resp = client.post("/compare", json={})
     assert resp.status_code == 422
+
+
+# --- Metadata endpoints ---
+
+
+def test_constant_metadata_endpoint():
+    resp = client.get("/metadata/constants")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "nri" in data
+    assert data["nri"]["full_name"] == "Initial nonrenewable resources"
+    assert data["nri"]["unit"] == "resource units"
+    assert data["nri"]["sector"] == "Resources"
+    # Should cover all constants that have metadata
+    from pyworld3.domain.constants import CONSTANT_META
+
+    assert set(data.keys()) == set(CONSTANT_META.keys())
+
+
+def test_variable_metadata_endpoint():
+    resp = client.get("/metadata/variables")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "pop" in data
+    assert data["pop"]["full_name"] == "Total population"
+    assert data["pop"]["unit"] == "people"
+    assert data["pop"]["sector"] == "Population"
+    from pyworld3.domain.constants import VARIABLE_META
+
+    assert set(data.keys()) == set(VARIABLE_META.keys())
+
+
+# --- Static file serving ---
+
+
+def test_static_index_served():
+    resp = client.get("/")
+    assert resp.status_code == 200
+    assert "PyWorld3" in resp.text
+
+
+def test_static_js_served():
+    resp = client.get("/js/app.js")
+    assert resp.status_code == 200
+    assert "State" in resp.text
+
+
+def test_static_css_served():
+    resp = client.get("/css/variables.css")
+    assert resp.status_code == 200
+    assert "--color-primary" in resp.text
