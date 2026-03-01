@@ -4,7 +4,8 @@ COPY --from=ghcr.io/astral-sh/uv:0.10.2 /uv /uvx /bin/
 
 WORKDIR /app
 
-COPY pyproject.toml ./
+COPY pyproject.toml README.md ./
+COPY pyworld3/__init__.py pyworld3/__init__.py
 RUN uv sync --no-dev --extra app
 
 COPY pyworld3/ pyworld3/
