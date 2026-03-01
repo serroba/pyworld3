@@ -9,6 +9,7 @@
 + [Web Client](#Web-Client)
 + [REST API](#REST-API)
 + [CLI](#CLI)
++ [OWID Data Integration](#OWID-Data-Integration)
 + [Docker](#Docker)
 + [Architecture](#Architecture)
 + [How to tune your own simulation](#How-to-tune-your-own-simulation)
@@ -117,6 +118,8 @@ The FastAPI server exposes these endpoints:
 | `POST` | `/simulate` | Run a simulation with optional constant overrides |
 | `POST` | `/simulate/preset/{name}` | Run a preset scenario |
 | `POST` | `/compare` | Compare two scenarios side by side |
+| `POST` | `/calibrate` | Calibrate constants from OWID data (requires `owid` extras) |
+| `POST` | `/validate` | Validate simulation output against OWID data (requires `owid` extras) |
 
 # CLI
 
@@ -129,6 +132,114 @@ The `pyworld3` command provides the following subcommands:
 | `variables` | Print output variable names | `--describe` |
 | `presets` | List built-in presets | — |
 | `compare` | Compare two scenarios | `--preset` (×2), `--from` (×2), `--plot` |
+| `calibrate` | Calibrate constants from OWID data | `--reference-year`, `--entity`, `--param`, `--pretty` |
+| `validate` | Validate simulation against OWID data | `--preset`, `--from`, `--entity`, `--var`, `--summary` |
+
+# OWID Data Integration
+
+PyWorld3 can connect to [Our World in Data](https://ourworldindata.org/) (OWID) to **calibrate** model constants from observed data and **validate** simulation outputs against real-world time series. This is an optional feature that requires extra dependencies:
+
+```bash
+pip install pyworld3[owid]
+# or
+uv add pyworld3[owid]
+```
+
+## Calibration
+
+Calibration derives World3 constants from OWID data at a reference year. It covers population cohorts (p1i-p4i), desired family size (dcfsn), industrial capital (ici), and more.
+
+**CLI:**
+```bash
+# Calibrate all available constants for 1970
+pyworld3 calibrate --reference-year 1970 --pretty
+
+# Calibrate specific constants
+pyworld3 calibrate --param p1i --param p2i --param p3i --param p4i --pretty
+```
+
+**Python:**
+```python
+from pyworld3.application.calibrate import CalibrationService
+from pyworld3.application.ports import CalibrationParams
+
+service = CalibrationService()
+result = service.calibrate(CalibrationParams(reference_year=1970))
+
+# Inspect calibrated values with provenance
+for name, cc in result.constants.items():
+    print(f"{name} = {cc.value:.4g}  (default: {cc.default_value:.4g}, "
+          f"confidence: {cc.confidence}, source: {cc.owid_indicator})")
+
+# Use calibrated constants in a simulation
+from pyworld3.application.simulate import SimulationService
+from pyworld3.application.ports import SimulationParams
+
+sim = SimulationService()
+sim_result = sim.run(SimulationParams(constants=result.to_constants_dict()))
+```
+
+**API:**
+```bash
+curl -X POST http://localhost:8000/calibrate \
+  -H "Content-Type: application/json" \
+  -d '{"reference_year": 1970}'
+```
+
+## Validation
+
+Validation compares simulation outputs against OWID time series, computing RMSE, MAPE, and Pearson correlation for each mapped variable over the overlapping period.
+
+**CLI:**
+```bash
+# Validate default simulation against OWID data
+pyworld3 validate --summary
+
+# Validate a specific preset
+pyworld3 validate --preset doubled-resources --summary
+
+# Validate specific variables
+pyworld3 validate --var pop --var le --pretty
+```
+
+**Python:**
+```python
+from pyworld3.application.simulate import SimulationService
+from pyworld3.application.validate import ValidationService
+from pyworld3.application.ports import SimulationParams, ValidationParams
+
+# Run simulation
+sim = SimulationService()
+sim_result = sim.run(SimulationParams())
+
+# Validate against OWID data
+validator = ValidationService()
+val_result = validator.validate(sim_result, ValidationParams())
+
+for name, metric in val_result.metrics.items():
+    print(f"{name}: RMSE={metric.rmse:.4g}, MAPE={metric.mape:.1f}%, "
+          f"r={metric.correlation:.3f} ({metric.n_points} points)")
+```
+
+## Data Sources
+
+| Sector | OWID Source | Key Indicators |
+|--------|-----------|----------------|
+| Population | World Bank WDI | Total population, life expectancy, birth/death rates, age cohorts |
+| Capital | World Bank WDI | GDP, GDP/capita, capital formation, industry share |
+| Energy | OWID Energy Mix | Primary energy per capita, fossil fuel/renewables share |
+| Resources | OWID Minerals | Mineral reserves and production |
+| Pollution | World Bank WDI | CO2 emissions per unit GDP |
+
+Data is fetched as parquet files from the OWID catalog and cached locally at `~/.cache/pyworld3/owid/` with a 30-day TTL. No API key is needed.
+
+## Confidence Levels
+
+Each mapping carries a confidence level reflecting how well the OWID indicator maps to the World3 concept:
+
+- **High** -- Direct correspondence (e.g., total population, life expectancy, birth/death rates)
+- **Medium** -- Reasonable proxy requiring transformation (e.g., GDP as proxy for industrial output, TFR for desired family size)
+- **Low** -- Weak proxy (e.g., CO2 as proxy for World3's aggregate "persistent pollution")
 
 # Docker
 
