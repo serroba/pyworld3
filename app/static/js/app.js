@@ -23,6 +23,7 @@
   Router.register("#explore", "view-explore", ExploreView.render);
   Router.register("#compare", "view-compare", CompareView.render);
   Router.register("#advanced", "view-advanced", AdvancedView.render);
+  Router.register("#calibrate", "view-calibrate", CalibrateView.render);
 
   Router.start();
 })();

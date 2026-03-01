@@ -245,6 +245,23 @@ const AdvancedView = (() => {
     const accordionEl = document.getElementById("advanced-accordions");
     if (accordionEl) buildAccordions(accordionEl);
 
+    // Apply calibrated constants if coming from the Calibrate view
+    if (State.calibratedConstants) {
+      for (const [name, value] of Object.entries(State.calibratedConstants)) {
+        const input = document.getElementById(`const-${name}`);
+        if (input) {
+          input.value = value;
+          // Also update the slider if within range
+          const slider = input.closest(".input-group")?.querySelector('input[type="range"]');
+          if (slider) {
+            slider.value = Math.min(Math.max(value, parseFloat(slider.min)), parseFloat(slider.max));
+          }
+          editedConstants[name] = value;
+        }
+      }
+      State.calibratedConstants = null;
+    }
+
     // Render chart grid once (charts update in-place on each simulation)
     const chartsEl = document.getElementById("advanced-charts");
     if (chartsEl) renderChartGrid(chartsEl);

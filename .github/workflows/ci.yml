@@ -24,7 +24,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install dependencies
-        run: uv sync --extra app --extra owid
+        run: uv sync --extra app
 
       - name: Run tests
         run: uv run pytest tests/ --cov=pyworld3 --cov-report=xml:coverage.xml

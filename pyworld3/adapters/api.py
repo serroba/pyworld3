@@ -5,7 +5,14 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
+from pyworld3.application.calibrate import CalibrationService
 from pyworld3.application.container import get_service
+from pyworld3.application.ports import (
+    SimulationResult,
+    TimeSeriesResult,
+    ValidationParams,
+)
+from pyworld3.application.validate import ValidationService
 from pyworld3.domain.constants import (
     CONSTANT_DEFAULTS,
     CONSTANT_META,
@@ -227,26 +234,13 @@ def compare(body: CompareRequest):
 
 @app.post("/calibrate", response_model=CalibrationResponse)
 def calibrate(request: CalibrationRequest | None = None):
-    """Calibrate World3 constants from OWID observed data.
-
-    Requires the ``owid`` optional dependency group.
-    """
+    """Calibrate World3 constants from OWID observed data."""
     if request is None:
         request = CalibrationRequest()
     try:
-        from pyworld3.application.calibrate import CalibrationService
-
         service = CalibrationService()
         result = service.calibrate(request.to_params())
         return CalibrationResponse.from_result(result)
-    except ImportError:
-        return JSONResponse(
-            status_code=501,
-            content={
-                "detail": "OWID dependencies not installed. "
-                "Install with: pip install pyworld3[owid]"
-            },
-        )
     except Exception:
         logger.exception("Unexpected error during calibration")
         return JSONResponse(
@@ -263,19 +257,13 @@ def validate_simulation(
     """Run a simulation and validate its outputs against OWID data.
 
     If no simulation_request is provided, runs with defaults.
-    Requires the ``owid`` optional dependency group.
     """
     if simulation_request is None:
         simulation_request = SimulationRequest()
     if validation_request is None:
         validation_request = ValidationRequest()
     try:
-        from pyworld3.application.validate import ValidationService
-
         sim_response = _run(simulation_request)
-        # Convert SimulationResponse back to SimulationResult for validation
-        from pyworld3.application.ports import SimulationResult, TimeSeriesResult
-
         sim_result = SimulationResult(
             year_min=sim_response.year_min,
             year_max=sim_response.year_max,
@@ -287,8 +275,6 @@ def validate_simulation(
                 for name, ts in sim_response.series.items()
             },
         )
-        from pyworld3.application.ports import ValidationParams
-
         service = ValidationService()
         result = service.validate(
             sim_result,
@@ -298,14 +284,6 @@ def validate_simulation(
             ),
         )
         return ValidationResponse.from_result(result)
-    except ImportError:
-        return JSONResponse(
-            status_code=501,
-            content={
-                "detail": "OWID dependencies not installed. "
-                "Install with: pip install pyworld3[owid]"
-            },
-        )
     except SimulationValidationError as exc:
         return JSONResponse(status_code=422, content={"detail": exc.safe_message})
     except Exception:

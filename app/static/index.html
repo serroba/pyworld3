@@ -20,6 +20,7 @@
       <li><a href="#explore">Explore</a></li>
       <li><a href="#compare">Compare</a></li>
       <li><a href="#advanced">Advanced</a></li>
+      <li><a href="#calibrate">Calibrate</a></li>
     </ul>
   </div>
 </nav>
@@ -110,6 +111,60 @@
       <div id="advanced-charts" class="grid-2 mt-lg"></div>
     </div>
 
+    <!-- CALIBRATE VIEW -->
+    <div id="view-calibrate" class="view">
+      <h2 class="section-title">Calibrate &amp; Validate</h2>
+      <p class="text-muted mb-lg">
+        Calibrate model constants and validate simulation output against real-world
+        observations from <a href="https://ourworldindata.org" target="_blank" rel="noopener">Our World in Data</a> (OWID).
+      </p>
+
+      <!-- Calibrate section -->
+      <div class="card mb-lg">
+        <h3 class="card__title">Calibrate constants from OWID</h3>
+        <p class="card__desc mb-lg">
+          Fetches observed data from Our World in Data for the chosen entity and reference year,
+          then fits World3 model constants to match the real-world observations. The table below
+          shows which OWID indicator was used for each constant and how confident the mapping is.
+        </p>
+        <div class="grid-2 mb-lg">
+          <div class="input-group">
+            <label for="calibrate-entity">Entity</label>
+            <input type="text" id="calibrate-entity" value="World" style="padding:var(--space-sm) var(--space-md);border:1px solid var(--color-border);border-radius:var(--radius-sm);font-size:var(--text-sm);min-height:40px;">
+          </div>
+          <div class="input-group">
+            <label for="calibrate-year">Reference year</label>
+            <input type="number" id="calibrate-year" value="1970" min="1900" max="2025" style="padding:var(--space-sm) var(--space-md);border:1px solid var(--color-border);border-radius:var(--radius-sm);font-size:var(--text-sm);min-height:40px;">
+          </div>
+        </div>
+        <div style="display:flex;gap:var(--space-md);flex-wrap:wrap;">
+          <button id="calibrate-run" class="btn btn-primary">Calibrate</button>
+          <button id="calibrate-apply" class="btn btn-outline" style="display:none;">Apply to Advanced</button>
+        </div>
+        <div id="calibrate-status" class="mt-lg"></div>
+        <div id="calibrate-results" class="mt-lg"></div>
+      </div>
+
+      <!-- Validate section -->
+      <div class="card mb-lg">
+        <h3 class="card__title">Validate against OWID observations</h3>
+        <p class="card__desc mb-lg">
+          Runs a default World3 simulation and compares each output variable against the
+          corresponding OWID time series. The metrics table shows how well the simulation
+          tracks observed data (RMSE, MAPE, correlation) and which OWID indicator each
+          variable is compared against.
+        </p>
+        <div class="input-group" style="max-width:300px;">
+          <label for="validate-entity">Entity</label>
+          <input type="text" id="validate-entity" value="World" style="padding:var(--space-sm) var(--space-md);border:1px solid var(--color-border);border-radius:var(--radius-sm);font-size:var(--text-sm);min-height:40px;">
+        </div>
+        <button id="validate-run" class="btn btn-primary">Validate</button>
+        <div id="validate-status" class="mt-lg"></div>
+        <div id="validate-results" class="mt-lg"></div>
+        <div id="validate-charts" class="grid-2 mt-lg"></div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -126,6 +181,7 @@
 <script src="/js/views/explore.js"></script>
 <script src="/js/views/compare.js"></script>
 <script src="/js/views/advanced.js"></script>
+<script src="/js/views/calibrate.js"></script>
 <script src="/js/app.js"></script>
 
 </body>

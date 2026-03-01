@@ -83,3 +83,26 @@ def test_advanced_run_simulation(page: Page, base_url: str):
     assert canvases.count() > 0
     # No error overlay
     assert page.locator("#advanced-charts .error-overlay").count() == 0
+
+
+def test_calibrate_view_loads(page: Page, base_url: str):
+    """Navigate to #calibrate → controls are visible."""
+    page.goto(f"{base_url}/#calibrate")
+    expect(page.locator("#view-calibrate")).to_be_visible()
+    expect(page.locator("#calibrate-entity")).to_be_visible()
+    expect(page.locator("#calibrate-year")).to_be_visible()
+    expect(page.locator("#calibrate-run")).to_be_visible()
+    expect(page.locator("#validate-entity")).to_be_visible()
+    expect(page.locator("#validate-run")).to_be_visible()
+
+
+def test_calibrate_runs(page: Page, base_url: str):
+    """Click Calibrate → results table or error card appears (no JS crash)."""
+    page.goto(f"{base_url}/#calibrate")
+    page.wait_for_selector("#calibrate-run", timeout=10_000)
+    page.click("#calibrate-run")
+    # Wait for either a results table or an error card to appear
+    page.wait_for_selector(
+        "#calibrate-results table, #calibrate-status .card",
+        timeout=30_000,
+    )
