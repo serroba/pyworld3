@@ -5,6 +5,12 @@
 [![License: CeCILL 2.1](https://img.shields.io/badge/licence-CeCILL%202.1-028181)](https://opensource.org/licenses/CECILL-2.1)
 
 + [Install & Hello World3](#Install-and-Hello-World3)
++ [Quick Start](#Quick-Start)
++ [Web Client](#Web-Client)
++ [REST API](#REST-API)
++ [CLI](#CLI)
++ [Docker](#Docker)
++ [Architecture](#Architecture)
 + [How to tune your own simulation](#How-to-tune-your-own-simulation)
 + [Licence](#Licence)
 + [How to cite PyWorld3 with Bibtex](#How-to-cite-PyWorld3-with-Bibtex)
@@ -59,6 +65,84 @@ trajectories of the:
 - index of persistent pollution (`PPOLX`) from the Persistent Pollution sector.
 
 ![](./img/result_standard_run.png)
+
+# Quick Start
+
+There are three ways to use PyWorld3:
+
+**1. CLI** — run simulations from the terminal:
+```bash
+pyworld3 simulate --preset standard-run --summary
+```
+
+**2. Web client** — interactive browser UI:
+```bash
+uv run uvicorn pyworld3.adapters.api:app --port 8000
+# Open http://localhost:8000
+```
+
+**3. Python library** — import and script directly:
+```python
+from pyworld3 import World3
+world3 = World3()
+world3.init_world3_constants()
+world3.init_world3_variables()
+world3.set_world3_table_functions()
+world3.set_world3_delay_functions()
+world3.run_world3()
+```
+
+# Web Client
+
+The web client is served at `/` when the API server is running. It has four views:
+
+| View | Description |
+|------|-------------|
+| **Intro** | Overview of the World3 model with preset scenario cards |
+| **Explore** | Pick a preset and view simulation charts interactively |
+| **Compare** | Side-by-side comparison of two scenarios with delta metrics |
+| **Advanced** | Edit any model constant with range sliders, then simulate |
+
+# REST API
+
+The FastAPI server exposes these endpoints:
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/presets` | List built-in scenario presets |
+| `GET` | `/constants` | Get all World3 constant defaults |
+| `GET` | `/variables` | Get default output variable names |
+| `GET` | `/metadata/constants` | Metadata (name, unit, sector) for all constants |
+| `GET` | `/metadata/variables` | Metadata (name, unit, sector) for all variables |
+| `POST` | `/simulate` | Run a simulation with optional constant overrides |
+| `POST` | `/simulate/preset/{name}` | Run a preset scenario |
+| `POST` | `/compare` | Compare two scenarios side by side |
+
+# CLI
+
+The `pyworld3` command provides the following subcommands:
+
+| Command | Description | Key flags |
+|---------|-------------|-----------|
+| `simulate` | Run a simulation and output JSON | `--preset`, `--from`, `--set name=val`, `--var`, `--summary`, `--plot` |
+| `constants` | Print constant defaults | `--describe` |
+| `variables` | Print output variable names | `--describe` |
+| `presets` | List built-in presets | — |
+| `compare` | Compare two scenarios | `--preset` (×2), `--from` (×2), `--plot` |
+
+# Docker
+
+Build and run with Docker:
+```bash
+docker build -t pyworld3 .
+docker run -p 8000:8000 pyworld3
+```
+
+The container starts a Uvicorn server on port 8000, serving both the REST API and web client.
+
+# Architecture
+
+PyWorld3 uses a hexagonal (ports-and-adapters) architecture. The core simulation logic in `pyworld3/` is framework-agnostic and exposes a `SimulationPort` interface. Adapters in `pyworld3/adapters/` implement the CLI (Typer), REST API (FastAPI), and a lightweight dependency-injection container wires them together. See the [`docs/`](./docs/) directory for detailed model reference and design notes.
 
 # How to tune your own simulation
 

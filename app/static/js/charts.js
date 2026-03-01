@@ -167,5 +167,72 @@ const Charts = (() => {
     destroy(canvas) {
       destroyIfExists(canvas);
     },
+
+    /**
+     * Append a math-explainer section to a chart panel.
+     * @param {HTMLElement} panel - The .chart-panel element.
+     * @param {string} groupId - Chart group ID (may include cmp-/adv- prefix).
+     */
+    renderExplainer(panel, groupId) {
+      // Normalize prefixed IDs to base key
+      const baseId = groupId.replace(/^(?:cmp-|adv-)/, "");
+      const data = typeof MATH_EXPLAINERS !== "undefined" && MATH_EXPLAINERS[baseId];
+      if (!data) return;
+
+      const wrapper = document.createElement("div");
+      wrapper.className = "math-explainer";
+
+      // Outer details: "How does this work?"
+      const outer = document.createElement("details");
+      const outerSummary = document.createElement("summary");
+      outerSummary.textContent = "How does this work?";
+      outer.appendChild(outerSummary);
+
+      const text = document.createElement("p");
+      text.className = "explainer-text";
+      text.textContent = data.plain;
+      outer.appendChild(text);
+
+      // Inner details: "See the equations"
+      if (data.equations && data.equations.length) {
+        const inner = document.createElement("details");
+        const innerSummary = document.createElement("summary");
+        innerSummary.textContent = "See the equations";
+        inner.appendChild(innerSummary);
+
+        data.equations.forEach((eq) => {
+          const block = document.createElement("div");
+          block.className = "eq-block";
+          const label = document.createElement("span");
+          label.className = "eq-label";
+          label.textContent = eq.label + ": ";
+          block.appendChild(label);
+          const eqSpan = document.createElement("span");
+          eqSpan.className = "eq";
+          eqSpan.innerHTML = eq.html;
+          block.appendChild(eqSpan);
+          inner.appendChild(block);
+        });
+
+        outer.appendChild(inner);
+      }
+
+      // Variable tags
+      if (data.variables && data.variables.length) {
+        const tags = document.createElement("div");
+        tags.className = "explainer-vars";
+        data.variables.forEach((v) => {
+          const tag = document.createElement("span");
+          tag.className = "var-tag";
+          const meta = State.variableMeta[v];
+          tag.textContent = meta ? `${v}: ${meta.full_name}` : v;
+          tags.appendChild(tag);
+        });
+        outer.appendChild(tags);
+      }
+
+      wrapper.appendChild(outer);
+      panel.appendChild(wrapper);
+    },
   };
 })();

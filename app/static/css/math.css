@@ -1,0 +1,107 @@
+/* Math explainer styles — progressive disclosure under chart panels */
+
+.math-explainer {
+  margin-top: var(--space-sm);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+}
+
+.math-explainer details {
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--space-xs);
+}
+
+.math-explainer summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--color-primary);
+  padding: var(--space-xs) 0;
+  user-select: none;
+}
+
+.math-explainer summary:hover {
+  opacity: 0.8;
+}
+
+.math-explainer .explainer-text {
+  color: var(--color-text-muted, #555);
+  margin: var(--space-xs) 0 var(--space-sm);
+}
+
+/* Equation block */
+.eq-block {
+  margin: var(--space-xs) 0;
+}
+
+.eq-label {
+  font-weight: 600;
+  color: var(--color-text);
+  margin-right: var(--space-xs);
+}
+
+.eq {
+  font-family: "Georgia", "Times New Roman", serif;
+  font-size: 1.05em;
+  white-space: nowrap;
+  overflow-x: auto;
+  display: inline-block;
+  max-width: 100%;
+}
+
+.eq-var {
+  font-style: italic;
+}
+
+/* Fraction layout */
+.eq-frac {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  vertical-align: middle;
+  margin: 0 0.15em;
+  font-size: 0.85em;
+  line-height: 1.2;
+}
+
+.eq-frac .eq-num {
+  border-bottom: 1px solid currentColor;
+  padding: 0 0.2em 1px;
+}
+
+.eq-frac .eq-den {
+  padding: 1px 0.2em 0;
+}
+
+/* Subscript */
+.eq-sub {
+  font-size: 0.75em;
+  vertical-align: sub;
+}
+
+/* Variable tags */
+.explainer-vars {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  margin-top: var(--space-sm);
+}
+
+.var-tag {
+  display: inline-block;
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--color-surface-alt, #f0f0f0);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  font-family: monospace;
+}
+
+/* Horizontal scroll for wide equations on mobile */
+@media (max-width: 639px) {
+  .eq {
+    display: block;
+    overflow-x: auto;
+    padding-bottom: 2px;
+  }
+}

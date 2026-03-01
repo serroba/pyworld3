@@ -60,6 +60,7 @@ const CompareView = (() => {
       wrap.appendChild(canvas);
       panel.appendChild(header);
       panel.appendChild(wrap);
+      Charts.renderExplainer(panel, group.id);
       container.appendChild(panel);
     });
   }
