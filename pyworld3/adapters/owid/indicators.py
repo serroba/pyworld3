@@ -25,19 +25,22 @@ class OWIDIndicator:
 # World Development Indicators (WDI) — World Bank via OWID
 # ---------------------------------------------------------------------------
 
-_WDI_BASE = (
-    "https://catalog.ourworldindata.org/garden/wb/2024-10-07"
-    "/world_development_indicators"
-)
+_WDI_BASE = "https://catalog.ourworldindata.org/garden/worldbank_wdi/2025-09-08/wdi"
 
-_WDI_PARQUET = f"{_WDI_BASE}/world_development_indicators.parquet"
+_WDI_PARQUET = f"{_WDI_BASE}/wdi.parquet"
 
 # ---------------------------------------------------------------------------
 # Energy — OWID energy dataset
 # ---------------------------------------------------------------------------
 
-_ENERGY_BASE = "https://catalog.ourworldindata.org/garden/energy/2024-11-20/energy_mix"
+_ENERGY_BASE = "https://catalog.ourworldindata.org/garden/energy/2025-06-27/energy_mix"
 _ENERGY_PARQUET = f"{_ENERGY_BASE}/energy_mix.parquet"
+
+_PRIMARY_ENERGY_BASE = (
+    "https://catalog.ourworldindata.org/garden/energy/2025-06-27"
+    "/primary_energy_consumption"
+)
+_PRIMARY_ENERGY_PARQUET = f"{_PRIMARY_ENERGY_BASE}/primary_energy_consumption.parquet"
 
 # ---------------------------------------------------------------------------
 # Minerals — OWID minerals dataset
@@ -164,8 +167,8 @@ OWID_INDICATORS: dict[str, OWIDIndicator] = {
     "primary_energy_per_capita": OWIDIndicator(
         name="primary_energy_per_capita",
         description="Primary energy consumption per capita",
-        parquet_url=_ENERGY_PARQUET,
-        column="primary_energy_per_capita__kwh",
+        parquet_url=_PRIMARY_ENERGY_PARQUET,
+        column="primary_energy_consumption_per_capita__kwh",
         unit="kWh/person",
         sector="Energy",
     ),
@@ -200,7 +203,7 @@ OWID_INDICATORS: dict[str, OWIDIndicator] = {
         name="co2_per_gdp",
         description="CO2 emissions per unit GDP (kg per PPP $ of GDP)",
         parquet_url=_WDI_PARQUET,
-        column="en_atm_co2e_pp_gd",
+        column="en_ghg_co2_rt_gdp_pp_kd",
         unit="kg/$",
         sector="Pollution",
     ),
