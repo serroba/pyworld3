@@ -1,0 +1,13 @@
+name = "Comprehensive Policy"
+description = "Combined technology, population, and agriculture improvements."
+
+[constants]
+nruf2 = 0.5
+imef = 0.05
+ppgf2 = 0.5
+dcfsn = 2.0
+zpgt = 2000
+pet = 2000
+lyf2 = 2.0
+alai2 = 4.0
+icor2 = 2.0

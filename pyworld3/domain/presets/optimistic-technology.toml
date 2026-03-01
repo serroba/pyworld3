@@ -1,0 +1,7 @@
+name = "Optimistic Technology"
+description = "What if technology halves pollution and doubles resource efficiency?"
+
+[constants]
+nruf2 = 0.5
+imef = 0.05
+ppgf2 = 0.5

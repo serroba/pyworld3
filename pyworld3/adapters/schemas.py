@@ -1,9 +1,60 @@
+import tomllib
+from pathlib import Path
+from typing import Any
+
 from pydantic import BaseModel, Field, model_validator
 
 from pyworld3.application.ports import (
     SimulationParams,
     SimulationResult,
 )
+
+
+class ScenarioFile(BaseModel):
+    """A scenario loaded from a TOML file."""
+
+    name: str = "Unnamed Scenario"
+    description: str = ""
+    year_min: float | None = None
+    year_max: float | None = None
+    dt: float | None = None
+    pyear: float | None = None
+    iphst: float | None = None
+    constants: dict[str, float] = Field(default_factory=dict)
+    output_variables: list[str] | None = None
+
+    @staticmethod
+    def from_toml(path: Path) -> "ScenarioFile":
+        with path.open("rb") as f:
+            data = tomllib.load(f)
+        return ScenarioFile(**data)
+
+    def to_simulation_request(self, **cli_overrides: object) -> "SimulationRequest":
+        """Build a SimulationRequest, letting cli_overrides take precedence."""
+        params: dict[str, Any] = {}
+        for field_name in ("year_min", "year_max", "dt", "pyear", "iphst"):
+            cli_val = cli_overrides.get(field_name)
+            file_val = getattr(self, field_name)
+            if cli_val is not None:
+                params[field_name] = cli_val
+            elif file_val is not None:
+                params[field_name] = file_val
+
+        # Merge constants: file values, then --set overrides on top
+        merged_constants = dict(self.constants)
+        cli_constants = cli_overrides.get("constants")
+        if isinstance(cli_constants, dict):
+            merged_constants.update(cli_constants)
+        params["constants"] = merged_constants or None
+
+        # Output variables: CLI --var overrides file
+        cli_vars = cli_overrides.get("output_variables")
+        if cli_vars is not None:
+            params["output_variables"] = cli_vars
+        elif self.output_variables is not None:
+            params["output_variables"] = self.output_variables
+
+        return SimulationRequest(**params)
 
 
 class SimulationRequest(BaseModel):

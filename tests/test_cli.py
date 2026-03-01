@@ -159,3 +159,164 @@ def test_simulate_plot(tmp_path):
     assert result.exit_code == 0
     assert plot_file.exists()
     assert plot_file.stat().st_size > 0
+
+
+# --- Scenario file tests ---
+
+
+def test_simulate_from_toml(tmp_path):
+    scenario = tmp_path / "test.toml"
+    scenario.write_text(
+        'name = "Test"\ndescription = "Test scenario"\n\n[constants]\nnri = 2e12\n'
+    )
+    result = runner.invoke(app, ["simulate", "--from", str(scenario), "--pretty"])
+    assert result.exit_code == 0
+    data = json.loads(result.stdout)
+    assert data["constants_used"]["nri"] == 2e12
+
+
+def test_simulate_from_toml_with_set_override(tmp_path):
+    """--set overrides constants from the TOML file."""
+    scenario = tmp_path / "test.toml"
+    scenario.write_text('name = "Test"\n\n[constants]\nnri = 2e12\n')
+    result = runner.invoke(
+        app, ["simulate", "--from", str(scenario), "--set", "nri=3e12", "--pretty"]
+    )
+    assert result.exit_code == 0
+    data = json.loads(result.stdout)
+    assert data["constants_used"]["nri"] == 3e12
+
+
+def test_simulate_from_toml_with_output_variables(tmp_path):
+    scenario = tmp_path / "test.toml"
+    scenario.write_text(
+        'name = "Test"\noutput_variables = ["pop", "nr"]\n\n[constants]\n'
+    )
+    result = runner.invoke(app, ["simulate", "--from", str(scenario)])
+    assert result.exit_code == 0
+    data = json.loads(result.stdout)
+    assert set(data["series"].keys()) == {"pop", "nr"}
+
+
+def test_simulate_from_nonexistent_file():
+    result = runner.invoke(app, ["simulate", "--from", "/nonexistent/file.toml"])
+    assert result.exit_code == 1
+
+
+def test_simulate_from_and_preset_mutually_exclusive(tmp_path):
+    scenario = tmp_path / "test.toml"
+    scenario.write_text('name = "Test"\n[constants]\n')
+    result = runner.invoke(
+        app, ["simulate", "--from", str(scenario), "--preset", "standard-run"]
+    )
+    assert result.exit_code == 1
+
+
+# --- Preset tests ---
+
+
+def test_presets_command():
+    result = runner.invoke(app, ["presets"])
+    assert result.exit_code == 0
+    assert "standard-run" in result.stdout
+    assert "doubled-resources" in result.stdout
+    assert "optimistic-technology" in result.stdout
+    assert "population-stability" in result.stdout
+    assert "comprehensive-policy" in result.stdout
+
+
+def test_simulate_with_preset():
+    result = runner.invoke(app, ["simulate", "--preset", "standard-run", "--summary"])
+    assert result.exit_code == 0
+    assert "World3 Simulation Summary" in result.stdout
+
+
+def test_simulate_with_preset_doubled_resources():
+    result = runner.invoke(
+        app, ["simulate", "--preset", "doubled-resources", "--pretty"]
+    )
+    assert result.exit_code == 0
+    data = json.loads(result.stdout)
+    assert data["constants_used"]["nri"] == 2e12
+
+
+def test_simulate_unknown_preset():
+    result = runner.invoke(app, ["simulate", "--preset", "nonexistent"])
+    assert result.exit_code == 1
+    assert "nonexistent" in result.output
+
+
+# --- Compare command tests ---
+
+
+def test_compare_two_presets():
+    result = runner.invoke(
+        app,
+        ["compare", "--preset", "standard-run", "--preset", "optimistic-technology"],
+    )
+    assert result.exit_code == 0
+    assert "Comparison:" in result.stdout
+    assert "Standard Run" in result.stdout
+    assert "Optimistic Technology" in result.stdout
+    assert "Population" in result.stdout
+    assert "Delta" in result.stdout
+
+
+def test_compare_single_preset_vs_defaults():
+    result = runner.invoke(app, ["compare", "--preset", "doubled-resources"])
+    assert result.exit_code == 0
+    assert "Standard Run" in result.stdout
+    assert "Doubled Resources" in result.stdout
+
+
+def test_compare_from_files(tmp_path):
+    scenario_a = tmp_path / "a.toml"
+    scenario_b = tmp_path / "b.toml"
+    scenario_a.write_text('name = "Scenario A"\n[constants]\n')
+    scenario_b.write_text('name = "Scenario B"\n[constants]\nnri = 2e12\n')
+    result = runner.invoke(
+        app, ["compare", "--from", str(scenario_a), "--from", str(scenario_b)]
+    )
+    assert result.exit_code == 0
+    assert "Scenario A" in result.stdout
+    assert "Scenario B" in result.stdout
+
+
+def test_compare_no_scenarios():
+    result = runner.invoke(app, ["compare"])
+    assert result.exit_code == 1
+
+
+def test_compare_too_many_scenarios():
+    result = runner.invoke(
+        app,
+        [
+            "compare",
+            "--preset",
+            "standard-run",
+            "--preset",
+            "doubled-resources",
+            "--preset",
+            "optimistic-technology",
+        ],
+    )
+    assert result.exit_code == 1
+
+
+def test_compare_with_plot(tmp_path):
+    plot_file = tmp_path / "compare.png"
+    result = runner.invoke(
+        app,
+        [
+            "compare",
+            "--preset",
+            "standard-run",
+            "--preset",
+            "doubled-resources",
+            "--plot",
+            str(plot_file),
+        ],
+    )
+    assert result.exit_code == 0
+    assert plot_file.exists()
+    assert plot_file.stat().st_size > 0

@@ -1,3 +1,4 @@
+import importlib.resources
 import json
 import sys
 from collections import defaultdict
@@ -15,9 +16,110 @@ from pyworld3.domain.constants import (
 )
 from pyworld3.domain.exceptions import SimulationValidationError
 
-from .schemas import SimulationRequest, SimulationResponse
+from .schemas import ScenarioFile, SimulationRequest, SimulationResponse
 
 app = typer.Typer(name="pyworld3", help="Run World3 what-if simulations")
+
+
+# ---------------------------------------------------------------------------
+# Scenario / preset helpers
+# ---------------------------------------------------------------------------
+
+_PRESET_PACKAGE = "pyworld3.domain.presets"
+
+
+def _list_presets() -> list[str]:
+    """Return sorted list of available preset names (without .toml extension)."""
+    files = importlib.resources.files(_PRESET_PACKAGE)
+    return sorted(
+        p.name.removesuffix(".toml")
+        for p in files.iterdir()
+        if p.name.endswith(".toml")
+    )
+
+
+def _load_preset(name: str) -> ScenarioFile:
+    """Load a built-in preset by name."""
+    ref = importlib.resources.files(_PRESET_PACKAGE).joinpath(f"{name}.toml")
+    with importlib.resources.as_file(ref) as path:
+        return ScenarioFile.from_toml(path)
+
+
+def _load_scenario_file(path: Path) -> ScenarioFile:
+    """Load a user-provided scenario TOML file."""
+    if not path.exists():
+        typer.echo(f"Error: scenario file not found: {path}", err=True)
+        raise typer.Exit(code=1)
+    try:
+        return ScenarioFile.from_toml(path)
+    except Exception as exc:
+        typer.echo(f"Error: failed to parse scenario file: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+
+
+def _parse_set_overrides(set_: list[str] | None) -> dict[str, float]:
+    """Parse --set name=value pairs into a dict."""
+    constants: dict[str, float] = {}
+    if set_:
+        for item in set_:
+            if "=" not in item:
+                typer.echo(
+                    f"Error: invalid --set format '{item}', expected name=value",
+                    err=True,
+                )
+                raise typer.Exit(code=1)
+            name, val = item.split("=", 1)
+            try:
+                constants[name] = float(val)
+            except ValueError as exc:
+                typer.echo(
+                    f"Error: cannot parse '{val}' as float for '{name}'", err=True
+                )
+                raise typer.Exit(code=1) from exc
+    return constants
+
+
+def _build_request(
+    *,
+    scenario: ScenarioFile | None,
+    year_min: float,
+    year_max: float,
+    dt: float,
+    pyear: float,
+    iphst: float,
+    constants: dict[str, float],
+    var: list[str] | None,
+) -> SimulationRequest:
+    """Build a SimulationRequest from a scenario file + CLI overrides."""
+    if scenario is not None:
+        # Only pass CLI values that differ from defaults as overrides
+        cli_overrides: dict[str, object] = {}
+        cli_overrides["year_min"] = year_min
+        cli_overrides["year_max"] = year_max
+        cli_overrides["dt"] = dt
+        cli_overrides["pyear"] = pyear
+        cli_overrides["iphst"] = iphst
+        if constants:
+            cli_overrides["constants"] = constants
+        if var:
+            cli_overrides["output_variables"] = var
+        return scenario.to_simulation_request(**cli_overrides)
+    return SimulationRequest(
+        year_min=year_min,
+        year_max=year_max,
+        dt=dt,
+        pyear=pyear,
+        iphst=iphst,
+        constants=constants or None,
+        output_variables=var or None,
+    )
+
+
+def _run_request(request: SimulationRequest) -> SimulationResponse:
+    """Execute a simulation request and return the response."""
+    service = get_service()
+    result = service.run(request.to_params())
+    return SimulationResponse.from_result(result)
 
 
 # ---------------------------------------------------------------------------
@@ -155,6 +257,147 @@ def _format_simulation_summary(response: SimulationResponse) -> str:
     return "\n".join(lines)
 
 
+def _format_value(value: float) -> str:
+    """Format a number in a human-friendly way."""
+    abs_val = abs(value)
+    if abs_val >= 1e12:
+        return f"{value / 1e12:.2f}T"
+    if abs_val >= 1e9:
+        return f"{value / 1e9:.2f}B"
+    if abs_val >= 1e6:
+        return f"{value / 1e6:.2f}M"
+    if abs_val >= 1e3:
+        return f"{value / 1e3:.2f}K"
+    return f"{value:.2f}"
+
+
+def _format_comparison(
+    name_a: str,
+    name_b: str,
+    resp_a: SimulationResponse,
+    resp_b: SimulationResponse,
+) -> str:
+    """Format a side-by-side comparison of two simulation results."""
+    year_range = f"{resp_a.year_min:.0f}-{resp_a.year_max:.0f}"
+    lines: list[str] = [
+        f"Comparison: {name_a} vs {name_b} ({year_range})",
+        "",
+    ]
+
+    # Key metrics to compare: (variable, label, unit, use_last_value)
+    metrics = [
+        ("pop", "Population", "", True),
+        ("iopc", "Industrial output/cap", "$", True),
+        ("fpc", "Food/capita", "kg", True),
+        ("ppolx", "Pollution index", "", True),
+        ("nrfr", "Resources remaining", "%", True),
+        ("le", "Life expectancy", "yr", True),
+    ]
+
+    col_w = max(len(name_a), len(name_b), 15)
+    header = f"{'':30s} {name_a:>{col_w}s}   {name_b:>{col_w}s}     {'Delta':>8s}"
+    lines.append(header)
+    lines.append("-" * len(header))
+
+    for var_name, label, unit, use_last in metrics:
+        series_a = resp_a.series.get(var_name)
+        series_b = resp_b.series.get(var_name)
+        if not series_a or not series_b:
+            continue
+
+        val_a = series_a.values[-1] if use_last else series_a.values[0]
+        val_b = series_b.values[-1] if use_last else series_b.values[0]
+
+        if var_name == "nrfr":
+            # Show as percentage
+            str_a = f"{val_a * 100:.0f}%"
+            str_b = f"{val_b * 100:.0f}%"
+        else:
+            suffix = f" {unit}" if unit else ""
+            str_a = f"{_format_value(val_a)}{suffix}"
+            str_b = f"{_format_value(val_b)}{suffix}"
+
+        if val_a != 0:
+            delta_pct = (val_b - val_a) / abs(val_a) * 100
+            sign = "+" if delta_pct >= 0 else ""
+            delta_str = f"{sign}{delta_pct:.0f}%"
+        else:
+            delta_str = "N/A"
+
+        lines.append(
+            f"  {label:<28s} {str_a:>{col_w}s}   {str_b:>{col_w}s}     {delta_str:>8s}"
+        )
+
+    return "\n".join(lines)
+
+
+def _generate_comparison_plot(
+    name_a: str,
+    name_b: str,
+    resp_a: SimulationResponse,
+    resp_b: SimulationResponse,
+    output_path: Path,
+) -> None:
+    """Generate an overlay comparison plot for two scenarios."""
+    import matplotlib
+
+    matplotlib.use("Agg")
+
+    import matplotlib.pyplot as plt
+    import numpy as np
+
+    time_a = np.array(resp_a.time)
+    time_b = np.array(resp_b.time)
+
+    plot_vars = {
+        "pop": ("Population", "#2196F3"),
+        "nr": ("Resources", "#4CAF50"),
+        "iopc": ("Industrial output/cap", "#F44336"),
+        "fpc": ("Food/capita", "#FF9800"),
+        "ppolx": ("Pollution index", "#9C27B0"),
+    }
+
+    _fig, axes = plt.subplots(len(plot_vars), 1, figsize=(10, 3 * len(plot_vars)))
+
+    for ax, (var_name, (label, color)) in zip(axes, plot_vars.items()):
+        series_a = resp_a.series.get(var_name)
+        series_b = resp_b.series.get(var_name)
+
+        if series_a:
+            ax.plot(
+                time_a,
+                series_a.values,
+                label=name_a,
+                color=color,
+                linewidth=2,
+                linestyle="-",
+            )
+        if series_b:
+            ax.plot(
+                time_b,
+                series_b.values,
+                label=name_b,
+                color=color,
+                linewidth=2,
+                linestyle="--",
+                alpha=0.8,
+            )
+
+        ax.set_ylabel(label, fontsize=10)
+        ax.legend(fontsize=9)
+        ax.grid(True, alpha=0.3)
+
+    axes[-1].set_xlabel("Year", fontsize=12)
+    axes[0].set_title(
+        f"Comparison: {name_a} vs {name_b}",
+        fontsize=14,
+    )
+
+    plt.tight_layout()
+    plt.savefig(str(output_path), dpi=150)
+    plt.close()
+
+
 # ---------------------------------------------------------------------------
 # Commands
 # ---------------------------------------------------------------------------
@@ -174,6 +417,14 @@ def simulate(
     var: Annotated[
         list[str] | None,
         typer.Option(help="Output variable name"),
+    ] = None,
+    from_file: Annotated[
+        Path | None,
+        typer.Option("--from", help="Load scenario from a TOML file"),
+    ] = None,
+    preset: Annotated[
+        str | None,
+        typer.Option(help="Use a built-in preset scenario"),
     ] = None,
     output: Annotated[
         Path | None,
@@ -196,42 +447,46 @@ def simulate(
         )
         raise typer.Exit(code=1)
 
-    constants: dict[str, float] = {}
-    if set_:
-        for item in set_:
-            if "=" not in item:
-                typer.echo(
-                    f"Error: invalid --set format '{item}', expected name=value",
-                    err=True,
-                )
-                raise typer.Exit(code=1)
-            name, val = item.split("=", 1)
-            try:
-                constants[name] = float(val)
-            except ValueError as exc:
-                typer.echo(
-                    f"Error: cannot parse '{val}' as float for '{name}'", err=True
-                )
-                raise typer.Exit(code=1) from exc
+    if from_file is not None and preset is not None:
+        typer.echo(
+            "Error: --from and --preset are mutually exclusive",
+            err=True,
+        )
+        raise typer.Exit(code=1)
+
+    # Load scenario from file or preset
+    scenario: ScenarioFile | None = None
+    if from_file is not None:
+        scenario = _load_scenario_file(from_file)
+    elif preset is not None:
+        available = _list_presets()
+        if preset not in available:
+            typer.echo(
+                f"Error: unknown preset '{preset}'. Available: {', '.join(available)}",
+                err=True,
+            )
+            raise typer.Exit(code=1)
+        scenario = _load_preset(preset)
+
+    constants = _parse_set_overrides(set_)
 
     try:
-        request = SimulationRequest(
+        request = _build_request(
+            scenario=scenario,
             year_min=year_min,
             year_max=year_max,
             dt=dt,
             pyear=pyear,
             iphst=iphst,
-            constants=constants or None,
-            output_variables=var or None,
+            constants=constants,
+            var=var,
         )
     except ValueError as exc:
         typer.echo(f"Error: {exc}", err=True)
         raise typer.Exit(code=1) from exc
 
     try:
-        service = get_service()
-        result = service.run(request.to_params())
-        response = SimulationResponse.from_result(result)
+        response = _run_request(request)
     except SimulationValidationError as exc:
         typer.echo(f"Error: {exc.safe_message}", err=True)
         raise typer.Exit(code=1) from exc
@@ -281,6 +536,93 @@ def variables(
         print(_format_variables_table())
     else:
         print(json.dumps(DEFAULT_OUTPUT_VARIABLES, indent=2))
+
+
+@app.command(name="presets")
+def list_presets():
+    """List available built-in scenario presets."""
+    available = _list_presets()
+    for name in available:
+        scenario = _load_preset(name)
+        typer.echo(f"  {name:<30s} {scenario.description}")
+
+
+@app.command()
+def compare(
+    from_file: Annotated[
+        list[Path] | None,
+        typer.Option("--from", help="Scenario TOML file (can specify up to 2)"),
+    ] = None,
+    preset: Annotated[
+        list[str] | None,
+        typer.Option(help="Built-in preset name (can specify up to 2)"),
+    ] = None,
+    plot: Annotated[
+        Path | None,
+        typer.Option(help="Save comparison plot to this path (png)"),
+    ] = None,
+):
+    """Compare two scenarios side by side.
+
+    Provide two scenarios via --from and/or --preset. If only one is given,
+    it is compared against the standard run (defaults).
+    """
+    # Collect scenarios
+    scenarios: list[ScenarioFile] = []
+
+    if from_file:
+        for path in from_file:
+            scenarios.append(_load_scenario_file(path))
+    if preset:
+        available = _list_presets()
+        for name in preset:
+            if name not in available:
+                typer.echo(
+                    f"Error: unknown preset '{name}'. "
+                    f"Available: {', '.join(available)}",
+                    err=True,
+                )
+                raise typer.Exit(code=1)
+            scenarios.append(_load_preset(name))
+
+    if len(scenarios) == 0:
+        typer.echo(
+            "Error: provide at least one scenario via --from or --preset", err=True
+        )
+        raise typer.Exit(code=1)
+    if len(scenarios) > 2:
+        typer.echo("Error: compare accepts at most 2 scenarios", err=True)
+        raise typer.Exit(code=1)
+
+    # If only one scenario, compare against defaults
+    if len(scenarios) == 1:
+        scenarios.insert(0, ScenarioFile(name="Standard Run"))
+
+    scenario_a, scenario_b = scenarios
+
+    try:
+        req_a = scenario_a.to_simulation_request()
+        req_b = scenario_b.to_simulation_request()
+    except ValueError as exc:
+        typer.echo(f"Error: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+
+    try:
+        resp_a = _run_request(req_a)
+        resp_b = _run_request(req_b)
+    except SimulationValidationError as exc:
+        typer.echo(f"Error: {exc.safe_message}", err=True)
+        raise typer.Exit(code=1) from exc
+
+    comparison = _format_comparison(scenario_a.name, scenario_b.name, resp_a, resp_b)
+    sys.stdout.write(comparison)
+    sys.stdout.write("\n")
+
+    if plot is not None:
+        _generate_comparison_plot(
+            scenario_a.name, scenario_b.name, resp_a, resp_b, plot
+        )
+        typer.echo(f"Comparison plot saved to {plot}", err=True)
 
 
 if __name__ == "__main__":

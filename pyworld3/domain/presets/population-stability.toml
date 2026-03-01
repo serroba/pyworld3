@@ -1,0 +1,7 @@
+name = "Population Stability"
+description = "What if desired family size drops and population stabilizes earlier?"
+
+[constants]
+dcfsn = 2.0
+zpgt = 2000
+pet = 2000

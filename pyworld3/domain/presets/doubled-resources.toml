@@ -1,0 +1,5 @@
+name = "Doubled Resources"
+description = "What if the initial nonrenewable resource base were twice as large?"
+
+[constants]
+nri = 2e12
