@@ -2,7 +2,7 @@
 import { readFile, writeFile } from "node:fs/promises";
 import process from "node:process";
 import { ModelData } from "../model-data.js";
-import { createFixtureBackedRuntime, formatSimulationSummary, renderSimulationSvg, } from "../core/index.js";
+import { createWorld3Core, } from "../core/index.js";
 const FIXTURE_PATH = new URL("../../data/standard-run-explore.json", import.meta.url);
 const TABLES_PATH = new URL("../../data/functions-table-world3.json", import.meta.url);
 function parseArgs(argv) {
@@ -53,21 +53,20 @@ async function loadWorld3Tables() {
 }
 async function main() {
     const options = parseArgs(process.argv.slice(2));
-    const runtime = createFixtureBackedRuntime(ModelData, loadWorld3Tables, loadStandardRunFixture);
-    await runtime.prepareStandardRun();
-    const result = await runtime.simulateStandardRun();
+    const core = createWorld3Core(ModelData, loadWorld3Tables, loadStandardRunFixture);
+    const result = await core.simulateStandardRun();
     if (options.summary) {
-        process.stdout.write(`${formatSimulationSummary(result, ModelData)}\n`);
+        process.stdout.write(`${await core.summarizeStandardRun()}\n`);
     }
     if (options.json) {
         process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
     }
     if (options.plotSvg) {
-        await writeFile(options.plotSvg, renderSimulationSvg(result), "utf8");
+        await writeFile(options.plotSvg, await core.renderStandardRunSvg(), "utf8");
         process.stderr.write(`Plot saved to ${options.plotSvg}\n`);
     }
     if (!options.summary && !options.json && !options.plotSvg) {
-        process.stdout.write(`${formatSimulationSummary(result, ModelData)}\n`);
+        process.stdout.write(`${await core.summarizeStandardRun()}\n`);
     }
 }
 main().catch((error) => {

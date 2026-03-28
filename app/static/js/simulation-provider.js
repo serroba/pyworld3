@@ -4,7 +4,7 @@
  * HTTP remains the default implementation for now. This lets us move the UI
  * onto a stable abstraction before introducing a browser-native engine.
  */
-import { createFixtureBackedRuntime, createRuntimeBackedLocalSimulationCore, } from "./core/index.js";
+import { createWorld3Core, } from "./core/index.js";
 const HttpSimulationProvider = {
     mode: "http",
     async simulatePreset(name, overrides) {
@@ -74,8 +74,8 @@ function createBrowserTablesLoader() {
     return async () => loadWorld3Tables();
 }
 function createLocalSimulationProvider(modelData) {
-    const runtime = createFixtureBackedRuntime(modelData, createBrowserTablesLoader(), createBrowserFixtureLoader());
-    const localCore = createRuntimeBackedLocalSimulationCore(modelData, runtime);
+    const core = createWorld3Core(modelData, createBrowserTablesLoader(), createBrowserFixtureLoader());
+    const localCore = core.createLocalSimulationCore();
     return {
         mode: "local",
         simulatePreset: localCore.simulatePreset,

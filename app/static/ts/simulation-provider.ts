@@ -13,8 +13,7 @@ import {
   type SimulationResult,
 } from "./simulation-contracts.js";
 import {
-  createFixtureBackedRuntime,
-  createRuntimeBackedLocalSimulationCore,
+  createWorld3Core,
 } from "./core/index.js";
 import type { LocalSimulationLoader, RawLookupTable } from "./core/index.js";
 
@@ -148,12 +147,12 @@ function createBrowserTablesLoader(): () => Promise<RawLookupTable[]> {
 function createLocalSimulationProvider(
   modelData: ModelDataPayload,
 ): SimulationProviderApi {
-  const runtime = createFixtureBackedRuntime(
+  const core = createWorld3Core(
     modelData,
     createBrowserTablesLoader(),
     createBrowserFixtureLoader(),
   );
-  const localCore = createRuntimeBackedLocalSimulationCore(modelData, runtime);
+  const localCore = core.createLocalSimulationCore();
   return {
     mode: "local",
     simulatePreset: localCore.simulatePreset,

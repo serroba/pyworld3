@@ -2,6 +2,7 @@ export {
   createFixtureBackedRuntime,
   prepareRuntime,
 } from "./browser-native-runtime.js";
+export { createWorld3Core } from "./world3-core.js";
 export {
   LOCAL_PROVIDER_ERROR,
   createLocalSimulationCore,
@@ -32,6 +33,7 @@ export type {
   RuntimePreparation,
   RuntimeTablesLoader,
 } from "./browser-native-runtime.js";
+export type { World3Core } from "./world3-core.js";
 export type {
   LocalSimulationCore,
   LocalSimulationLoader,

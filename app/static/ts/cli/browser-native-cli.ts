@@ -5,9 +5,7 @@ import process from "node:process";
 
 import { ModelData } from "../model-data.js";
 import {
-  createFixtureBackedRuntime,
-  formatSimulationSummary,
-  renderSimulationSvg,
+  createWorld3Core,
 } from "../core/index.js";
 import type { RawLookupTable } from "../core/index.js";
 import type { SimulationResult } from "../simulation-contracts.js";
@@ -73,16 +71,15 @@ async function loadWorld3Tables(): Promise<RawLookupTable[]> {
 
 async function main() {
   const options = parseArgs(process.argv.slice(2));
-  const runtime = createFixtureBackedRuntime(
+  const core = createWorld3Core(
     ModelData,
     loadWorld3Tables,
     loadStandardRunFixture,
   );
-  await runtime.prepareStandardRun();
-  const result = await runtime.simulateStandardRun();
+  const result = await core.simulateStandardRun();
 
   if (options.summary) {
-    process.stdout.write(`${formatSimulationSummary(result, ModelData)}\n`);
+    process.stdout.write(`${await core.summarizeStandardRun()}\n`);
   }
 
   if (options.json) {
@@ -90,14 +87,12 @@ async function main() {
   }
 
   if (options.plotSvg) {
-    await writeFile(options.plotSvg, renderSimulationSvg(result), "utf8");
+    await writeFile(options.plotSvg, await core.renderStandardRunSvg(), "utf8");
     process.stderr.write(`Plot saved to ${options.plotSvg}\n`);
   }
 
   if (!options.summary && !options.json && !options.plotSvg) {
-    process.stdout.write(
-      `${formatSimulationSummary(result, ModelData)}\n`,
-    );
+    process.stdout.write(`${await core.summarizeStandardRun()}\n`);
   }
 }
 
