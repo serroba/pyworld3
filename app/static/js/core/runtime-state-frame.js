@@ -84,15 +84,40 @@ export function createRuntimeStateFrame(prepared, fixture) {
     };
 }
 export function runtimeStateFrameToSimulationResult(frame) {
+    return assembleSimulationResultFromStepper(frame);
+}
+export function assembleSimulationResultFromStepper(frame) {
+    const stepper = createRuntimeStepper(frame);
+    const seriesNames = Array.from(frame.series.keys());
+    const seriesValues = new Map(seriesNames.map((name) => [name, []]));
+    const time = [];
+    while (!stepper.isDone()) {
+        const observation = stepper.next();
+        if (!observation) {
+            break;
+        }
+        time.push(observation.time);
+        for (const name of seriesNames) {
+            const value = observation.values[name];
+            if (value === undefined) {
+                throw new Error(`Runtime observation is missing '${name}' while assembling the simulation result.`);
+            }
+            const values = seriesValues.get(name);
+            if (!values) {
+                throw new Error(`Runtime result assembly is missing a buffer for '${name}'.`);
+            }
+            values.push(value);
+        }
+    }
     return {
         year_min: frame.request.year_min ?? frame.time[0] ?? 1900,
         year_max: frame.request.year_max ?? frame.time[frame.time.length - 1] ?? 2100,
         dt: frame.request.dt ?? 0.5,
-        time: Array.from(frame.time),
+        time,
         constants_used: { ...frame.constantsUsed },
-        series: Object.fromEntries(Array.from(frame.series.entries(), ([name, values]) => [
+        series: Object.fromEntries(Array.from(seriesValues.entries(), ([name, values]) => [
             name,
-            { name, values: Array.from(values) },
+            { name, values },
         ])),
     };
 }

@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 
 import {
+  assembleSimulationResultFromStepper,
   createRuntimeStepper,
   createRuntimeStateFrame,
   listRuntimeObservations,
@@ -81,6 +82,33 @@ describe("runtime state frame", () => {
       constants_used: { nri: 200 },
       series: {
         nrfr: { name: "nrfr", values: [0.5, 0.45, 0.4] },
+      },
+    });
+  });
+
+  test("can assemble the public simulation result by stepping observations", () => {
+    const prepared = prepareRuntime(
+      ModelData,
+      {
+        year_min: 1900,
+        year_max: 1902,
+        dt: 1,
+        output_variables: ["pop", "nrfr"],
+      },
+      tables,
+    );
+
+    const frame = createRuntimeStateFrame(prepared, fixture);
+
+    expect(assembleSimulationResultFromStepper(frame)).toEqual({
+      year_min: 1900,
+      year_max: 1902,
+      dt: 1,
+      time: [1900, 1901, 1902],
+      constants_used: { nri: 100 },
+      series: {
+        pop: { name: "pop", values: [10, 14, 18] },
+        nrfr: { name: "nrfr", values: [1, 0.9, 0.8] },
       },
     });
   });

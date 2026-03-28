@@ -4,5 +4,5 @@ export { LOCAL_PROVIDER_ERROR, createLocalSimulationCore, createRuntimeBackedLoc
 export { createSeriesBuffer, createTimeGrid, Delay3, Dlinf3, Smooth, } from "./runtime-primitives.js";
 export { formatSimulationSummary, renderSimulationSvg, } from "./simulation-artifacts.js";
 export { projectSimulationResult } from "./simulation-results.js";
-export { createRuntimeStepper, createRuntimeStateFrame, listRuntimeObservations, observeRuntimeStateAt, populateSeriesBufferFromStepper, runtimeStateFrameToSimulationResult, } from "./runtime-state-frame.js";
+export { assembleSimulationResultFromStepper, createRuntimeStepper, createRuntimeStateFrame, listRuntimeObservations, observeRuntimeStateAt, populateSeriesBufferFromStepper, runtimeStateFrameToSimulationResult, } from "./runtime-state-frame.js";
 export { createLookupInterpolator, createLookupLibrary, evaluateLookupTable, normalizeLookupTable, } from "./world3-tables.js";
