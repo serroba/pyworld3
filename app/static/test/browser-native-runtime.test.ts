@@ -100,4 +100,40 @@ describe("browser-native runtime", () => {
       },
     });
   });
+
+  test("derives nrfr natively through the runtime projection seam", async () => {
+    const runtime = createFixtureBackedRuntime(
+      ModelData,
+      async () => tables,
+      async () => ({
+        year_min: 1900,
+        year_max: 1902,
+        dt: 0.5,
+        time: [1900, 1900.5, 1901, 1901.5, 1902],
+        constants_used: { nri: 100 },
+        series: {
+          nr: { name: "nr", values: [100, 95, 90, 85, 80] },
+          nrfr: { name: "nrfr", values: [7, 7, 7, 7, 7] },
+        },
+      }),
+    );
+
+    await expect(
+      runtime.simulateStandardRun({
+        year_min: 1900,
+        year_max: 1902,
+        dt: 1,
+        output_variables: ["nrfr"],
+      }),
+    ).resolves.toEqual({
+      year_min: 1900,
+      year_max: 1902,
+      dt: 1,
+      time: [1900, 1901, 1902],
+      constants_used: { nri: 100 },
+      series: {
+        nrfr: { name: "nrfr", values: [1, 0.9, 0.8] },
+      },
+    });
+  });
 });

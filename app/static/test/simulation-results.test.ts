@@ -24,6 +24,7 @@ const fixture: SimulationResult = {
   series: {
     pop: { name: "pop", values: [10, 12, 14, 16, 18] },
     nr: { name: "nr", values: [100, 95, 90, 85, 80] },
+    nrfr: { name: "nrfr", values: [9, 9, 9, 9, 9] },
   },
 };
 
@@ -74,6 +75,54 @@ describe("simulation result projection", () => {
 
     expect(() => projectSimulationResult(prepared, fixture)).toThrow(
       "cannot project year 1900.3",
+    );
+  });
+
+  test("derives nrfr natively from nr and resolved nri", () => {
+    const prepared = prepareRuntime(
+      ModelData,
+      {
+        year_min: 1900,
+        year_max: 1902,
+        dt: 1,
+        output_variables: ["nrfr"],
+        constants: { nri: 100 },
+      },
+      tables,
+    );
+
+    expect(projectSimulationResult(prepared, fixture)).toEqual({
+      year_min: 1900,
+      year_max: 1902,
+      dt: 1,
+      time: [1900, 1901, 1902],
+      constants_used: { nri: 100 },
+      series: {
+        nrfr: { name: "nrfr", values: [1, 0.9, 0.8] },
+      },
+    });
+  });
+
+  test("fails clearly when nrfr is requested but nr is unavailable", () => {
+    const prepared = prepareRuntime(
+      ModelData,
+      {
+        year_min: 1900,
+        year_max: 1902,
+        dt: 1,
+        output_variables: ["nrfr"],
+      },
+      tables,
+    );
+    const fixtureWithoutNr = {
+      ...fixture,
+      series: {
+        pop: fixture.series.pop!,
+      },
+    } satisfies SimulationResult;
+
+    expect(() => projectSimulationResult(prepared, fixtureWithoutNr)).toThrow(
+      "cannot derive 'nrfr' because the source variable 'nr' is missing",
     );
   });
 });
