@@ -5,6 +5,7 @@ import {
   buildSimulationRequestFromPreset,
 } from "../simulation-contracts.js";
 import { createTimeGrid } from "./runtime-primitives.js";
+import { projectSimulationResult } from "./simulation-results.js";
 import {
   type LookupInterpolator,
   type RawLookupTable,
@@ -31,6 +32,22 @@ export type BrowserNativeRuntime = {
     options?: { signal?: AbortSignal },
   ) => Promise<SimulationResult>;
 };
+
+function hasRequestOverrides(request?: SimulationRequest): boolean {
+  if (!request) {
+    return false;
+  }
+
+  return Object.entries(request).some(([, value]) => {
+    if (Array.isArray(value)) {
+      return value.length > 0;
+    }
+    if (value && typeof value === "object") {
+      return Object.keys(value).length > 0;
+    }
+    return value !== undefined;
+  });
+}
 
 export function prepareRuntime(
   modelData: ModelDataPayload,
@@ -88,8 +105,15 @@ export function createFixtureBackedRuntime(
       return prepareRuntime(modelData, request, tables);
     },
 
-    async simulateStandardRun(_overrides, options) {
-      return getFixture(options);
+    async simulateStandardRun(overrides = {}, options) {
+      const fixture = await getFixture(options);
+
+      if (!hasRequestOverrides(overrides)) {
+        return fixture;
+      }
+
+      const prepared = await this.prepareStandardRun(overrides);
+      return projectSimulationResult(prepared, fixture);
     },
   };
 }
