@@ -5,7 +5,7 @@
  * HTTP remains the default implementation for now. This lets us move the UI
  * onto a stable abstraction before introducing a browser-native engine.
  */
-const SimulationProvider = {
+const HttpSimulationProvider = {
     mode: "http",
     async simulatePreset(name, overrides) {
         return API.simulatePreset(name, overrides);
@@ -17,4 +17,23 @@ const SimulationProvider = {
         return API.compare(scenarioA, scenarioB);
     },
 };
+const LOCAL_PROVIDER_ERROR = "Local simulation provider is not implemented yet. Switch back to HTTP mode.";
+const LocalSimulationProvider = {
+    mode: "local",
+    async simulatePreset() {
+        throw new Error(LOCAL_PROVIDER_ERROR);
+    },
+    async simulate() {
+        throw new Error(LOCAL_PROVIDER_ERROR);
+    },
+    async compare() {
+        throw new Error(LOCAL_PROVIDER_ERROR);
+    },
+};
+function resolveProviderMode() {
+    return window.__PYWORLD3_PROVIDER_MODE__ === "local" ? "local" : "http";
+}
+const SimulationProvider = resolveProviderMode() === "local"
+    ? LocalSimulationProvider
+    : HttpSimulationProvider;
 window.SimulationProvider = SimulationProvider;

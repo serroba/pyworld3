@@ -255,6 +255,13 @@ def test_static_model_data_served():
     assert "standard-run" in resp.text
 
 
+def test_static_simulation_provider_served():
+    resp = client.get("/js/simulation-provider.js")
+    assert resp.status_code == 200
+    assert "const HttpSimulationProvider" in resp.text
+    assert "LocalSimulationProvider" in resp.text
+
+
 def test_static_css_served():
     resp = client.get("/css/variables.css")
     assert resp.status_code == 200

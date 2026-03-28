@@ -13,9 +13,10 @@ type ScenarioSpec = {
 type SimulationRequest = Record<string, unknown>;
 type SimulationResult = Record<string, unknown>;
 type CompareResult = Record<string, unknown>;
+type ProviderMode = "http" | "local";
 
 type SimulationProviderApi = {
-  mode: "http";
+  mode: ProviderMode;
   simulatePreset: (
     name: string,
     overrides?: SimulationRequest,
@@ -47,9 +48,10 @@ declare const API: {
 
 interface Window {
   SimulationProvider: SimulationProviderApi;
+  __PYWORLD3_PROVIDER_MODE__?: ProviderMode;
 }
 
-const SimulationProvider: SimulationProviderApi = {
+const HttpSimulationProvider: SimulationProviderApi = {
   mode: "http",
 
   async simulatePreset(name, overrides) {
@@ -64,5 +66,33 @@ const SimulationProvider: SimulationProviderApi = {
     return API.compare(scenarioA, scenarioB);
   },
 };
+
+const LOCAL_PROVIDER_ERROR =
+  "Local simulation provider is not implemented yet. Switch back to HTTP mode.";
+
+const LocalSimulationProvider: SimulationProviderApi = {
+  mode: "local",
+
+  async simulatePreset() {
+    throw new Error(LOCAL_PROVIDER_ERROR);
+  },
+
+  async simulate() {
+    throw new Error(LOCAL_PROVIDER_ERROR);
+  },
+
+  async compare() {
+    throw new Error(LOCAL_PROVIDER_ERROR);
+  },
+};
+
+function resolveProviderMode(): ProviderMode {
+  return window.__PYWORLD3_PROVIDER_MODE__ === "local" ? "local" : "http";
+}
+
+const SimulationProvider =
+  resolveProviderMode() === "local"
+    ? LocalSimulationProvider
+    : HttpSimulationProvider;
 
 window.SimulationProvider = SimulationProvider;
