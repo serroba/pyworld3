@@ -24,10 +24,13 @@ export { projectSimulationResult } from "./simulation-results.js";
 export {
   assembleSimulationResultFromStepper,
   createReplayStateDefinition,
+  createDerivedSeriesDefinition,
+  createNrfrDerivedDefinition,
   createRuntimeStepper,
   createRuntimeStateFrame,
   listRuntimeObservations,
   observeRuntimeStateAt,
+  populateDerivedBufferFromDefinition,
   populateSeriesBufferFromStepper,
   populateStateBufferFromDefinition,
   populateStateBufferFromStepper,
@@ -47,6 +50,7 @@ export type {
   RuntimeTablesLoader,
 } from "./browser-native-runtime.js";
 export type {
+  RuntimeDerivedDefinition,
   RuntimeObservation,
   RuntimeSeriesDeriver,
   RuntimeStateAdvance,

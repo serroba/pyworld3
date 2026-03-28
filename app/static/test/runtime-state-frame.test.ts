@@ -3,10 +3,12 @@ import { describe, expect, test } from "vitest";
 import {
   assembleSimulationResultFromStepper,
   createReplayStateDefinition,
+  createNrfrDerivedDefinition,
   createRuntimeStepper,
   createRuntimeStateFrame,
   listRuntimeObservations,
   observeRuntimeStateAt,
+  populateDerivedBufferFromDefinition,
   populateSeriesBufferFromStepper,
   populateStateBufferFromDefinition,
   populateStateBufferFromStepper,
@@ -520,5 +522,35 @@ describe("runtime state frame", () => {
     );
 
     expect(Array.from(projectedPpolx.get("ppolx") ?? [])).toEqual([0.1, 0.2, 0.3]);
+  });
+
+  test("can populate a derived series from an explicit runtime derived definition", () => {
+    const prepared = prepareRuntime(
+      ModelData,
+      {
+        year_min: 1900,
+        year_max: 1902,
+        dt: 1,
+        output_variables: ["nrfr"],
+      },
+      tables,
+    );
+    const sourceFrame = {
+      request: prepared.request,
+      time: Float64Array.from(prepared.time),
+      constantsUsed: { nri: 100 },
+      series: new Map<string, Float64Array>([
+        ["nr", Float64Array.from([100, 90, 80])],
+      ]),
+    };
+    const derivedSeries = new Map<string, Float64Array>();
+
+    populateDerivedBufferFromDefinition(
+      sourceFrame,
+      derivedSeries,
+      createNrfrDerivedDefinition(sourceFrame.constantsUsed),
+    );
+
+    expect(Array.from(derivedSeries.get("nrfr") ?? [])).toEqual([1, 0.9, 0.8]);
   });
 });

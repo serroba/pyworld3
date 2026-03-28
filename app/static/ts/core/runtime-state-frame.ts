@@ -36,6 +36,10 @@ export type RuntimeStateDefinition = {
   readonly variable: string;
   readonly advance: RuntimeStateAdvance;
 };
+export type RuntimeDerivedDefinition = {
+  readonly variable: string;
+  readonly derive: RuntimeSeriesDeriver;
+};
 
 function toTimeKey(value: number): string {
   return value.toFixed(TIME_KEY_PRECISION);
@@ -146,6 +150,47 @@ export function populateStateBufferFromDefinition(
   );
 }
 
+export function createDerivedSeriesDefinition(
+  variable: string,
+  derive: RuntimeSeriesDeriver,
+): RuntimeDerivedDefinition {
+  return {
+    variable,
+    derive,
+  };
+}
+
+export function createNrfrDerivedDefinition(
+  constantsUsed: ConstantMap,
+): RuntimeDerivedDefinition {
+  return createDerivedSeriesDefinition("nrfr", (observation) => {
+    const nr = observation.values.nr;
+    const nri = constantsUsed.nri;
+    if (nr === undefined) {
+      throw new Error(
+        "Fixture-backed runtime cannot derive 'nrfr' because the source variable 'nr' is missing.",
+      );
+    }
+    if (nri === undefined || nri === 0) {
+      throw new Error(
+        "Fixture-backed runtime cannot derive 'nrfr' because constant 'nri' is missing or zero.",
+      );
+    }
+    return nr / nri;
+  });
+}
+
+export function populateDerivedBufferFromDefinition(
+  sourceFrame: RuntimeStateFrame,
+  series: Map<string, Float64Array>,
+  definition: RuntimeDerivedDefinition,
+): void {
+  series.set(
+    definition.variable,
+    populateSeriesBufferFromStepper(sourceFrame, definition.derive),
+  );
+}
+
 export function createRuntimeStateFrame(
   prepared: RuntimePreparation,
   fixture: SimulationResult,
@@ -201,23 +246,10 @@ export function createRuntimeStateFrame(
   const series = new Map<string, Float64Array>();
   for (const variable of prepared.outputVariables) {
     if (variable === "nrfr") {
-      series.set(
-        variable,
-        populateSeriesBufferFromStepper(sourceFrame, (observation) => {
-          const nr = observation.values.nr;
-          const nri = constantsUsed.nri;
-          if (nr === undefined) {
-            throw new Error(
-              "Fixture-backed runtime cannot derive 'nrfr' because the source variable 'nr' is missing.",
-            );
-          }
-          if (nri === undefined || nri === 0) {
-            throw new Error(
-              "Fixture-backed runtime cannot derive 'nrfr' because constant 'nri' is missing or zero.",
-            );
-          }
-          return nr / nri;
-        }),
+      populateDerivedBufferFromDefinition(
+        sourceFrame,
+        series,
+        createNrfrDerivedDefinition(constantsUsed),
       );
       continue;
     }

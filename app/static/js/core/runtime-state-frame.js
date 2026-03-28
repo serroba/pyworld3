@@ -62,6 +62,28 @@ export function populateStateBufferFromDefinition(sourceSeries, oracleFrame, def
     }
     sourceSeries.set(variable, populateStateBufferFromStepper(oracleFrame, projectedValues[0] ?? 0, advance));
 }
+export function createDerivedSeriesDefinition(variable, derive) {
+    return {
+        variable,
+        derive,
+    };
+}
+export function createNrfrDerivedDefinition(constantsUsed) {
+    return createDerivedSeriesDefinition("nrfr", (observation) => {
+        const nr = observation.values.nr;
+        const nri = constantsUsed.nri;
+        if (nr === undefined) {
+            throw new Error("Fixture-backed runtime cannot derive 'nrfr' because the source variable 'nr' is missing.");
+        }
+        if (nri === undefined || nri === 0) {
+            throw new Error("Fixture-backed runtime cannot derive 'nrfr' because constant 'nri' is missing or zero.");
+        }
+        return nr / nri;
+    });
+}
+export function populateDerivedBufferFromDefinition(sourceFrame, series, definition) {
+    series.set(definition.variable, populateSeriesBufferFromStepper(sourceFrame, definition.derive));
+}
 export function createRuntimeStateFrame(prepared, fixture) {
     const projectedIndices = buildProjectedIndices(prepared, fixture);
     const constantsUsed = {
@@ -101,17 +123,7 @@ export function createRuntimeStateFrame(prepared, fixture) {
     const series = new Map();
     for (const variable of prepared.outputVariables) {
         if (variable === "nrfr") {
-            series.set(variable, populateSeriesBufferFromStepper(sourceFrame, (observation) => {
-                const nr = observation.values.nr;
-                const nri = constantsUsed.nri;
-                if (nr === undefined) {
-                    throw new Error("Fixture-backed runtime cannot derive 'nrfr' because the source variable 'nr' is missing.");
-                }
-                if (nri === undefined || nri === 0) {
-                    throw new Error("Fixture-backed runtime cannot derive 'nrfr' because constant 'nri' is missing or zero.");
-                }
-                return nr / nri;
-            }));
+            populateDerivedBufferFromDefinition(sourceFrame, series, createNrfrDerivedDefinition(constantsUsed));
             continue;
         }
         const values = sourceSeries.get(variable);
