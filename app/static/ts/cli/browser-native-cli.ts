@@ -4,12 +4,12 @@ import { readFile, writeFile } from "node:fs/promises";
 import process from "node:process";
 
 import { ModelData } from "../model-data.js";
-import { createFixtureBackedRuntime } from "../core/browser-native-runtime.js";
 import {
+  createFixtureBackedRuntime,
   formatSimulationSummary,
   renderSimulationSvg,
-} from "../core/simulation-artifacts.js";
-import type { RawLookupTable } from "../core/world3-tables.js";
+} from "../core/index.js";
+import type { RawLookupTable } from "../core/index.js";
 import type { SimulationResult } from "../simulation-contracts.js";
 
 const FIXTURE_PATH = new URL("../../data/standard-run-explore.json", import.meta.url);

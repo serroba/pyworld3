@@ -13,11 +13,10 @@ import {
   type SimulationResult,
 } from "./simulation-contracts.js";
 import {
+  createFixtureBackedRuntime,
   createRuntimeBackedLocalSimulationCore,
-  type LocalSimulationLoader,
-} from "./core/local-simulation-core.js";
-import { createFixtureBackedRuntime } from "./core/browser-native-runtime.js";
-import type { RawLookupTable } from "./core/world3-tables.js";
+} from "./core/index.js";
+import type { LocalSimulationLoader, RawLookupTable } from "./core/index.js";
 
 export type ProviderMode = "http" | "local";
 

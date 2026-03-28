@@ -6,7 +6,7 @@ import {
   Smooth,
   createSeriesBuffer,
   createTimeGrid,
-} from "../ts/core/runtime-primitives.ts";
+} from "../ts/core/index.ts";
 
 describe("runtime primitives", () => {
   test("creates a deterministic time grid", () => {

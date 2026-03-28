@@ -2,8 +2,7 @@
 import { readFile, writeFile } from "node:fs/promises";
 import process from "node:process";
 import { ModelData } from "../model-data.js";
-import { createFixtureBackedRuntime } from "../core/browser-native-runtime.js";
-import { formatSimulationSummary, renderSimulationSvg, } from "../core/simulation-artifacts.js";
+import { createFixtureBackedRuntime, formatSimulationSummary, renderSimulationSvg, } from "../core/index.js";
 const FIXTURE_PATH = new URL("../../data/standard-run-explore.json", import.meta.url);
 const TABLES_PATH = new URL("../../data/functions-table-world3.json", import.meta.url);
 function parseArgs(argv) {

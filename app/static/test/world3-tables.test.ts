@@ -6,7 +6,7 @@ import {
   evaluateLookupTable,
   normalizeLookupTable,
   type RawLookupTable,
-} from "../ts/core/world3-tables.ts";
+} from "../ts/core/index.ts";
 
 const sampleTable: RawLookupTable = {
   sector: "Population",
