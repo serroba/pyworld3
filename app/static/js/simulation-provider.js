@@ -4,8 +4,7 @@
  * HTTP remains the default implementation for now. This lets us move the UI
  * onto a stable abstraction before introducing a browser-native engine.
  */
-import { createRuntimeBackedLocalSimulationCore, } from "./core/local-simulation-core.js";
-import { createFixtureBackedRuntime } from "./core/browser-native-runtime.js";
+import { createFixtureBackedRuntime, createRuntimeBackedLocalSimulationCore, } from "./core/index.js";
 const HttpSimulationProvider = {
     mode: "http",
     async simulatePreset(name, overrides) {

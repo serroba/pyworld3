@@ -4,8 +4,8 @@ import { ModelData } from "../ts/model-data.ts";
 import {
   createFixtureBackedRuntime,
   prepareRuntime,
-} from "../ts/core/browser-native-runtime.ts";
-import type { RawLookupTable } from "../ts/core/world3-tables.ts";
+} from "../ts/core/index.ts";
+import type { RawLookupTable } from "../ts/core/index.ts";
 import type { SimulationResult } from "../ts/simulation-contracts.ts";
 
 const fixture: SimulationResult = {

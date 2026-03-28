@@ -4,7 +4,7 @@ import { ModelData } from "../ts/model-data.ts";
 import {
   formatSimulationSummary,
   renderSimulationSvg,
-} from "../ts/core/simulation-artifacts.ts";
+} from "../ts/core/index.ts";
 import type { SimulationResult } from "../ts/simulation-contracts.ts";
 
 const fixture: SimulationResult = {
