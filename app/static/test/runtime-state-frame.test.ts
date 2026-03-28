@@ -7,6 +7,7 @@ import {
   listRuntimeObservations,
   observeRuntimeStateAt,
   populateSeriesBufferFromStepper,
+  populateStateBufferFromStepper,
   prepareRuntime,
   runtimeStateFrameToSimulationResult,
 } from "../ts/core/index.ts";
@@ -280,5 +281,39 @@ describe("runtime state frame", () => {
     );
 
     expect(Array.from(doubledPopulation)).toEqual([20, 28, 36]);
+  });
+
+  test("can populate a source state series buffer by stepping observed transitions", () => {
+    const prepared = prepareRuntime(
+      ModelData,
+      {
+        year_min: 1900,
+        year_max: 1902,
+        dt: 1,
+        output_variables: ["nr"],
+      },
+      tables,
+    );
+    const frame = createRuntimeStateFrame(prepared, fixture);
+
+    expect(Array.from(frame.series.get("nr") ?? [])).toEqual([100, 90, 80]);
+
+    const replayedNr = populateStateBufferFromStepper(
+      frame,
+      frame.series.get("nr")?.[0] ?? 0,
+      (currentValue, observation, nextObservation) => {
+        const observed = observation.values.nr;
+        const nextObserved = nextObservation?.values.nr;
+        if (observed === undefined) {
+          throw new Error("Missing nr during state buffer population.");
+        }
+        if (nextObserved === undefined) {
+          return currentValue;
+        }
+        return currentValue + (nextObserved - observed);
+      },
+    );
+
+    expect(Array.from(replayedNr)).toEqual([100, 90, 80]);
   });
 });

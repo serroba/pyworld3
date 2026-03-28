@@ -28,6 +28,7 @@ export {
   listRuntimeObservations,
   observeRuntimeStateAt,
   populateSeriesBufferFromStepper,
+  populateStateBufferFromStepper,
   runtimeStateFrameToSimulationResult,
 } from "./runtime-state-frame.js";
 export {
@@ -46,6 +47,7 @@ export type {
 export type {
   RuntimeObservation,
   RuntimeSeriesDeriver,
+  RuntimeStateAdvance,
   RuntimeStateFrame,
   RuntimeStepper,
 } from "./runtime-state-frame.js";

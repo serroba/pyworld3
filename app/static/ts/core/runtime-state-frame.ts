@@ -27,6 +27,11 @@ export type RuntimeStepper = {
 };
 
 export type RuntimeSeriesDeriver = (observation: RuntimeObservation) => number;
+export type RuntimeStateAdvance = (
+  currentValue: number,
+  observation: RuntimeObservation,
+  nextObservation: RuntimeObservation | null,
+) => number;
 
 function toTimeKey(value: number): string {
   return value.toFixed(TIME_KEY_PRECISION);
@@ -112,9 +117,46 @@ export function createRuntimeStateFrame(
     );
   }
 
-  const sourceFrame: RuntimeStateFrame = {
+  const oracleFrame: RuntimeStateFrame = {
     request: prepared.request,
     time: Float64Array.from(prepared.time),
+    constantsUsed,
+    series: sourceSeries,
+  };
+
+  if (sourceVariables.has("nr")) {
+    const projectedNr = sourceSeries.get("nr");
+    if (!projectedNr) {
+      throw new Error(
+        "Fixture-backed runtime cannot derive 'nrfr' because the source variable 'nr' is missing.",
+      );
+    }
+
+    sourceSeries.set(
+      "nr",
+      populateStateBufferFromStepper(
+        oracleFrame,
+        projectedNr[0] ?? 0,
+        (currentValue, observation, nextObservation) => {
+          const observed = observation.values.nr;
+          const nextObserved = nextObservation?.values.nr;
+          if (observed === undefined) {
+            throw new Error(
+              "Runtime state advance is missing the observed 'nr' value.",
+            );
+          }
+          if (nextObserved === undefined) {
+            return currentValue;
+          }
+          return currentValue + (nextObserved - observed);
+        },
+      ),
+    );
+  }
+
+  const sourceFrame: RuntimeStateFrame = {
+    request: prepared.request,
+    time: oracleFrame.time,
     constantsUsed,
     series: sourceSeries,
   };
@@ -308,6 +350,36 @@ export function populateSeriesBufferFromStepper(
       break;
     }
     values[observation.index] = deriveValue(observation);
+  }
+
+  return values;
+}
+
+export function populateStateBufferFromStepper(
+  frame: RuntimeStateFrame,
+  initialValue: number,
+  advanceState: RuntimeStateAdvance,
+): Float64Array {
+  const stepper = createRuntimeStepper(frame);
+  const values = new Float64Array(frame.time.length);
+  if (values.length === 0) {
+    return values;
+  }
+
+  values[0] = initialValue;
+  let currentValue = initialValue;
+
+  while (!stepper.isDone()) {
+    const observation = stepper.next();
+    if (!observation) {
+      break;
+    }
+    if (observation.index >= values.length - 1) {
+      break;
+    }
+    const nextObservation = stepper.current();
+    currentValue = advanceState(currentValue, observation, nextObservation);
+    values[observation.index + 1] = currentValue;
   }
 
   return values;
