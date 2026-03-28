@@ -2,6 +2,14 @@ import type { ConstantMap, SimulationResult } from "../simulation-contracts.js";
 import type { RuntimePreparation } from "./browser-native-runtime.js";
 
 const TIME_KEY_PRECISION = 8;
+const REPLAYABLE_SOURCE_VARIABLES = new Set([
+  "nr",
+  "pop",
+  "iopc",
+  "fpc",
+  "ppolx",
+  "le",
+]);
 
 export type RuntimeStateFrame = {
   readonly request: RuntimePreparation["request"];
@@ -158,24 +166,11 @@ export function createRuntimeStateFrame(
     series: sourceSeries,
   };
 
-  if (sourceVariables.has("nr")) {
-    replaySourceSeriesThroughStepper(sourceSeries, oracleFrame, "nr");
-  }
-
-  if (sourceVariables.has("pop")) {
-    replaySourceSeriesThroughStepper(sourceSeries, oracleFrame, "pop");
-  }
-
-  if (sourceVariables.has("iopc")) {
-    replaySourceSeriesThroughStepper(sourceSeries, oracleFrame, "iopc");
-  }
-
-  if (sourceVariables.has("fpc")) {
-    replaySourceSeriesThroughStepper(sourceSeries, oracleFrame, "fpc");
-  }
-
-  if (sourceVariables.has("ppolx")) {
-    replaySourceSeriesThroughStepper(sourceSeries, oracleFrame, "ppolx");
+  for (const variable of sourceVariables) {
+    if (!REPLAYABLE_SOURCE_VARIABLES.has(variable)) {
+      continue;
+    }
+    replaySourceSeriesThroughStepper(sourceSeries, oracleFrame, variable);
   }
 
   const sourceFrame: RuntimeStateFrame = {

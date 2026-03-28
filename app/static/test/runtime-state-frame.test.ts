@@ -37,6 +37,7 @@ const fixture: SimulationResult = {
     iopc: { name: "iopc", values: [1, 1.5, 2, 2.5, 3] },
     fpc: { name: "fpc", values: [300, 290, 280, 270, 260] },
     ppolx: { name: "ppolx", values: [0.1, 0.15, 0.2, 0.25, 0.3] },
+    le: { name: "le", values: [30, 31, 32, 33, 34] },
     nrfr: { name: "nrfr", values: [99, 99, 99, 99, 99] },
   },
 };
@@ -454,5 +455,39 @@ describe("runtime state frame", () => {
     );
 
     expect(Array.from(replayedPpolx)).toEqual([0.1, 0.2, 0.3]);
+  });
+
+  test("can populate the le source series through the stepped state path", () => {
+    const prepared = prepareRuntime(
+      ModelData,
+      {
+        year_min: 1900,
+        year_max: 1902,
+        dt: 1,
+        output_variables: ["le"],
+      },
+      tables,
+    );
+    const frame = createRuntimeStateFrame(prepared, fixture);
+
+    expect(Array.from(frame.series.get("le") ?? [])).toEqual([30, 32, 34]);
+
+    const replayedLe = populateStateBufferFromStepper(
+      frame,
+      frame.series.get("le")?.[0] ?? 0,
+      (currentValue, observation, nextObservation) => {
+        const observed = observation.values.le;
+        const nextObserved = nextObservation?.values.le;
+        if (observed === undefined) {
+          throw new Error("Missing le during state buffer population.");
+        }
+        if (nextObserved === undefined) {
+          return currentValue;
+        }
+        return currentValue + (nextObserved - observed);
+      },
+    );
+
+    expect(Array.from(replayedLe)).toEqual([30, 32, 34]);
   });
 });
