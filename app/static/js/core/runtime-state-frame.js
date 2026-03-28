@@ -1,4 +1,5 @@
 const TIME_KEY_PRECISION = 8;
+const DEFAULT_POLICY_YEAR = 1975;
 const NR_RATE_SERIES = "__nr_rate";
 function toTimeKey(value) {
     return value.toFixed(TIME_KEY_PRECISION);
@@ -49,10 +50,32 @@ function createOracleRateSeries(values, time) {
             throw new Error("Oracle-backed rate construction is missing a source value.");
         }
         const dt = nextTime - currentTime;
-        rates[index] = dt === 0 ? 0 : (nextValue - currentValue) / dt;
+        rates[index] = dt === 0 ? 0 : (currentValue - nextValue) / dt;
     }
     if (rates.length > 1) {
         rates[rates.length - 1] = rates[rates.length - 2] ?? 0;
+    }
+    return rates;
+}
+function clipAtPolicyYear(beforeValue, afterValue, time, policyYear) {
+    return time <= policyYear ? beforeValue : afterValue;
+}
+function createNrResourceUsageRateSeries(pop, iopc, time, constantsUsed, pcrumLookup) {
+    const rates = new Float64Array(time.length);
+    const nruf1 = constantsUsed.nruf1 ?? 1;
+    const nruf2 = constantsUsed.nruf2 ?? 1;
+    for (let index = 0; index < time.length; index += 1) {
+        const population = pop[index];
+        const industrialOutputPerCapita = iopc[index];
+        const year = time[index];
+        if (population === undefined ||
+            industrialOutputPerCapita === undefined ||
+            year === undefined) {
+            throw new Error("Native nr flow construction is missing a source value.");
+        }
+        const nruf = clipAtPolicyYear(nruf1, nruf2, year, DEFAULT_POLICY_YEAR);
+        const pcrum = pcrumLookup.evaluate(industrialOutputPerCapita);
+        rates[index] = population * pcrum * nruf;
     }
     return rates;
 }
@@ -75,7 +98,7 @@ export function createReplayStateDefinition(variable) {
         advance: createObservedDeltaAdvance(variable),
     };
 }
-export function createEulerStateDefinition(variable, rateVariable) {
+export function createEulerStateDefinition(variable, rateVariable, multiplier = 1) {
     return {
         variable,
         advance: (currentValue, observation, nextObservation) => {
@@ -87,12 +110,12 @@ export function createEulerStateDefinition(variable, rateVariable) {
                 return currentValue;
             }
             const dt = nextObservation.time - observation.time;
-            return currentValue + dt * rate;
+            return currentValue + multiplier * dt * rate;
         },
     };
 }
 const STEPPED_SOURCE_STATE_DEFINITIONS = new Map([
-    ["nr", createEulerStateDefinition("nr", NR_RATE_SERIES)],
+    ["nr", createEulerStateDefinition("nr", NR_RATE_SERIES, -1)],
     ["pop", createReplayStateDefinition("pop")],
     ["iopc", createReplayStateDefinition("iopc")],
     ["fpc", createReplayStateDefinition("fpc")],
@@ -139,6 +162,14 @@ export function createRuntimeStateFrame(prepared, fixture) {
     if (prepared.outputVariables.includes("nrfr")) {
         sourceVariables.add("nr");
     }
+    const canComputeNativeNrRate = (sourceVariables.has("nr") || prepared.outputVariables.includes("nrfr")) &&
+        fixture.series.pop !== undefined &&
+        fixture.series.iopc !== undefined &&
+        prepared.lookupLibrary.has("PCRUM");
+    if (canComputeNativeNrRate) {
+        sourceVariables.add("pop");
+        sourceVariables.add("iopc");
+    }
     const sourceSeries = new Map();
     for (const variable of sourceVariables) {
         if (variable === "nr" && !fixture.series.nr) {
@@ -154,7 +185,17 @@ export function createRuntimeStateFrame(prepared, fixture) {
     };
     const projectedNr = sourceSeries.get("nr");
     if (projectedNr) {
-        sourceSeries.set(NR_RATE_SERIES, createOracleRateSeries(projectedNr, oracleFrame.time));
+        if (canComputeNativeNrRate) {
+            const pop = sourceSeries.get("pop");
+            const iopc = sourceSeries.get("iopc");
+            const pcrumLookup = prepared.lookupLibrary.get("PCRUM");
+            if (pop && iopc && pcrumLookup) {
+                sourceSeries.set(NR_RATE_SERIES, createNrResourceUsageRateSeries(pop, iopc, oracleFrame.time, constantsUsed, pcrumLookup));
+            }
+        }
+        else {
+            sourceSeries.set(NR_RATE_SERIES, createOracleRateSeries(projectedNr, oracleFrame.time));
+        }
     }
     for (const variable of sourceVariables) {
         const definition = STEPPED_SOURCE_STATE_DEFINITIONS.get(variable);

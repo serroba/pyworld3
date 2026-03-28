@@ -28,6 +28,13 @@ const tables: RawLookupTable[] = [
     "y.name": "M1",
     "y.values": [0.05, 0.03],
   },
+  {
+    sector: "Resource",
+    "x.name": "IOPC",
+    "x.values": [1, 2, 3],
+    "y.name": "PCRUM",
+    "y.values": [1, 10 / 14, 10 / 18],
+  },
 ];
 
 const fixture: SimulationResult = {
@@ -324,6 +331,36 @@ describe("runtime state frame", () => {
     );
 
     expect(Array.from(replayedNr)).toEqual([100, 90, 80]);
+  });
+
+  test("can populate a stock series from an Euler-style runtime state definition", () => {
+    const prepared = prepareRuntime(
+      ModelData,
+      {
+        year_min: 1900,
+        year_max: 1902,
+        dt: 1,
+        output_variables: ["nr"],
+      },
+      tables,
+    );
+    const projectedNr = new Map<string, Float64Array>([
+      ["nr", Float64Array.from([100, 0, 0])],
+      ["__nr_rate", Float64Array.from([10, 10, 10])],
+    ]);
+
+    populateStateBufferFromDefinition(
+      projectedNr,
+      {
+        request: prepared.request,
+        time: Float64Array.from(prepared.time),
+        constantsUsed: fixture.constants_used,
+        series: projectedNr,
+      },
+      createEulerStateDefinition("nr", "__nr_rate", -1),
+    );
+
+    expect(Array.from(projectedNr.get("nr") ?? [])).toEqual([100, 90, 80]);
   });
 
   test("can populate the pop source series through the stepped state path", () => {
