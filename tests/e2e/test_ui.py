@@ -6,6 +6,13 @@ from playwright.sync_api import Page, expect
 pytestmark = pytest.mark.e2e
 
 
+def set_provider_mode(page: Page, mode: str):
+    """Override the browser-side simulation provider mode before app boot."""
+    page.add_init_script(
+        f"window.__PYWORLD3_PROVIDER_MODE__ = {mode!r};"
+    )
+
+
 def test_homepage_loads(page: Page, base_url: str):
     """Page title, nav bar, and preset cards are rendered."""
     page.goto(base_url)
@@ -37,6 +44,38 @@ def test_explore_preset_renders_charts(page: Page, base_url: str):
     assert canvases.count() > 0
     # No error card should be visible
     assert page.locator("#explore-charts .card--error").count() == 0
+
+
+def test_http_provider_mode_explore_still_works(page: Page, base_url: str):
+    """Explicit HTTP provider mode should preserve the current behavior."""
+    set_provider_mode(page, "http")
+    page.goto(f"{base_url}/#explore")
+    page.wait_for_selector("#explore-pills button", timeout=10_000)
+    page.locator("#explore-pills button").first.click()
+    page.wait_for_selector("#explore-charts canvas", timeout=30_000)
+    assert page.locator("#explore-status .card").count() == 0
+
+
+def test_local_provider_mode_standard_run_renders_explore_charts(
+    page: Page, base_url: str
+):
+    """Local provider mode should render the fixture-backed standard run."""
+    set_provider_mode(page, "local")
+    page.goto(f"{base_url}/#explore?preset=standard-run")
+    page.wait_for_selector("#explore-charts canvas", timeout=30_000)
+    assert page.locator("#explore-status .card").count() == 0
+
+
+def test_local_provider_mode_unsupported_preset_shows_clear_explore_error(
+    page: Page, base_url: str
+):
+    """Unsupported local presets should still fail with a clear message."""
+    set_provider_mode(page, "local")
+    page.goto(f"{base_url}/#explore?preset=doubled-resources")
+    page.wait_for_selector("#explore-status .card", timeout=10_000)
+    expect(page.locator("#explore-status")).to_contain_text(
+        "supports only the standard-run preset without overrides"
+    )
 
 
 def test_compare_view_loads_metrics(page: Page, base_url: str):

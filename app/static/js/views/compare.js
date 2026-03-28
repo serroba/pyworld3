@@ -75,7 +75,7 @@ const CompareView = (() => {
     renderChartGrid(chartsEl);
 
     try {
-      const data = await API.compare(
+      const data = await SimulationProvider.compare(
         { preset: presetA },
         { preset: presetB }
       );

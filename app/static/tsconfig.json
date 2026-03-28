@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "module": "none"
+  },
+  "files": [
+    "ts/simulation-contracts.ts",
+    "ts/model-data.ts",
+    "ts/simulation-provider.ts"
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "name": "pyworld3-static-ui",
+  "private": true,
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "^4.1.2",
+    "jsdom": "^29.0.1",
+    "typescript": "^5.8.2",
+    "vitest": "^4.1.2"
+  }
+}

@@ -158,7 +158,7 @@ const ModelView = (() => {
 
   async function fetchPreset(name) {
     if (simCache.has(name)) return simCache.get(name);
-    const result = await API.simulatePreset(name);
+    const result = await SimulationProvider.simulatePreset(name);
     simCache.set(name, result);
     return result;
   }

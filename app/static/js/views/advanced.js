@@ -214,7 +214,7 @@ const AdvancedView = (() => {
       if (Object.keys(editedConstants).length > 0) {
         request.constants = { ...editedConstants };
       }
-      const result = await API.simulate(request, { signal });
+      const result = await SimulationProvider.simulate(request, { signal });
 
       setChartsLoading(false);
 

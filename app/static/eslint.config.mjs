@@ -24,7 +24,7 @@ export default [
     },
     rules: {
       "no-unused-vars": ["warn", {
-        varsIgnorePattern: "^(API|State|Router|UI|Charts|IntroView|ExploreView|CompareView|AdvancedView|_)",
+        varsIgnorePattern: "^(API|State|Router|UI|Charts|ModelData|SimulationProvider|buildSimulationRequestFromPreset|resolveScenarioRequest|IntroView|ExploreView|CompareView|AdvancedView|_)",
         caughtErrorsIgnorePattern: "^_",
       }],
       eqeqeq: "warn",

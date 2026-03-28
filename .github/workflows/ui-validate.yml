@@ -14,7 +14,7 @@ permissions:
   contents: read
 
 jobs:
-  validate:
+  ts-coverage:
     runs-on: ubuntu-latest
 
     steps:
@@ -24,6 +24,62 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22"
+          cache: "npm"
+          cache-dependency-path: app/static/package-lock.json
+
+      - name: Install UI dependencies
+        working-directory: app/static
+        run: npm ci
+
+      - name: Type-check TypeScript
+        working-directory: app/static
+        run: npm run typecheck
+
+      - name: Run TypeScript tests with coverage
+        working-directory: app/static
+        run: npm run test:coverage
+
+  generated-assets:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: app/static/package-lock.json
+
+      - name: Install UI dependencies
+        working-directory: app/static
+        run: npm ci
+
+      - name: Verify generated UI assets are up to date
+        working-directory: app/static
+        run: |
+          npm run build
+          git diff --exit-code js/model-data.js
+          git diff --exit-code js/simulation-contracts.js
+          git diff --exit-code js/simulation-provider.js
+
+  static-quality:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: app/static/package-lock.json
+
+      - name: Install UI dependencies
+        working-directory: app/static
+        run: npm ci
 
       - name: Validate HTML
         run: npx --yes htmlhint@latest app/static/index.html
