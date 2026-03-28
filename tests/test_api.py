@@ -269,6 +269,13 @@ def test_static_simulation_contracts_served():
     assert "function resolveScenarioRequest" in resp.text
 
 
+def test_static_local_standard_run_fixture_served():
+    resp = client.get("/data/standard-run-explore.json")
+    assert resp.status_code == 200
+    assert '"year_min":1900' in resp.text
+    assert '"pop"' in resp.text
+
+
 def test_static_css_served():
     resp = client.get("/css/variables.css")
     assert resp.status_code == 200

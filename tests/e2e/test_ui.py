@@ -56,15 +56,25 @@ def test_http_provider_mode_explore_still_works(page: Page, base_url: str):
     assert page.locator("#explore-status .card").count() == 0
 
 
-def test_local_provider_mode_shows_clear_explore_error(page: Page, base_url: str):
-    """Local provider mode should fail gracefully until local execution exists."""
+def test_local_provider_mode_standard_run_renders_explore_charts(
+    page: Page, base_url: str
+):
+    """Local provider mode should render the fixture-backed standard run."""
     set_provider_mode(page, "local")
-    page.goto(f"{base_url}/#explore")
-    page.wait_for_selector("#explore-pills button", timeout=10_000)
-    page.locator("#explore-pills button").first.click()
+    page.goto(f"{base_url}/#explore?preset=standard-run")
+    page.wait_for_selector("#explore-charts canvas", timeout=30_000)
+    assert page.locator("#explore-status .card").count() == 0
+
+
+def test_local_provider_mode_unsupported_preset_shows_clear_explore_error(
+    page: Page, base_url: str
+):
+    """Unsupported local presets should still fail with a clear message."""
+    set_provider_mode(page, "local")
+    page.goto(f"{base_url}/#explore?preset=doubled-resources")
     page.wait_for_selector("#explore-status .card", timeout=10_000)
     expect(page.locator("#explore-status")).to_contain_text(
-        "Local simulation provider is not implemented yet"
+        "supports only the standard-run preset without overrides"
     )
 
 
