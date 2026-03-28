@@ -22,6 +22,10 @@ export {
 } from "./simulation-artifacts.js";
 export { projectSimulationResult } from "./simulation-results.js";
 export {
+  createRuntimeStateFrame,
+  runtimeStateFrameToSimulationResult,
+} from "./runtime-state-frame.js";
+export {
   createLookupInterpolator,
   createLookupLibrary,
   evaluateLookupTable,
@@ -34,6 +38,7 @@ export type {
   RuntimePreparation,
   RuntimeTablesLoader,
 } from "./browser-native-runtime.js";
+export type { RuntimeStateFrame } from "./runtime-state-frame.js";
 export type { World3Core } from "./world3-core.js";
 export type {
   LocalSimulationCore,

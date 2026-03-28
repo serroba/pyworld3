@@ -1,0 +1,82 @@
+import { describe, expect, test } from "vitest";
+
+import {
+  createRuntimeStateFrame,
+  prepareRuntime,
+  runtimeStateFrameToSimulationResult,
+} from "../ts/core/index.ts";
+import { ModelData } from "../ts/model-data.ts";
+import type { RawLookupTable } from "../ts/core/index.ts";
+import type { SimulationResult } from "../ts/simulation-contracts.ts";
+
+const tables: RawLookupTable[] = [
+  {
+    sector: "Population",
+    "x.name": "LE",
+    "x.values": [20, 40],
+    "y.name": "M1",
+    "y.values": [0.05, 0.03],
+  },
+];
+
+const fixture: SimulationResult = {
+  year_min: 1900,
+  year_max: 1902,
+  dt: 0.5,
+  time: [1900, 1900.5, 1901, 1901.5, 1902],
+  constants_used: { nri: 100 },
+  series: {
+    nr: { name: "nr", values: [100, 95, 90, 85, 80] },
+    pop: { name: "pop", values: [10, 12, 14, 16, 18] },
+    nrfr: { name: "nrfr", values: [99, 99, 99, 99, 99] },
+  },
+};
+
+describe("runtime state frame", () => {
+  test("creates a typed aligned state frame from runtime preparation", () => {
+    const prepared = prepareRuntime(
+      ModelData,
+      {
+        year_min: 1900,
+        year_max: 1902,
+        dt: 1,
+        output_variables: ["pop", "nrfr"],
+      },
+      tables,
+    );
+
+    const frame = createRuntimeStateFrame(prepared, fixture);
+
+    expect(Array.from(frame.time)).toEqual([1900, 1901, 1902]);
+    expect(frame.constantsUsed).toEqual({ nri: 100 });
+    expect(Array.from(frame.series.get("pop") ?? [])).toEqual([10, 14, 18]);
+    expect(Array.from(frame.series.get("nrfr") ?? [])).toEqual([1, 0.9, 0.8]);
+  });
+
+  test("can convert the state frame back to the public simulation result shape", () => {
+    const prepared = prepareRuntime(
+      ModelData,
+      {
+        year_min: 1900,
+        year_max: 1902,
+        dt: 1,
+        output_variables: ["nrfr"],
+        constants: { nri: 200 },
+      },
+      tables,
+    );
+
+    const frame = createRuntimeStateFrame(prepared, fixture);
+
+    expect(runtimeStateFrameToSimulationResult(frame)).toEqual({
+      year_min: 1900,
+      year_max: 1902,
+      dt: 1,
+      time: [1900, 1901, 1902],
+      constants_used: { nri: 200 },
+      series: {
+        nrfr: { name: "nrfr", values: [0.5, 0.45, 0.4] },
+      },
+    });
+  });
+});

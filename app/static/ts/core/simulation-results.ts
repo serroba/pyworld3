@@ -1,115 +1,15 @@
-import type { SimulationResult, TimeSeriesResult } from "../simulation-contracts.js";
+import type { SimulationResult } from "../simulation-contracts.js";
 import type { RuntimePreparation } from "./browser-native-runtime.js";
-
-const TIME_KEY_PRECISION = 8;
-
-function toTimeKey(value: number): string {
-  return value.toFixed(TIME_KEY_PRECISION);
-}
-
-function projectSeriesValues(
-  source: TimeSeriesResult,
-  indices: number[],
-): TimeSeriesResult {
-  return {
-    name: source.name,
-    values: indices.map((index) => {
-      const value = source.values[index];
-      if (value === undefined) {
-        throw new Error(
-          `Fixture series '${source.name}' is missing a value at index ${index}.`,
-        );
-      }
-      return value;
-    }),
-  };
-}
-
-function deriveNrfrSeries(
-  fixture: SimulationResult,
-  indices: number[],
-  constantsUsed: Record<string, number>,
-): TimeSeriesResult {
-  const nrSeries = fixture.series.nr;
-  if (!nrSeries) {
-    throw new Error(
-      "Fixture-backed runtime cannot derive 'nrfr' because the source variable 'nr' is missing.",
-    );
-  }
-
-  const nri = constantsUsed.nri;
-  if (nri === undefined || nri === 0) {
-    throw new Error(
-      "Fixture-backed runtime cannot derive 'nrfr' because constant 'nri' is missing or zero.",
-    );
-  }
-
-  const projectedNr = projectSeriesValues(nrSeries, indices);
-  return {
-    name: "nrfr",
-    values: projectedNr.values.map((value) => value / nri),
-  };
-}
-
-function resolveProjectedSeries(
-  variable: string,
-  fixture: SimulationResult,
-  indices: number[],
-  constantsUsed: Record<string, number>,
-): TimeSeriesResult {
-  if (variable === "nrfr") {
-    return deriveNrfrSeries(fixture, indices, constantsUsed);
-  }
-
-  const source = fixture.series[variable];
-  if (!source) {
-    throw new Error(
-      `Fixture-backed runtime is missing the requested output variable '${variable}'.`,
-    );
-  }
-  return projectSeriesValues(source, indices);
-}
+import {
+  createRuntimeStateFrame,
+  runtimeStateFrameToSimulationResult,
+} from "./runtime-state-frame.js";
 
 export function projectSimulationResult(
   prepared: RuntimePreparation,
   fixture: SimulationResult,
 ): SimulationResult {
-  const fixtureTimeIndex = new Map<string, number>();
-
-  fixture.time.forEach((value, index) => {
-    fixtureTimeIndex.set(toTimeKey(value), index);
-  });
-
-  const projectedIndices = Array.from(prepared.time, (value) => {
-    const index = fixtureTimeIndex.get(toTimeKey(value));
-    if (index === undefined) {
-      throw new Error(
-        `Fixture-backed runtime cannot project year ${value} onto the requested time grid.`,
-      );
-    }
-    return index;
-  });
-
-  const constantsUsed = {
-    ...fixture.constants_used,
-    ...(prepared.request.constants ?? {}),
-  };
-
-  const series = Object.fromEntries(
-    prepared.outputVariables.map((variable) => {
-      return [
-        variable,
-        resolveProjectedSeries(variable, fixture, projectedIndices, constantsUsed),
-      ];
-    }),
+  return runtimeStateFrameToSimulationResult(
+    createRuntimeStateFrame(prepared, fixture),
   );
-
-  return {
-    year_min: prepared.request.year_min ?? fixture.year_min,
-    year_max: prepared.request.year_max ?? fixture.year_max,
-    dt: prepared.request.dt ?? fixture.dt,
-    time: Array.from(prepared.time),
-    constants_used: constantsUsed,
-    series,
-  };
 }

@@ -92,6 +92,7 @@ jobs:
           git diff --exit-code js/core/index.js
           git diff --exit-code js/core/browser-native-runtime.js
           git diff --exit-code js/core/local-simulation-core.js
+          git diff --exit-code js/core/runtime-state-frame.js
           git diff --exit-code js/core/runtime-primitives.js
           git diff --exit-code js/core/simulation-artifacts.js
           git diff --exit-code js/core/simulation-results.js
