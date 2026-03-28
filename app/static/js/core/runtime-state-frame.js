@@ -71,6 +71,23 @@ export function createRuntimeStateFrame(prepared, fixture) {
             return currentValue + (nextObserved - observed);
         }));
     }
+    if (sourceVariables.has("pop")) {
+        const projectedPop = sourceSeries.get("pop");
+        if (!projectedPop) {
+            throw new Error("Fixture-backed runtime cannot populate the source variable 'pop' because it is missing.");
+        }
+        sourceSeries.set("pop", populateStateBufferFromStepper(oracleFrame, projectedPop[0] ?? 0, (currentValue, observation, nextObservation) => {
+            const observed = observation.values.pop;
+            const nextObserved = nextObservation?.values.pop;
+            if (observed === undefined) {
+                throw new Error("Runtime state advance is missing the observed 'pop' value.");
+            }
+            if (nextObserved === undefined) {
+                return currentValue;
+            }
+            return currentValue + (nextObserved - observed);
+        }));
+    }
     const sourceFrame = {
         request: prepared.request,
         time: oracleFrame.time,

@@ -316,4 +316,38 @@ describe("runtime state frame", () => {
 
     expect(Array.from(replayedNr)).toEqual([100, 90, 80]);
   });
+
+  test("can populate the pop source series through the stepped state path", () => {
+    const prepared = prepareRuntime(
+      ModelData,
+      {
+        year_min: 1900,
+        year_max: 1902,
+        dt: 1,
+        output_variables: ["pop"],
+      },
+      tables,
+    );
+    const frame = createRuntimeStateFrame(prepared, fixture);
+
+    expect(Array.from(frame.series.get("pop") ?? [])).toEqual([10, 14, 18]);
+
+    const replayedPop = populateStateBufferFromStepper(
+      frame,
+      frame.series.get("pop")?.[0] ?? 0,
+      (currentValue, observation, nextObservation) => {
+        const observed = observation.values.pop;
+        const nextObserved = nextObservation?.values.pop;
+        if (observed === undefined) {
+          throw new Error("Missing pop during state buffer population.");
+        }
+        if (nextObserved === undefined) {
+          return currentValue;
+        }
+        return currentValue + (nextObserved - observed);
+      },
+    );
+
+    expect(Array.from(replayedPop)).toEqual([10, 14, 18]);
+  });
 });
