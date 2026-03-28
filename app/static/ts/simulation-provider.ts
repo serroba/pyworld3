@@ -5,14 +5,6 @@
  * onto a stable abstraction before introducing a browser-native engine.
  */
 
-type ScenarioSpec = {
-  preset?: string;
-  request?: Record<string, unknown>;
-};
-
-type SimulationRequest = Record<string, unknown>;
-type SimulationResult = Record<string, unknown>;
-type CompareResult = Record<string, unknown>;
 type ProviderMode = "http" | "local";
 
 type SimulationProviderApi = {
@@ -73,15 +65,19 @@ const LOCAL_PROVIDER_ERROR =
 const LocalSimulationProvider: SimulationProviderApi = {
   mode: "local",
 
-  async simulatePreset() {
-    throw new Error(LOCAL_PROVIDER_ERROR);
+  async simulatePreset(name, overrides) {
+    return this.simulate(buildSimulationRequestFromPreset(name, overrides));
   },
 
   async simulate() {
     throw new Error(LOCAL_PROVIDER_ERROR);
   },
 
-  async compare() {
+  async compare(scenarioA, scenarioB) {
+    resolveScenarioRequest(scenarioA);
+    if (scenarioB) {
+      resolveScenarioRequest(scenarioB);
+    }
     throw new Error(LOCAL_PROVIDER_ERROR);
   },
 };

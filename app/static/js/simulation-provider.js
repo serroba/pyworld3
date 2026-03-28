@@ -20,13 +20,17 @@ const HttpSimulationProvider = {
 const LOCAL_PROVIDER_ERROR = "Local simulation provider is not implemented yet. Switch back to HTTP mode.";
 const LocalSimulationProvider = {
     mode: "local",
-    async simulatePreset() {
-        throw new Error(LOCAL_PROVIDER_ERROR);
+    async simulatePreset(name, overrides) {
+        return this.simulate(buildSimulationRequestFromPreset(name, overrides));
     },
     async simulate() {
         throw new Error(LOCAL_PROVIDER_ERROR);
     },
-    async compare() {
+    async compare(scenarioA, scenarioB) {
+        resolveScenarioRequest(scenarioA);
+        if (scenarioB) {
+            resolveScenarioRequest(scenarioB);
+        }
         throw new Error(LOCAL_PROVIDER_ERROR);
     },
 };

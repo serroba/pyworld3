@@ -262,6 +262,13 @@ def test_static_simulation_provider_served():
     assert "LocalSimulationProvider" in resp.text
 
 
+def test_static_simulation_contracts_served():
+    resp = client.get("/js/simulation-contracts.js")
+    assert resp.status_code == 200
+    assert "function buildSimulationRequestFromPreset" in resp.text
+    assert "function resolveScenarioRequest" in resp.text
+
+
 def test_static_css_served():
     resp = client.get("/css/variables.css")
     assert resp.status_code == 200
