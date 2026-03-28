@@ -23,11 +23,13 @@ export {
 export { projectSimulationResult } from "./simulation-results.js";
 export {
   assembleSimulationResultFromStepper,
+  createReplayStateDefinition,
   createRuntimeStepper,
   createRuntimeStateFrame,
   listRuntimeObservations,
   observeRuntimeStateAt,
   populateSeriesBufferFromStepper,
+  populateStateBufferFromDefinition,
   populateStateBufferFromStepper,
   runtimeStateFrameToSimulationResult,
 } from "./runtime-state-frame.js";
@@ -48,6 +50,7 @@ export type {
   RuntimeObservation,
   RuntimeSeriesDeriver,
   RuntimeStateAdvance,
+  RuntimeStateDefinition,
   RuntimeStateFrame,
   RuntimeStepper,
 } from "./runtime-state-frame.js";

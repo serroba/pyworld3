@@ -1,12 +1,4 @@
 const TIME_KEY_PRECISION = 8;
-const REPLAYABLE_SOURCE_VARIABLES = new Set([
-    "nr",
-    "pop",
-    "iopc",
-    "fpc",
-    "ppolx",
-    "le",
-]);
 function toTimeKey(value) {
     return value.toFixed(TIME_KEY_PRECISION);
 }
@@ -39,12 +31,8 @@ function resolveSourceSeriesValues(variable, fixture, indices) {
     }
     return projectSeriesValues(source.values, indices, source.name);
 }
-function replaySourceSeriesThroughStepper(sourceSeries, oracleFrame, variable) {
-    const projectedValues = sourceSeries.get(variable);
-    if (!projectedValues) {
-        throw new Error(`Fixture-backed runtime cannot populate the source variable '${variable}' because it is missing.`);
-    }
-    sourceSeries.set(variable, populateStateBufferFromStepper(oracleFrame, projectedValues[0] ?? 0, (currentValue, observation, nextObservation) => {
+function createObservedDeltaAdvance(variable) {
+    return (currentValue, observation, nextObservation) => {
         const observed = observation.values[variable];
         const nextObserved = nextObservation?.values[variable];
         if (observed === undefined) {
@@ -54,7 +42,25 @@ function replaySourceSeriesThroughStepper(sourceSeries, oracleFrame, variable) {
             return currentValue;
         }
         return currentValue + (nextObserved - observed);
-    }));
+    };
+}
+export function createReplayStateDefinition(variable) {
+    return {
+        variable,
+        advance: createObservedDeltaAdvance(variable),
+    };
+}
+const STEPPED_SOURCE_STATE_DEFINITIONS = new Map(["nr", "pop", "iopc", "fpc", "ppolx", "le"].map((variable) => [
+    variable,
+    createReplayStateDefinition(variable),
+]));
+export function populateStateBufferFromDefinition(sourceSeries, oracleFrame, definition) {
+    const { variable, advance } = definition;
+    const projectedValues = sourceSeries.get(variable);
+    if (!projectedValues) {
+        throw new Error(`Fixture-backed runtime cannot populate the source variable '${variable}' because it is missing.`);
+    }
+    sourceSeries.set(variable, populateStateBufferFromStepper(oracleFrame, projectedValues[0] ?? 0, advance));
 }
 export function createRuntimeStateFrame(prepared, fixture) {
     const projectedIndices = buildProjectedIndices(prepared, fixture);
@@ -80,10 +86,11 @@ export function createRuntimeStateFrame(prepared, fixture) {
         series: sourceSeries,
     };
     for (const variable of sourceVariables) {
-        if (!REPLAYABLE_SOURCE_VARIABLES.has(variable)) {
+        const definition = STEPPED_SOURCE_STATE_DEFINITIONS.get(variable);
+        if (!definition) {
             continue;
         }
-        replaySourceSeriesThroughStepper(sourceSeries, oracleFrame, variable);
+        populateStateBufferFromDefinition(sourceSeries, oracleFrame, definition);
     }
     const sourceFrame = {
         request: prepared.request,

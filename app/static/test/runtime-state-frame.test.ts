@@ -2,11 +2,13 @@ import { describe, expect, test } from "vitest";
 
 import {
   assembleSimulationResultFromStepper,
+  createReplayStateDefinition,
   createRuntimeStepper,
   createRuntimeStateFrame,
   listRuntimeObservations,
   observeRuntimeStateAt,
   populateSeriesBufferFromStepper,
+  populateStateBufferFromDefinition,
   populateStateBufferFromStepper,
   prepareRuntime,
   runtimeStateFrameToSimulationResult,
@@ -489,5 +491,34 @@ describe("runtime state frame", () => {
     );
 
     expect(Array.from(replayedLe)).toEqual([30, 32, 34]);
+  });
+
+  test("can populate a source series from an explicit runtime state definition", () => {
+    const prepared = prepareRuntime(
+      ModelData,
+      {
+        year_min: 1900,
+        year_max: 1902,
+        dt: 1,
+        output_variables: ["ppolx"],
+      },
+      tables,
+    );
+    const projectedPpolx = new Map([
+      ["ppolx", Float64Array.from([0.1, 0.2, 0.3])],
+    ]);
+
+    populateStateBufferFromDefinition(
+      projectedPpolx,
+      {
+        request: prepared.request,
+        time: Float64Array.from(prepared.time),
+        constantsUsed: fixture.constants_used,
+        series: projectedPpolx,
+      },
+      createReplayStateDefinition("ppolx"),
+    );
+
+    expect(Array.from(projectedPpolx.get("ppolx") ?? [])).toEqual([0.1, 0.2, 0.3]);
   });
 });

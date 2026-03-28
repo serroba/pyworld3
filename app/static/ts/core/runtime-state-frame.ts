@@ -2,14 +2,6 @@ import type { ConstantMap, SimulationResult } from "../simulation-contracts.js";
 import type { RuntimePreparation } from "./browser-native-runtime.js";
 
 const TIME_KEY_PRECISION = 8;
-const REPLAYABLE_SOURCE_VARIABLES = new Set([
-  "nr",
-  "pop",
-  "iopc",
-  "fpc",
-  "ppolx",
-  "le",
-]);
 
 export type RuntimeStateFrame = {
   readonly request: RuntimePreparation["request"];
@@ -40,6 +32,10 @@ export type RuntimeStateAdvance = (
   observation: RuntimeObservation,
   nextObservation: RuntimeObservation | null,
 ) => number;
+export type RuntimeStateDefinition = {
+  readonly variable: string;
+  readonly advance: RuntimeStateAdvance;
+};
 
 function toTimeKey(value: number): string {
   return value.toFixed(TIME_KEY_PRECISION);
@@ -95,11 +91,44 @@ function resolveSourceSeriesValues(
   return projectSeriesValues(source.values, indices, source.name);
 }
 
-function replaySourceSeriesThroughStepper(
+function createObservedDeltaAdvance(variable: string): RuntimeStateAdvance {
+  return (currentValue, observation, nextObservation) => {
+    const observed = observation.values[variable];
+    const nextObserved = nextObservation?.values[variable];
+    if (observed === undefined) {
+      throw new Error(
+        `Runtime state advance is missing the observed '${variable}' value.`,
+      );
+    }
+    if (nextObserved === undefined) {
+      return currentValue;
+    }
+    return currentValue + (nextObserved - observed);
+  };
+}
+
+export function createReplayStateDefinition(
+  variable: string,
+): RuntimeStateDefinition {
+  return {
+    variable,
+    advance: createObservedDeltaAdvance(variable),
+  };
+}
+
+const STEPPED_SOURCE_STATE_DEFINITIONS = new Map<string, RuntimeStateDefinition>(
+  ["nr", "pop", "iopc", "fpc", "ppolx", "le"].map((variable) => [
+    variable,
+    createReplayStateDefinition(variable),
+  ]),
+);
+
+export function populateStateBufferFromDefinition(
   sourceSeries: Map<string, Float64Array>,
   oracleFrame: RuntimeStateFrame,
-  variable: string,
+  definition: RuntimeStateDefinition,
 ): void {
+  const { variable, advance } = definition;
   const projectedValues = sourceSeries.get(variable);
   if (!projectedValues) {
     throw new Error(
@@ -112,19 +141,7 @@ function replaySourceSeriesThroughStepper(
     populateStateBufferFromStepper(
       oracleFrame,
       projectedValues[0] ?? 0,
-      (currentValue, observation, nextObservation) => {
-        const observed = observation.values[variable];
-        const nextObserved = nextObservation?.values[variable];
-        if (observed === undefined) {
-          throw new Error(
-            `Runtime state advance is missing the observed '${variable}' value.`,
-          );
-        }
-        if (nextObserved === undefined) {
-          return currentValue;
-        }
-        return currentValue + (nextObserved - observed);
-      },
+      advance,
     ),
   );
 }
@@ -167,10 +184,11 @@ export function createRuntimeStateFrame(
   };
 
   for (const variable of sourceVariables) {
-    if (!REPLAYABLE_SOURCE_VARIABLES.has(variable)) {
+    const definition = STEPPED_SOURCE_STATE_DEFINITIONS.get(variable);
+    if (!definition) {
       continue;
     }
-    replaySourceSeriesThroughStepper(sourceSeries, oracleFrame, variable);
+    populateStateBufferFromDefinition(sourceSeries, oracleFrame, definition);
   }
 
   const sourceFrame: RuntimeStateFrame = {
