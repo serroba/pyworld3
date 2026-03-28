@@ -10,5 +10,5 @@
     "noImplicitReturns": true,
     "noUncheckedIndexedAccess": true
   },
-  "files": ["ts/model-data.ts"]
+  "files": ["ts/model-data.ts", "ts/simulation-provider.ts"]
 }

@@ -73,7 +73,7 @@ const ExploreView = (() => {
     if (statusEl) statusEl.innerHTML = '<div class="spinner">Running simulation\u2026</div>';
 
     try {
-      const result = await API.simulatePreset(presetName);
+      const result = await SimulationProvider.simulatePreset(presetName);
       currentPreset = presetName;
       if (statusEl) statusEl.innerHTML = "";
 

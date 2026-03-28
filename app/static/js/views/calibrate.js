@@ -190,7 +190,7 @@ const CalibrateView = (() => {
 
       // Run a simulation to get chart data for overlays
       try {
-        const simResult = await API.simulate({});
+        const simResult = await SimulationProvider.simulate({});
         if (chartsEl) renderValidationCharts(chartsEl, simResult, data.metrics);
       } catch (_) {
         // Charts are best-effort; table is the primary output

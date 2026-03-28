@@ -2,7 +2,8 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "noEmit": false,
-    "outFile": "js/model-data.js",
+    "rootDir": "ts",
+    "outDir": "js",
     "removeComments": false
   }
 }
