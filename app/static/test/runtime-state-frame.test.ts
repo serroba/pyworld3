@@ -2,6 +2,8 @@ import { describe, expect, test } from "vitest";
 
 import {
   createRuntimeStateFrame,
+  listRuntimeObservations,
+  observeRuntimeStateAt,
   prepareRuntime,
   runtimeStateFrameToSimulationResult,
 } from "../ts/core/index.ts";
@@ -78,5 +80,69 @@ describe("runtime state frame", () => {
         nrfr: { name: "nrfr", values: [0.5, 0.45, 0.4] },
       },
     });
+  });
+
+  test("can observe a single timestep snapshot from the frame", () => {
+    const prepared = prepareRuntime(
+      ModelData,
+      {
+        year_min: 1900,
+        year_max: 1902,
+        dt: 1,
+        output_variables: ["pop", "nrfr"],
+      },
+      tables,
+    );
+
+    const frame = createRuntimeStateFrame(prepared, fixture);
+
+    expect(observeRuntimeStateAt(frame, 1)).toEqual({
+      index: 1,
+      time: 1901,
+      values: {
+        pop: 14,
+        nrfr: 0.9,
+      },
+    });
+  });
+
+  test("can list the full observation stream from the frame", () => {
+    const prepared = prepareRuntime(
+      ModelData,
+      {
+        year_min: 1900,
+        year_max: 1901,
+        dt: 0.5,
+        output_variables: ["pop"],
+      },
+      tables,
+    );
+
+    const frame = createRuntimeStateFrame(prepared, fixture);
+
+    expect(listRuntimeObservations(frame)).toEqual([
+      { index: 0, time: 1900, values: { pop: 10 } },
+      { index: 1, time: 1900.5, values: { pop: 12 } },
+      { index: 2, time: 1901, values: { pop: 14 } },
+    ]);
+  });
+
+  test("fails clearly when observing an out-of-bounds frame index", () => {
+    const prepared = prepareRuntime(
+      ModelData,
+      {
+        year_min: 1900,
+        year_max: 1901,
+        dt: 1,
+        output_variables: ["pop"],
+      },
+      tables,
+    );
+
+    const frame = createRuntimeStateFrame(prepared, fixture);
+
+    expect(() => observeRuntimeStateAt(frame, 3)).toThrow(
+      "index 3 is out of bounds",
+    );
   });
 });

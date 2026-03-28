@@ -23,6 +23,8 @@ export {
 export { projectSimulationResult } from "./simulation-results.js";
 export {
   createRuntimeStateFrame,
+  listRuntimeObservations,
+  observeRuntimeStateAt,
   runtimeStateFrameToSimulationResult,
 } from "./runtime-state-frame.js";
 export {
@@ -38,7 +40,10 @@ export type {
   RuntimePreparation,
   RuntimeTablesLoader,
 } from "./browser-native-runtime.js";
-export type { RuntimeStateFrame } from "./runtime-state-frame.js";
+export type {
+  RuntimeObservation,
+  RuntimeStateFrame,
+} from "./runtime-state-frame.js";
 export type { World3Core } from "./world3-core.js";
 export type {
   LocalSimulationCore,

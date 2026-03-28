@@ -10,6 +10,12 @@ export type RuntimeStateFrame = {
   readonly series: Map<string, Float64Array>;
 };
 
+export type RuntimeObservation = {
+  readonly index: number;
+  readonly time: number;
+  readonly values: Record<string, number>;
+};
+
 function toTimeKey(value: number): string {
   return value.toFixed(TIME_KEY_PRECISION);
 }
@@ -135,4 +141,34 @@ export function runtimeStateFrameToSimulationResult(
       ]),
     ),
   };
+}
+
+export function observeRuntimeStateAt(
+  frame: RuntimeStateFrame,
+  index: number,
+): RuntimeObservation {
+  const time = frame.time[index];
+  if (time === undefined) {
+    throw new Error(`Runtime state frame index ${index} is out of bounds.`);
+  }
+
+  const values = Object.fromEntries(
+    Array.from(frame.series.entries(), ([name, series]) => {
+      const value = series[index];
+      if (value === undefined) {
+        throw new Error(
+          `Runtime state frame series '${name}' is missing a value at index ${index}.`,
+        );
+      }
+      return [name, value];
+    }),
+  );
+
+  return { index, time, values };
+}
+
+export function listRuntimeObservations(
+  frame: RuntimeStateFrame,
+): RuntimeObservation[] {
+  return Array.from(frame.time, (_time, index) => observeRuntimeStateAt(frame, index));
 }
