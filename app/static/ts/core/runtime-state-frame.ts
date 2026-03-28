@@ -41,6 +41,8 @@ export type RuntimeDerivedDefinition = {
   readonly derive: RuntimeSeriesDeriver;
 };
 
+const NR_RATE_SERIES = "__nr_rate";
+
 function toTimeKey(value: number): string {
   return value.toFixed(TIME_KEY_PRECISION);
 }
@@ -95,6 +97,39 @@ function resolveSourceSeriesValues(
   return projectSeriesValues(source.values, indices, source.name);
 }
 
+function createOracleRateSeries(
+  values: Float64Array,
+  time: Float64Array,
+): Float64Array {
+  const rates = new Float64Array(values.length);
+  if (values.length === 0) {
+    return rates;
+  }
+
+  for (let index = 0; index < values.length - 1; index += 1) {
+    const currentValue = values[index];
+    const nextValue = values[index + 1];
+    const currentTime = time[index];
+    const nextTime = time[index + 1];
+    if (
+      currentValue === undefined ||
+      nextValue === undefined ||
+      currentTime === undefined ||
+      nextTime === undefined
+    ) {
+      throw new Error("Oracle-backed rate construction is missing a source value.");
+    }
+    const dt = nextTime - currentTime;
+    rates[index] = dt === 0 ? 0 : (nextValue - currentValue) / dt;
+  }
+
+  if (rates.length > 1) {
+    rates[rates.length - 1] = rates[rates.length - 2] ?? 0;
+  }
+
+  return rates;
+}
+
 function createObservedDeltaAdvance(variable: string): RuntimeStateAdvance {
   return (currentValue, observation, nextObservation) => {
     const observed = observation.values[variable];
@@ -120,11 +155,37 @@ export function createReplayStateDefinition(
   };
 }
 
-const STEPPED_SOURCE_STATE_DEFINITIONS = new Map<string, RuntimeStateDefinition>(
-  ["nr", "pop", "iopc", "fpc", "ppolx", "le"].map((variable) => [
+export function createEulerStateDefinition(
+  variable: string,
+  rateVariable: string,
+): RuntimeStateDefinition {
+  return {
     variable,
-    createReplayStateDefinition(variable),
-  ]),
+    advance: (currentValue, observation, nextObservation) => {
+      const rate = observation.values[rateVariable];
+      if (rate === undefined) {
+        throw new Error(
+          `Runtime Euler state advance is missing the rate variable '${rateVariable}'.`,
+        );
+      }
+      if (!nextObservation) {
+        return currentValue;
+      }
+      const dt = nextObservation.time - observation.time;
+      return currentValue + dt * rate;
+    },
+  };
+}
+
+const STEPPED_SOURCE_STATE_DEFINITIONS = new Map<string, RuntimeStateDefinition>(
+  [
+    ["nr", createEulerStateDefinition("nr", NR_RATE_SERIES)],
+    ["pop", createReplayStateDefinition("pop")],
+    ["iopc", createReplayStateDefinition("iopc")],
+    ["fpc", createReplayStateDefinition("fpc")],
+    ["ppolx", createReplayStateDefinition("ppolx")],
+    ["le", createReplayStateDefinition("le")],
+  ],
 );
 
 export function populateStateBufferFromDefinition(
@@ -227,6 +288,14 @@ export function createRuntimeStateFrame(
     constantsUsed,
     series: sourceSeries,
   };
+
+  const projectedNr = sourceSeries.get("nr");
+  if (projectedNr) {
+    sourceSeries.set(
+      NR_RATE_SERIES,
+      createOracleRateSeries(projectedNr, oracleFrame.time),
+    );
+  }
 
   for (const variable of sourceVariables) {
     const definition = STEPPED_SOURCE_STATE_DEFINITIONS.get(variable);

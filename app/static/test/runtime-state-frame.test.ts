@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 
 import {
   assembleSimulationResultFromStepper,
+  createEulerStateDefinition,
   createReplayStateDefinition,
   createNrfrDerivedDefinition,
   createRuntimeStepper,
@@ -522,6 +523,36 @@ describe("runtime state frame", () => {
     );
 
     expect(Array.from(projectedPpolx.get("ppolx") ?? [])).toEqual([0.1, 0.2, 0.3]);
+  });
+
+  test("can populate a stock series from an Euler-style runtime state definition", () => {
+    const prepared = prepareRuntime(
+      ModelData,
+      {
+        year_min: 1900,
+        year_max: 1902,
+        dt: 1,
+        output_variables: ["nr"],
+      },
+      tables,
+    );
+    const projectedNr = new Map<string, Float64Array>([
+      ["nr", Float64Array.from([100, 0, 0])],
+      ["__nr_rate", Float64Array.from([-10, -10, -10])],
+    ]);
+
+    populateStateBufferFromDefinition(
+      projectedNr,
+      {
+        request: prepared.request,
+        time: Float64Array.from(prepared.time),
+        constantsUsed: fixture.constants_used,
+        series: projectedNr,
+      },
+      createEulerStateDefinition("nr", "__nr_rate"),
+    );
+
+    expect(Array.from(projectedNr.get("nr") ?? [])).toEqual([100, 90, 80]);
   });
 
   test("can populate a derived series from an explicit runtime derived definition", () => {

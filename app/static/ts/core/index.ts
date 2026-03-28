@@ -24,6 +24,7 @@ export { projectSimulationResult } from "./simulation-results.js";
 export {
   assembleSimulationResultFromStepper,
   createReplayStateDefinition,
+  createEulerStateDefinition,
   createDerivedSeriesDefinition,
   createNrfrDerivedDefinition,
   createRuntimeStepper,
