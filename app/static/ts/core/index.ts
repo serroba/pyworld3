@@ -22,6 +22,7 @@ export {
 } from "./simulation-artifacts.js";
 export { projectSimulationResult } from "./simulation-results.js";
 export {
+  createRuntimeStepper,
   createRuntimeStateFrame,
   listRuntimeObservations,
   observeRuntimeStateAt,
@@ -43,6 +44,7 @@ export type {
 export type {
   RuntimeObservation,
   RuntimeStateFrame,
+  RuntimeStepper,
 } from "./runtime-state-frame.js";
 export type { World3Core } from "./world3-core.js";
 export type {

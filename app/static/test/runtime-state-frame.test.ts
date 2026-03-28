@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 
 import {
+  createRuntimeStepper,
   createRuntimeStateFrame,
   listRuntimeObservations,
   observeRuntimeStateAt,
@@ -144,5 +145,83 @@ describe("runtime state frame", () => {
     expect(() => observeRuntimeStateAt(frame, 3)).toThrow(
       "index 3 is out of bounds",
     );
+  });
+
+  test("can step through the runtime frame sequentially", () => {
+    const prepared = prepareRuntime(
+      ModelData,
+      {
+        year_min: 1900,
+        year_max: 1901,
+        dt: 0.5,
+        output_variables: ["pop"],
+      },
+      tables,
+    );
+    const frame = createRuntimeStateFrame(prepared, fixture);
+    const stepper = createRuntimeStepper(frame);
+
+    expect(stepper.length()).toBe(3);
+    expect(stepper.index()).toBe(0);
+    expect(stepper.current()).toEqual({
+      index: 0,
+      time: 1900,
+      values: { pop: 10 },
+    });
+    expect(stepper.peek(1)).toEqual({
+      index: 1,
+      time: 1900.5,
+      values: { pop: 12 },
+    });
+    expect(stepper.next()).toEqual({
+      index: 0,
+      time: 1900,
+      values: { pop: 10 },
+    });
+    expect(stepper.index()).toBe(1);
+    expect(stepper.next()).toEqual({
+      index: 1,
+      time: 1900.5,
+      values: { pop: 12 },
+    });
+    expect(stepper.next()).toEqual({
+      index: 2,
+      time: 1901,
+      values: { pop: 14 },
+    });
+    expect(stepper.isDone()).toBe(true);
+    expect(stepper.current()).toBeNull();
+    expect(stepper.next()).toBeNull();
+    expect(stepper.peek()).toBeNull();
+  });
+
+  test("can reset the runtime stepper back to the beginning", () => {
+    const prepared = prepareRuntime(
+      ModelData,
+      {
+        year_min: 1900,
+        year_max: 1901,
+        dt: 1,
+        output_variables: ["pop"],
+      },
+      tables,
+    );
+    const frame = createRuntimeStateFrame(prepared, fixture);
+    const stepper = createRuntimeStepper(frame);
+
+    stepper.next();
+    stepper.next();
+
+    expect(stepper.isDone()).toBe(true);
+
+    stepper.reset();
+
+    expect(stepper.index()).toBe(0);
+    expect(stepper.isDone()).toBe(false);
+    expect(stepper.current()).toEqual({
+      index: 0,
+      time: 1900,
+      values: { pop: 10 },
+    });
   });
 });

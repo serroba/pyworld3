@@ -93,3 +93,44 @@ export function observeRuntimeStateAt(frame, index) {
 export function listRuntimeObservations(frame) {
     return Array.from(frame.time, (_time, index) => observeRuntimeStateAt(frame, index));
 }
+export function createRuntimeStepper(frame) {
+    let currentIndex = 0;
+    function hasIndex(index) {
+        return index >= 0 && index < frame.time.length;
+    }
+    return {
+        current() {
+            if (!hasIndex(currentIndex)) {
+                return null;
+            }
+            return observeRuntimeStateAt(frame, currentIndex);
+        },
+        next() {
+            if (!hasIndex(currentIndex)) {
+                return null;
+            }
+            const observation = observeRuntimeStateAt(frame, currentIndex);
+            currentIndex += 1;
+            return observation;
+        },
+        peek(offset = 0) {
+            const targetIndex = currentIndex + offset;
+            if (!hasIndex(targetIndex)) {
+                return null;
+            }
+            return observeRuntimeStateAt(frame, targetIndex);
+        },
+        reset() {
+            currentIndex = 0;
+        },
+        isDone() {
+            return currentIndex >= frame.time.length;
+        },
+        index() {
+            return currentIndex;
+        },
+        length() {
+            return frame.time.length;
+        },
+    };
+}

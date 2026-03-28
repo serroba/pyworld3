@@ -16,6 +16,16 @@ export type RuntimeObservation = {
   readonly values: Record<string, number>;
 };
 
+export type RuntimeStepper = {
+  current: () => RuntimeObservation | null;
+  next: () => RuntimeObservation | null;
+  peek: (offset?: number) => RuntimeObservation | null;
+  reset: () => void;
+  isDone: () => boolean;
+  index: () => number;
+  length: () => number;
+};
+
 function toTimeKey(value: number): string {
   return value.toFixed(TIME_KEY_PRECISION);
 }
@@ -171,4 +181,54 @@ export function listRuntimeObservations(
   frame: RuntimeStateFrame,
 ): RuntimeObservation[] {
   return Array.from(frame.time, (_time, index) => observeRuntimeStateAt(frame, index));
+}
+
+export function createRuntimeStepper(frame: RuntimeStateFrame): RuntimeStepper {
+  let currentIndex = 0;
+
+  function hasIndex(index: number): boolean {
+    return index >= 0 && index < frame.time.length;
+  }
+
+  return {
+    current() {
+      if (!hasIndex(currentIndex)) {
+        return null;
+      }
+      return observeRuntimeStateAt(frame, currentIndex);
+    },
+
+    next() {
+      if (!hasIndex(currentIndex)) {
+        return null;
+      }
+      const observation = observeRuntimeStateAt(frame, currentIndex);
+      currentIndex += 1;
+      return observation;
+    },
+
+    peek(offset = 0) {
+      const targetIndex = currentIndex + offset;
+      if (!hasIndex(targetIndex)) {
+        return null;
+      }
+      return observeRuntimeStateAt(frame, targetIndex);
+    },
+
+    reset() {
+      currentIndex = 0;
+    },
+
+    isDone() {
+      return currentIndex >= frame.time.length;
+    },
+
+    index() {
+      return currentIndex;
+    },
+
+    length() {
+      return frame.time.length;
+    },
+  };
 }
