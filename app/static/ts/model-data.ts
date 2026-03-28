@@ -5,32 +5,6 @@
  * Build it with `npm run build` to regenerate `js/model-data.js`.
  */
 
-type ConstantMeta = {
-  full_name: string;
-  sector: string;
-  unit: string;
-};
-
-type VariableMeta = {
-  full_name: string;
-  sector: string;
-  unit: string;
-};
-
-type PresetInfo = {
-  name: string;
-  description: string;
-  constants: Record<string, number>;
-};
-
-type ModelDataPayload = {
-  constantDefaults: Record<string, number>;
-  constantMeta: Record<string, ConstantMeta>;
-  variableMeta: Record<string, VariableMeta>;
-  defaultVariables: string[];
-  presets: PresetInfo[];
-};
-
 interface Window {
   ModelData: ModelDataPayload;
 }
