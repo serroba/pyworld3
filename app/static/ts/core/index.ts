@@ -23,10 +23,13 @@ export {
 export { projectSimulationResult } from "./simulation-results.js";
 export {
   assembleSimulationResultFromStepper,
+  createNrResourceUsageRateDefinition,
   createEulerStateDefinition,
   createReplayStateDefinition,
   createDerivedSeriesDefinition,
   createNrfrDerivedDefinition,
+  createNrufDerivedDefinition,
+  createPcrumDerivedDefinition,
   createRuntimeStepper,
   createRuntimeStateFrame,
   listRuntimeObservations,

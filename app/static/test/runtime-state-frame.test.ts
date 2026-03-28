@@ -3,8 +3,11 @@ import { describe, expect, test } from "vitest";
 import {
   assembleSimulationResultFromStepper,
   createEulerStateDefinition,
+  createNrResourceUsageRateDefinition,
   createReplayStateDefinition,
   createNrfrDerivedDefinition,
+  createNrufDerivedDefinition,
+  createPcrumDerivedDefinition,
   createRuntimeStepper,
   createRuntimeStateFrame,
   listRuntimeObservations,
@@ -22,18 +25,18 @@ import type { SimulationResult } from "../ts/simulation-contracts.ts";
 
 const tables: RawLookupTable[] = [
   {
+    sector: "Resources",
+    "x.name": "IOPC",
+    "x.values": [1, 2, 3],
+    "y.name": "PCRUM",
+    "y.values": [2, 3, 4],
+  },
+  {
     sector: "Population",
     "x.name": "LE",
     "x.values": [20, 40],
     "y.name": "M1",
     "y.values": [0.05, 0.03],
-  },
-  {
-    sector: "Resource",
-    "x.name": "IOPC",
-    "x.values": [1, 2, 3],
-    "y.name": "PCRUM",
-    "y.values": [1, 10 / 14, 10 / 18],
   },
 ];
 
@@ -42,7 +45,7 @@ const fixture: SimulationResult = {
   year_max: 1902,
   dt: 0.5,
   time: [1900, 1900.5, 1901, 1901.5, 1902],
-  constants_used: { nri: 100 },
+  constants_used: { nri: 100, nruf1: 1, nruf2: 0.5 },
   series: {
     nr: { name: "nr", values: [100, 95, 90, 85, 80] },
     pop: { name: "pop", values: [10, 12, 14, 16, 18] },
@@ -70,9 +73,9 @@ describe("runtime state frame", () => {
     const frame = createRuntimeStateFrame(prepared, fixture);
 
     expect(Array.from(frame.time)).toEqual([1900, 1901, 1902]);
-    expect(frame.constantsUsed).toEqual({ nri: 100 });
+    expect(frame.constantsUsed).toEqual({ nri: 100, nruf1: 1, nruf2: 0.5 });
     expect(Array.from(frame.series.get("pop") ?? [])).toEqual([10, 14, 18]);
-    expect(Array.from(frame.series.get("nrfr") ?? [])).toEqual([1, 0.9, 0.8]);
+    expect(Array.from(frame.series.get("nrfr") ?? [])).toEqual([1, 0.8, 0.38]);
     expect(frame.series.has("nr")).toBe(false);
   });
 
@@ -96,9 +99,9 @@ describe("runtime state frame", () => {
       year_max: 1902,
       dt: 1,
       time: [1900, 1901, 1902],
-      constants_used: { nri: 200 },
+      constants_used: { nri: 200, nruf1: 1, nruf2: 0.5 },
       series: {
-        nrfr: { name: "nrfr", values: [0.5, 0.45, 0.4] },
+        nrfr: { name: "nrfr", values: [0.5, 0.4, 0.19] },
       },
     });
   });
@@ -122,10 +125,10 @@ describe("runtime state frame", () => {
       year_max: 1902,
       dt: 1,
       time: [1900, 1901, 1902],
-      constants_used: { nri: 100 },
+      constants_used: { nri: 100, nruf1: 1, nruf2: 0.5 },
       series: {
         pop: { name: "pop", values: [10, 14, 18] },
-        nrfr: { name: "nrfr", values: [1, 0.9, 0.8] },
+        nrfr: { name: "nrfr", values: [1, 0.8, 0.38] },
       },
     });
   });
@@ -149,7 +152,7 @@ describe("runtime state frame", () => {
       time: 1901,
       values: {
         pop: 14,
-        nrfr: 0.9,
+        nrfr: 0.8,
       },
     });
   });
@@ -312,7 +315,7 @@ describe("runtime state frame", () => {
     );
     const frame = createRuntimeStateFrame(prepared, fixture);
 
-    expect(Array.from(frame.series.get("nr") ?? [])).toEqual([100, 90, 80]);
+    expect(Array.from(frame.series.get("nr") ?? [])).toEqual([100, 80, 38]);
 
     const replayedNr = populateStateBufferFromStepper(
       frame,
@@ -330,7 +333,7 @@ describe("runtime state frame", () => {
       },
     );
 
-    expect(Array.from(replayedNr)).toEqual([100, 90, 80]);
+    expect(Array.from(replayedNr)).toEqual([100, 80, 38]);
   });
 
   test("can populate a stock series from an Euler-style runtime state definition", () => {
@@ -560,6 +563,143 @@ describe("runtime state frame", () => {
     );
 
     expect(Array.from(projectedPpolx.get("ppolx") ?? [])).toEqual([0.1, 0.2, 0.3]);
+  });
+
+  test("can populate nr through an explicit Euler stock definition with positive outflow", () => {
+    const prepared = prepareRuntime(
+      ModelData,
+      {
+        year_min: 1900,
+        year_max: 1902,
+        dt: 1,
+        output_variables: ["nr"],
+      },
+      tables,
+    );
+    const projectedNr = new Map([
+      ["nr", Float64Array.from([100, 90, 80])],
+      ["__nr_rate", Float64Array.from([10, 10, 10])],
+    ]);
+
+    populateStateBufferFromDefinition(
+      projectedNr,
+      {
+        request: prepared.request,
+        time: Float64Array.from(prepared.time),
+        constantsUsed: fixture.constants_used,
+        series: projectedNr,
+      },
+      createEulerStateDefinition("nr", "__nr_rate", -1),
+    );
+
+    expect(Array.from(projectedNr.get("nr") ?? [])).toEqual([100, 90, 80]);
+  });
+
+  test("can derive the hidden nruf policy series from constants", () => {
+    const prepared = prepareRuntime(
+      ModelData,
+      {
+        year_min: 1974,
+        year_max: 1976,
+        dt: 1,
+        pyear: 1975,
+        output_variables: ["nr"],
+      },
+      tables,
+    );
+    const series = new Map([["nr", Float64Array.from([100, 90, 80])]]);
+    const frame = {
+      request: prepared.request,
+      time: Float64Array.from(prepared.time),
+      constantsUsed: fixture.constants_used,
+      series,
+    };
+
+    populateDerivedBufferFromDefinition(
+      frame,
+      series,
+      createNrufDerivedDefinition(fixture.constants_used, 1975),
+    );
+
+    expect(Array.from(series.get("__nruf") ?? [])).toEqual([1, 1, 0.5]);
+  });
+
+  test("can derive the hidden pcrum lookup series from iopc", () => {
+    const prepared = prepareRuntime(
+      ModelData,
+      {
+        year_min: 1900,
+        year_max: 1902,
+        dt: 1,
+        output_variables: ["iopc"],
+      },
+      tables,
+    );
+    const series = new Map([["iopc", Float64Array.from([1, 2, 3])]]);
+    const frame = {
+      request: prepared.request,
+      time: Float64Array.from(prepared.time),
+      constantsUsed: fixture.constants_used,
+      series,
+    };
+
+    populateDerivedBufferFromDefinition(
+      frame,
+      series,
+      createPcrumDerivedDefinition(prepared.lookupLibrary.get("PCRUM")!),
+    );
+
+    expect(Array.from(series.get("__pcrum") ?? [])).toEqual([2, 3, 4]);
+  });
+
+  test("can derive the hidden resource usage rate from pop pcrum and nruf", () => {
+    const prepared = prepareRuntime(
+      ModelData,
+      {
+        year_min: 1900,
+        year_max: 1902,
+        dt: 1,
+        output_variables: ["nr"],
+      },
+      tables,
+    );
+    const series = new Map([
+      ["pop", Float64Array.from([10, 14, 18])],
+      ["__pcrum", Float64Array.from([2, 3, 4])],
+      ["__nruf", Float64Array.from([1, 1, 0.5])],
+    ]);
+    const frame = {
+      request: prepared.request,
+      time: Float64Array.from(prepared.time),
+      constantsUsed: fixture.constants_used,
+      series,
+    };
+
+    populateDerivedBufferFromDefinition(
+      frame,
+      series,
+      createNrResourceUsageRateDefinition(),
+    );
+
+    expect(Array.from(series.get("__nr_rate") ?? [])).toEqual([20, 42, 36]);
+  });
+
+  test("uses native resource flow definitions when hidden dependencies are available", () => {
+    const prepared = prepareRuntime(
+      ModelData,
+      {
+        year_min: 1900,
+        year_max: 1902,
+        dt: 1,
+        output_variables: ["nr", "nrfr"],
+      },
+      tables,
+    );
+
+    const frame = createRuntimeStateFrame(prepared, fixture);
+
+    expect(Array.from(frame.series.get("nr") ?? [])).toEqual([100, 80, 38]);
+    expect(Array.from(frame.series.get("nrfr") ?? [])).toEqual([1, 0.8, 0.38]);
   });
 
   test("can populate a stock series from an Euler-style runtime state definition", () => {
