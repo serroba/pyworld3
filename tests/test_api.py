@@ -259,7 +259,7 @@ def test_static_simulation_provider_served():
     resp = client.get("/js/simulation-provider.js")
     assert resp.status_code == 200
     assert "const HttpSimulationProvider" in resp.text
-    assert "LocalSimulationProvider" in resp.text
+    assert "createSimulationProvider" in resp.text
 
 
 def test_static_simulation_contracts_served():
@@ -267,6 +267,13 @@ def test_static_simulation_contracts_served():
     assert resp.status_code == 200
     assert "function buildSimulationRequestFromPreset" in resp.text
     assert "function resolveScenarioRequest" in resp.text
+
+
+def test_static_browser_native_bridge_served():
+    resp = client.get("/js/browser-native.js")
+    assert resp.status_code == 200
+    assert "window.ModelData = ModelData" in resp.text
+    assert "window.SimulationProvider = createSimulationProvider(ModelData)" in resp.text
 
 
 def test_static_local_standard_run_fixture_served():

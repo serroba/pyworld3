@@ -1,11 +1,10 @@
-"use strict";
 /**
  * Browser-local model metadata used to boot the UI without calling the API.
  *
  * This file is the typed source of truth for browser-native model metadata.
  * Build it with `npm run build` to regenerate `js/model-data.js`.
  */
-const ModelData = {
+export const ModelData = {
     constantDefaults: {
         ahl70: 1.5,
         alai1: 2,
@@ -232,4 +231,3 @@ const ModelData = {
         },
     ],
 };
-window.ModelData = ModelData;

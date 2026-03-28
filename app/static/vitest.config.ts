@@ -7,7 +7,11 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       reporter: ["text", "lcov"],
-      include: ["ts/simulation-contracts.ts", "ts/simulation-provider.ts"],
+      include: [
+        "ts/browser-native.ts",
+        "ts/simulation-contracts.ts",
+        "ts/simulation-provider.ts",
+      ],
       thresholds: {
         lines: 90,
         functions: 90,

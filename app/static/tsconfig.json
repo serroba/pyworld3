@@ -1,11 +1,12 @@
 {
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "module": "none"
+    "module": "ES2022"
   },
   "files": [
     "ts/simulation-contracts.ts",
     "ts/model-data.ts",
-    "ts/simulation-provider.ts"
+    "ts/simulation-provider.ts",
+    "ts/browser-native.ts"
   ]
 }

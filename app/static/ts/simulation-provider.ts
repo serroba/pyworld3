@@ -5,9 +5,19 @@
  * onto a stable abstraction before introducing a browser-native engine.
  */
 
-type ProviderMode = "http" | "local";
+import {
+  type CompareResult,
+  type ModelDataPayload,
+  type ScenarioSpec,
+  type SimulationRequest,
+  type SimulationResult,
+  buildSimulationRequestFromPreset,
+  resolveScenarioRequest,
+} from "./simulation-contracts.js";
 
-type SimulationProviderApi = {
+export type ProviderMode = "http" | "local";
+
+export type SimulationProviderApi = {
   mode: ProviderMode;
   simulatePreset: (
     name: string,
@@ -23,7 +33,7 @@ type SimulationProviderApi = {
   ) => Promise<CompareResult>;
 };
 
-declare const API: {
+type HttpApi = {
   simulatePreset: (
     name: string,
     overrides?: SimulationRequest,
@@ -38,29 +48,27 @@ declare const API: {
   ) => Promise<CompareResult>;
 };
 
-interface Window {
-  SimulationProvider: SimulationProviderApi;
-  __PYWORLD3_PROVIDER_MODE__?: ProviderMode;
-  buildSimulationRequestFromPreset: (
-    name: string,
-    overrides?: SimulationRequest,
-  ) => SimulationRequest;
-  resolveScenarioRequest: (spec: ScenarioSpec) => SimulationRequest;
+declare global {
+  interface Window {
+    SimulationProvider: SimulationProviderApi;
+    __PYWORLD3_PROVIDER_MODE__?: ProviderMode;
+    API?: HttpApi;
+  }
 }
 
 const HttpSimulationProvider: SimulationProviderApi = {
   mode: "http",
 
   async simulatePreset(name, overrides) {
-    return API.simulatePreset(name, overrides);
+    return getApi().simulatePreset(name, overrides);
   },
 
   async simulate(request, options) {
-    return API.simulate(request, options);
+    return getApi().simulate(request, options);
   },
 
   async compare(scenarioA, scenarioB) {
-    return API.compare(scenarioA, scenarioB);
+    return getApi().compare(scenarioA, scenarioB);
   },
 };
 
@@ -69,6 +77,13 @@ const LOCAL_PROVIDER_ERROR =
   "Local simulation currently supports only the standard-run preset without overrides. Switch back to HTTP mode for other scenarios.";
 
 let localStandardRunFixturePromise: Promise<SimulationResult> | null = null;
+
+function getApi(): HttpApi {
+  if (!window.API) {
+    throw new Error("HTTP API client is not available on window.");
+  }
+  return window.API;
+}
 
 function hasExplicitOverrides(request?: SimulationRequest): boolean {
   if (!request) {
@@ -113,7 +128,10 @@ async function loadLocalStandardRunFixture(
   return localStandardRunFixturePromise;
 }
 
-const LocalSimulationProvider: SimulationProviderApi = {
+function createLocalSimulationProvider(
+  modelData: ModelDataPayload,
+): SimulationProviderApi {
+  return {
   mode: "local",
 
   async simulatePreset(name, overrides) {
@@ -131,21 +149,28 @@ const LocalSimulationProvider: SimulationProviderApi = {
   },
 
   async compare(scenarioA, scenarioB) {
-    window.resolveScenarioRequest(scenarioA);
+    resolveScenarioRequest(modelData, scenarioA);
     if (scenarioB) {
-      window.resolveScenarioRequest(scenarioB);
+      resolveScenarioRequest(modelData, scenarioB);
     }
     throw new Error(LOCAL_PROVIDER_ERROR);
   },
-};
+  };
+}
 
 function resolveProviderMode(): ProviderMode {
   return window.__PYWORLD3_PROVIDER_MODE__ === "local" ? "local" : "http";
 }
 
-const SimulationProvider =
-  resolveProviderMode() === "local"
-    ? LocalSimulationProvider
+export function createSimulationProvider(
+  modelData: ModelDataPayload,
+): SimulationProviderApi {
+  return resolveProviderMode() === "local"
+    ? createLocalSimulationProvider(modelData)
     : HttpSimulationProvider;
+}
 
-window.SimulationProvider = SimulationProvider;
+export const SimulationProvider =
+  resolveProviderMode() === "local"
+    ? null
+    : HttpSimulationProvider;

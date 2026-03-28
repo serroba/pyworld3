@@ -32,8 +32,9 @@ declare global {
 
 async function loadContractsSuite() {
   vi.resetModules();
-  await import("../ts/model-data.ts");
-  await import("../ts/simulation-contracts.ts");
+  const { ModelData } = await import("../ts/model-data.ts");
+  const contracts = await import("../ts/simulation-contracts.ts");
+  return { ModelData, ...contracts };
 }
 
 describe("simulation contracts", () => {
@@ -44,9 +45,10 @@ describe("simulation contracts", () => {
   });
 
   test("builds a preset request with merged constant overrides", async () => {
-    await loadContractsSuite();
+    const { ModelData, buildSimulationRequestFromPreset } = await loadContractsSuite();
 
-    const request = window.buildSimulationRequestFromPreset!(
+    const request = buildSimulationRequestFromPreset(
+      ModelData,
       "doubled-resources",
       {
         year_min: 1950,
@@ -66,9 +68,9 @@ describe("simulation contracts", () => {
   });
 
   test("resolves preset-backed scenarios through the browser helper", async () => {
-    await loadContractsSuite();
+    const { ModelData, resolveScenarioRequest } = await loadContractsSuite();
 
-    const request = window.resolveScenarioRequest!({
+    const request = resolveScenarioRequest(ModelData, {
       preset: "standard-run",
       request: { year_max: 2050 },
     });
@@ -77,9 +79,9 @@ describe("simulation contracts", () => {
   });
 
   test("preserves optional scalar overrides when they are provided", async () => {
-    await loadContractsSuite();
+    const { ModelData, buildSimulationRequestFromPreset } = await loadContractsSuite();
 
-    const request = window.buildSimulationRequestFromPreset!("standard-run", {
+    const request = buildSimulationRequestFromPreset(ModelData, "standard-run", {
       dt: 1,
       pyear: 2000,
       iphst: 1980,
@@ -93,10 +95,11 @@ describe("simulation contracts", () => {
   });
 
   test("throws a clear error for unknown presets", async () => {
-    await loadContractsSuite();
+    const { ModelData, buildSimulationRequestFromPreset } =
+      await loadContractsSuite();
 
     expect(() =>
-      window.buildSimulationRequestFromPreset!("missing-preset"),
+      buildSimulationRequestFromPreset(ModelData, "missing-preset"),
     ).toThrow("Unknown preset");
   });
 });

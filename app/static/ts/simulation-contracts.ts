@@ -5,9 +5,9 @@
  * browser-native migration honest about request/response boundaries.
  */
 
-type ConstantMap = Record<string, number>;
+export type ConstantMap = Record<string, number>;
 
-type SimulationRequest = {
+export type SimulationRequest = {
   year_min?: number;
   year_max?: number;
   dt?: number;
@@ -17,17 +17,17 @@ type SimulationRequest = {
   output_variables?: string[];
 };
 
-type ScenarioSpec = {
+export type ScenarioSpec = {
   preset?: string;
   request?: SimulationRequest;
 };
 
-type TimeSeriesResult = {
+export type TimeSeriesResult = {
   name: string;
   values: number[];
 };
 
-type SimulationResult = {
+export type SimulationResult = {
   year_min: number;
   year_max: number;
   dt: number;
@@ -36,7 +36,7 @@ type SimulationResult = {
   series: Record<string, TimeSeriesResult>;
 };
 
-type CompareMetric = {
+export type CompareMetric = {
   label: string;
   variable: string;
   value_a: number;
@@ -44,7 +44,7 @@ type CompareMetric = {
   delta_pct: number | null;
 };
 
-type CompareResult = {
+export type CompareResult = {
   scenario_a: string;
   scenario_b: string;
   results_a: SimulationResult;
@@ -52,7 +52,7 @@ type CompareResult = {
   metrics: CompareMetric[];
 };
 
-type PresetInfo = {
+export type PresetInfo = {
   name: string;
   description: string;
   constants: ConstantMap;
@@ -64,7 +64,7 @@ type PresetInfo = {
   output_variables?: string[];
 };
 
-type ModelDataPayload = {
+export type ModelDataPayload = {
   constantDefaults: ConstantMap;
   constantMeta: Record<
     string,
@@ -86,28 +86,20 @@ type ModelDataPayload = {
   presets: PresetInfo[];
 };
 
-interface Window {
-  ModelData: ModelDataPayload;
-  buildSimulationRequestFromPreset: (
-    name: string,
-    overrides?: SimulationRequest,
-  ) => SimulationRequest;
-  resolveScenarioRequest: (spec: ScenarioSpec) => SimulationRequest;
-}
-
-function getPresetByName(name: string): PresetInfo {
-  const preset = window.ModelData.presets.find((candidate) => candidate.name === name);
+function getPresetByName(modelData: ModelDataPayload, name: string): PresetInfo {
+  const preset = modelData.presets.find((candidate) => candidate.name === name);
   if (!preset) {
     throw new Error(`Unknown preset '${name}'`);
   }
   return preset;
 }
 
-function buildSimulationRequestFromPreset(
+export function buildSimulationRequestFromPreset(
+  modelData: ModelDataPayload,
   name: string,
   overrides: SimulationRequest = {},
 ): SimulationRequest {
-  const preset = getPresetByName(name);
+  const preset = getPresetByName(modelData, name);
   const mergedConstants: ConstantMap = {
     ...preset.constants,
     ...(overrides.constants || {}),
@@ -145,12 +137,12 @@ function buildSimulationRequestFromPreset(
   return request;
 }
 
-function resolveScenarioRequest(spec: ScenarioSpec): SimulationRequest {
+export function resolveScenarioRequest(
+  modelData: ModelDataPayload,
+  spec: ScenarioSpec,
+): SimulationRequest {
   if (spec.preset) {
-    return buildSimulationRequestFromPreset(spec.preset, spec.request);
+    return buildSimulationRequestFromPreset(modelData, spec.preset, spec.request);
   }
   return spec.request || {};
 }
-
-window.buildSimulationRequestFromPreset = buildSimulationRequestFromPreset;
-window.resolveScenarioRequest = resolveScenarioRequest;

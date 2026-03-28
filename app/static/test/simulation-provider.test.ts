@@ -16,29 +16,6 @@ declare global {
     compare: ReturnType<typeof vi.fn>;
   };
 
-  interface Window {
-    __PYWORLD3_PROVIDER_MODE__?: "http" | "local";
-    SimulationProvider?: {
-      mode: "http" | "local";
-      simulatePreset: (
-        name: string,
-        overrides?: Record<string, unknown>,
-      ) => Promise<MockSimulationResult>;
-      simulate: (
-        request?: Record<string, unknown>,
-        options?: { signal?: AbortSignal },
-      ) => Promise<MockSimulationResult>;
-      compare: (
-        scenarioA: { preset?: string; request?: Record<string, unknown> },
-        scenarioB?: { preset?: string; request?: Record<string, unknown> },
-      ) => Promise<unknown>;
-    };
-    resolveScenarioRequest?: (spec: {
-      preset?: string;
-      request?: Record<string, unknown>;
-    }) => Record<string, unknown>;
-  }
-
   var API: ApiMock;
 }
 
@@ -55,9 +32,11 @@ const fixture: MockSimulationResult = {
 
 async function loadProviderSuite() {
   vi.resetModules();
-  await import("../ts/model-data.ts");
-  await import("../ts/simulation-contracts.ts");
-  await import("../ts/simulation-provider.ts");
+  const modelData = await import("../ts/model-data.ts");
+  const contracts = await import("../ts/simulation-contracts.ts");
+  const provider = await import("../ts/simulation-provider.ts");
+  const bridge = await import("../ts/browser-native.ts");
+  return { ...modelData, ...contracts, ...provider, ...bridge };
 }
 
 describe("simulation provider", () => {
@@ -76,11 +55,12 @@ describe("simulation provider", () => {
   test("defaults to the HTTP provider and delegates API calls", async () => {
     const api = (globalThis as typeof globalThis & { API: ApiMock }).API;
     api.simulatePreset.mockResolvedValue(fixture);
-    await loadProviderSuite();
+    const { ModelData, createSimulationProvider } = await loadProviderSuite();
+    const simulationProvider = createSimulationProvider(ModelData);
 
-    const result = await window.SimulationProvider!.simulatePreset("standard-run");
+    const result = await simulationProvider.simulatePreset("standard-run");
 
-    expect(window.SimulationProvider!.mode).toBe("http");
+    expect(simulationProvider.mode).toBe("http");
     expect(api.simulatePreset).toHaveBeenCalledWith(
       "standard-run",
       undefined,
@@ -94,13 +74,14 @@ describe("simulation provider", () => {
     api.compare.mockResolvedValue({ metrics: [] });
     const signal = new AbortController().signal;
 
-    await loadProviderSuite();
+    const { ModelData, createSimulationProvider } = await loadProviderSuite();
+    const simulationProvider = createSimulationProvider(ModelData);
 
     await expect(
-      window.SimulationProvider!.simulate({ output_variables: ["pop"] }, { signal }),
+      simulationProvider.simulate({ output_variables: ["pop"] }, { signal }),
     ).resolves.toEqual(fixture);
     await expect(
-      window.SimulationProvider!.compare(
+      simulationProvider.compare(
         { preset: "standard-run" },
         { request: { year_max: 2050 } },
       ),
@@ -123,12 +104,13 @@ describe("simulation provider", () => {
       json: async () => fixture,
     } as Response);
 
-    await loadProviderSuite();
+    const { ModelData, createSimulationProvider } = await loadProviderSuite();
+    const simulationProvider = createSimulationProvider(ModelData);
 
-    const first = await window.SimulationProvider!.simulatePreset("standard-run");
-    const second = await window.SimulationProvider!.simulate();
+    const first = await simulationProvider.simulatePreset("standard-run");
+    const second = await simulationProvider.simulate();
 
-    expect(window.SimulationProvider!.mode).toBe("local");
+    expect(simulationProvider.mode).toBe("local");
     expect(globalThis.fetch).toHaveBeenCalledTimes(1);
     expect(first).toEqual(fixture);
     expect(second).toEqual(fixture);
@@ -142,10 +124,11 @@ describe("simulation provider", () => {
     } as Response);
     const signal = new AbortController().signal;
 
-    await loadProviderSuite();
+    const { ModelData, createSimulationProvider } = await loadProviderSuite();
+    const simulationProvider = createSimulationProvider(ModelData);
 
     await expect(
-      window.SimulationProvider!.simulate(undefined, { signal }),
+      simulationProvider.simulate(undefined, { signal }),
     ).resolves.toEqual(fixture);
     expect(globalThis.fetch).toHaveBeenCalledWith(
       "/data/standard-run-explore.json",
@@ -155,28 +138,31 @@ describe("simulation provider", () => {
 
   test("rejects unsupported local presets with a clear error", async () => {
     window.__PYWORLD3_PROVIDER_MODE__ = "local";
-    await loadProviderSuite();
+    const { ModelData, createSimulationProvider } = await loadProviderSuite();
+    const simulationProvider = createSimulationProvider(ModelData);
 
     await expect(
-      window.SimulationProvider!.simulatePreset("doubled-resources"),
+      simulationProvider.simulatePreset("doubled-resources"),
     ).rejects.toThrow("supports only the standard-run preset without overrides");
   });
 
   test("rejects local simulate requests with explicit overrides", async () => {
     window.__PYWORLD3_PROVIDER_MODE__ = "local";
-    await loadProviderSuite();
+    const { ModelData, createSimulationProvider } = await loadProviderSuite();
+    const simulationProvider = createSimulationProvider(ModelData);
 
     await expect(
-      window.SimulationProvider!.simulate({ output_variables: ["pop"] }),
+      simulationProvider.simulate({ output_variables: ["pop"] }),
     ).rejects.toThrow("supports only the standard-run preset without overrides");
   });
 
   test("treats populated constant overrides as explicit local overrides", async () => {
     window.__PYWORLD3_PROVIDER_MODE__ = "local";
-    await loadProviderSuite();
+    const { ModelData, createSimulationProvider } = await loadProviderSuite();
+    const simulationProvider = createSimulationProvider(ModelData);
 
     await expect(
-      window.SimulationProvider!.simulatePreset("standard-run", {
+      simulationProvider.simulatePreset("standard-run", {
         constants: { nri: 2_000_000_000_000 },
       }),
     ).rejects.toThrow("supports only the standard-run preset without overrides");
@@ -184,13 +170,15 @@ describe("simulation provider", () => {
 
   test("rejects local compare requests after resolving their shapes", async () => {
     window.__PYWORLD3_PROVIDER_MODE__ = "local";
-    await loadProviderSuite();
+    const { ModelData, createSimulationProvider, resolveScenarioRequest } =
+      await loadProviderSuite();
+    const simulationProvider = createSimulationProvider(ModelData);
 
     expect(() =>
-      window.resolveScenarioRequest!({ preset: "standard-run" }),
+      resolveScenarioRequest(ModelData, { preset: "standard-run" }),
     ).not.toThrow();
     await expect(
-      window.SimulationProvider!.compare(
+      simulationProvider.compare(
         { preset: "standard-run" },
         { request: { year_max: 2050 } },
       ),
@@ -209,14 +197,31 @@ describe("simulation provider", () => {
         json: async () => fixture,
       } as Response);
 
-    await loadProviderSuite();
+    const { ModelData, createSimulationProvider } = await loadProviderSuite();
+    const simulationProvider = createSimulationProvider(ModelData);
 
     await expect(
-      window.SimulationProvider!.simulatePreset("standard-run"),
+      simulationProvider.simulatePreset("standard-run"),
     ).rejects.toThrow("Failed to load local simulation fixture (503)");
     await expect(
-      window.SimulationProvider!.simulatePreset("standard-run"),
+      simulationProvider.simulatePreset("standard-run"),
     ).resolves.toEqual(fixture);
     expect(globalThis.fetch).toHaveBeenCalledTimes(2);
+  });
+
+  test("browser-native bridge populates window globals", async () => {
+    window.__PYWORLD3_PROVIDER_MODE__ = "local";
+    vi.mocked(globalThis.fetch).mockResolvedValue({
+      ok: true,
+      json: async () => fixture,
+    } as Response);
+
+    const { ModelData } = await loadProviderSuite();
+
+    expect(window.ModelData).toBe(ModelData);
+    expect(window.buildSimulationRequestFromPreset("standard-run")).toEqual({});
+    await expect(
+      window.SimulationProvider.simulatePreset("standard-run"),
+    ).resolves.toEqual(fixture);
   });
 });

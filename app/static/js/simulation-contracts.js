@@ -1,19 +1,18 @@
-"use strict";
 /**
  * Shared browser-side simulation contracts and preset resolution helpers.
  *
  * These types mirror the API shapes the UI already consumes, while keeping the
  * browser-native migration honest about request/response boundaries.
  */
-function getPresetByName(name) {
-    const preset = window.ModelData.presets.find((candidate) => candidate.name === name);
+function getPresetByName(modelData, name) {
+    const preset = modelData.presets.find((candidate) => candidate.name === name);
     if (!preset) {
         throw new Error(`Unknown preset '${name}'`);
     }
     return preset;
 }
-function buildSimulationRequestFromPreset(name, overrides = {}) {
-    const preset = getPresetByName(name);
+export function buildSimulationRequestFromPreset(modelData, name, overrides = {}) {
+    const preset = getPresetByName(modelData, name);
     const mergedConstants = {
         ...preset.constants,
         ...(overrides.constants || {}),
@@ -48,11 +47,9 @@ function buildSimulationRequestFromPreset(name, overrides = {}) {
     }
     return request;
 }
-function resolveScenarioRequest(spec) {
+export function resolveScenarioRequest(modelData, spec) {
     if (spec.preset) {
-        return buildSimulationRequestFromPreset(spec.preset, spec.request);
+        return buildSimulationRequestFromPreset(modelData, spec.preset, spec.request);
     }
     return spec.request || {};
 }
-window.buildSimulationRequestFromPreset = buildSimulationRequestFromPreset;
-window.resolveScenarioRequest = resolveScenarioRequest;

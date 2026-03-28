@@ -5,11 +5,9 @@
  * Build it with `npm run build` to regenerate `js/model-data.js`.
  */
 
-interface Window {
-  ModelData: ModelDataPayload;
-}
+import type { ModelDataPayload } from "./simulation-contracts.js";
 
-const ModelData: ModelDataPayload = {
+export const ModelData: ModelDataPayload = {
   constantDefaults: {
     ahl70: 1.5,
     alai1: 2,
@@ -240,5 +238,3 @@ const ModelData: ModelDataPayload = {
     },
   ],
 };
-
-window.ModelData = ModelData;
