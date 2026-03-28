@@ -134,9 +134,7 @@ describe("runtime state frame", () => {
     );
 
     const frame = createRuntimeStateFrame(prepared, fixture);
-
     const result = runtimeStateFrameToSimulationResult(frame);
-
     expect(result.year_min).toBe(1900);
     expect(result.year_max).toBe(1902);
     expect(result.dt).toBe(1);

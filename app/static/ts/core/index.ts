@@ -22,15 +22,22 @@ export {
 } from "./simulation-artifacts.js";
 export { projectSimulationResult } from "./simulation-results.js";
 export {
-  assembleSimulationResultFromStepper,
   createFcaorDerivedDefinition,
+  createNrfrDerivedDefinition,
   createNrResourceUsageRateDefinition,
+  createNrufDerivedDefinition,
+  createOracleRateSeries,
+  createPcrumDerivedDefinition,
+  extendResourceSourceVariables,
+  maybePopulateResourceOutputSeries,
+  populateResourceNativeSupportSeries,
+  RESOURCE_HIDDEN_SERIES,
+} from "./resource-sector.js";
+export {
+  assembleSimulationResultFromStepper,
   createEulerStateDefinition,
   createReplayStateDefinition,
   createDerivedSeriesDefinition,
-  createNrfrDerivedDefinition,
-  createNrufDerivedDefinition,
-  createPcrumDerivedDefinition,
   createRuntimeStepper,
   createRuntimeStateFrame,
   listRuntimeObservations,
