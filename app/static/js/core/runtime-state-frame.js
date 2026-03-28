@@ -1,8 +1,5 @@
+import { RESOURCE_HIDDEN_SERIES, extendResourceSourceVariables, maybePopulateResourceOutputSeries, populateResourceNativeSupportSeries, } from "./resource-sector.js";
 const TIME_KEY_PRECISION = 8;
-const DEFAULT_POLICY_YEAR = 1975;
-const NR_RATE_SERIES = "__nr_rate";
-const NRUF_SERIES = "__nruf";
-const PCRUM_SERIES = "__pcrum";
 function toTimeKey(value) {
     return value.toFixed(TIME_KEY_PRECISION);
 }
@@ -34,30 +31,6 @@ function resolveSourceSeriesValues(variable, fixture, indices) {
         throw new Error(`Fixture-backed runtime is missing the requested output variable '${variable}'.`);
     }
     return projectSeriesValues(source.values, indices, source.name);
-}
-function createOracleRateSeries(values, time) {
-    const rates = new Float64Array(values.length);
-    if (values.length === 0) {
-        return rates;
-    }
-    for (let index = 0; index < values.length - 1; index += 1) {
-        const currentValue = values[index];
-        const nextValue = values[index + 1];
-        const currentTime = time[index];
-        const nextTime = time[index + 1];
-        if (currentValue === undefined ||
-            nextValue === undefined ||
-            currentTime === undefined ||
-            nextTime === undefined) {
-            throw new Error("Oracle-backed rate construction is missing a source value.");
-        }
-        const dt = nextTime - currentTime;
-        rates[index] = dt === 0 ? 0 : (currentValue - nextValue) / dt;
-    }
-    if (rates.length > 1) {
-        rates[rates.length - 1] = rates[rates.length - 2] ?? 0;
-    }
-    return rates;
 }
 function createObservedDeltaAdvance(variable) {
     return (currentValue, observation, nextObservation) => {
@@ -94,60 +67,8 @@ export function createEulerStateDefinition(variable, rateVariable, multiplier = 
         },
     };
 }
-function clipAtPolicyYear(beforeValue, afterValue, time, policyYear) {
-    return time > policyYear ? afterValue : beforeValue;
-}
-export function createNrufDerivedDefinition(constantsUsed, policyYear = DEFAULT_POLICY_YEAR) {
-    return createDerivedSeriesDefinition(NRUF_SERIES, (observation) => {
-        const nruf1 = constantsUsed.nruf1 ?? 1;
-        const nruf2 = constantsUsed.nruf2 ?? 1;
-        return clipAtPolicyYear(nruf1, nruf2, observation.time, policyYear);
-    });
-}
-export function createPcrumDerivedDefinition(pcrumLookup) {
-    return createDerivedSeriesDefinition(PCRUM_SERIES, (observation) => {
-        const iopc = observation.values.iopc;
-        if (iopc === undefined) {
-            throw new Error("Fixture-backed runtime cannot derive '__pcrum' because the source variable 'iopc' is missing.");
-        }
-        return pcrumLookup.evaluate(iopc);
-    });
-}
-export function createNrResourceUsageRateDefinition() {
-    return createDerivedSeriesDefinition(NR_RATE_SERIES, (observation) => {
-        const pop = observation.values.pop;
-        const pcrum = observation.values[PCRUM_SERIES];
-        const nruf = observation.values[NRUF_SERIES];
-        if (pop === undefined) {
-            throw new Error("Fixture-backed runtime cannot derive '__nr_rate' because the source variable 'pop' is missing.");
-        }
-        if (pcrum === undefined) {
-            throw new Error("Fixture-backed runtime cannot derive '__nr_rate' because the source variable '__pcrum' is missing.");
-        }
-        if (nruf === undefined) {
-            throw new Error("Fixture-backed runtime cannot derive '__nr_rate' because the source variable '__nruf' is missing.");
-        }
-        return pop * pcrum * nruf;
-    });
-}
-export function createFcaorDerivedDefinition(constantsUsed, fcaor1Lookup, fcaor2Lookup, policyYear = DEFAULT_POLICY_YEAR) {
-    return createDerivedSeriesDefinition("fcaor", (observation) => {
-        const nr = observation.values.nr;
-        const nri = constantsUsed.nri;
-        if (nr === undefined) {
-            throw new Error("Fixture-backed runtime cannot derive 'fcaor' because the source variable 'nr' is missing.");
-        }
-        if (nri === undefined || nri === 0) {
-            throw new Error("Fixture-backed runtime cannot derive 'fcaor' because constant 'nri' is missing or zero.");
-        }
-        const nrfr = nr / nri;
-        const beforePolicy = fcaor1Lookup.evaluate(nrfr);
-        const afterPolicy = fcaor2Lookup.evaluate(nrfr);
-        return clipAtPolicyYear(beforePolicy, afterPolicy, observation.time, policyYear);
-    });
-}
 const STEPPED_SOURCE_STATE_DEFINITIONS = new Map([
-    ["nr", createEulerStateDefinition("nr", NR_RATE_SERIES, -1)],
+    ["nr", createEulerStateDefinition("nr", RESOURCE_HIDDEN_SERIES.nrRate, -1)],
     ["pop", createReplayStateDefinition("pop")],
     ["iopc", createReplayStateDefinition("iopc")],
     ["fpc", createReplayStateDefinition("fpc")],
@@ -168,19 +89,6 @@ export function createDerivedSeriesDefinition(variable, derive) {
         derive,
     };
 }
-export function createNrfrDerivedDefinition(constantsUsed) {
-    return createDerivedSeriesDefinition("nrfr", (observation) => {
-        const nr = observation.values.nr;
-        const nri = constantsUsed.nri;
-        if (nr === undefined) {
-            throw new Error("Fixture-backed runtime cannot derive 'nrfr' because the source variable 'nr' is missing.");
-        }
-        if (nri === undefined || nri === 0) {
-            throw new Error("Fixture-backed runtime cannot derive 'nrfr' because constant 'nri' is missing or zero.");
-        }
-        return nr / nri;
-    });
-}
 export function populateDerivedBufferFromDefinition(sourceFrame, series, definition) {
     series.set(definition.variable, populateSeriesBufferFromStepper(sourceFrame, definition.derive));
 }
@@ -191,20 +99,7 @@ export function createRuntimeStateFrame(prepared, fixture) {
         ...(prepared.request.constants ?? {}),
     };
     const sourceVariables = new Set(prepared.outputVariables.filter((variable) => variable !== "nrfr" && variable !== "fcaor"));
-    if (prepared.outputVariables.includes("nrfr") ||
-        prepared.outputVariables.includes("fcaor")) {
-        sourceVariables.add("nr");
-    }
-    const shouldComputeNativeNrFlow = sourceVariables.has("nr");
-    const pcrumLookup = prepared.lookupLibrary.get("PCRUM");
-    const canUseNativeNrFlow = shouldComputeNativeNrFlow &&
-        Boolean(fixture.series.pop) &&
-        Boolean(fixture.series.iopc) &&
-        Boolean(pcrumLookup);
-    if (canUseNativeNrFlow) {
-        sourceVariables.add("pop");
-        sourceVariables.add("iopc");
-    }
+    const { canUseNativeNrFlow } = extendResourceSourceVariables(sourceVariables, prepared.outputVariables, fixture, prepared.lookupLibrary);
     const sourceSeries = new Map();
     for (const variable of sourceVariables) {
         if (variable === "nr" && !fixture.series.nr) {
@@ -218,27 +113,7 @@ export function createRuntimeStateFrame(prepared, fixture) {
         constantsUsed,
         series: sourceSeries,
     };
-    const projectedNr = sourceSeries.get("nr");
-    if (projectedNr && canUseNativeNrFlow && pcrumLookup) {
-        populateDerivedBufferFromDefinition(oracleFrame, sourceSeries, createNrufDerivedDefinition(constantsUsed, prepared.request.pyear ?? DEFAULT_POLICY_YEAR));
-        const nrFlowFrame = {
-            request: oracleFrame.request,
-            time: oracleFrame.time,
-            constantsUsed,
-            series: sourceSeries,
-        };
-        populateDerivedBufferFromDefinition(nrFlowFrame, sourceSeries, createPcrumDerivedDefinition(pcrumLookup));
-        const nrRateFrame = {
-            request: oracleFrame.request,
-            time: oracleFrame.time,
-            constantsUsed,
-            series: sourceSeries,
-        };
-        populateDerivedBufferFromDefinition(nrRateFrame, sourceSeries, createNrResourceUsageRateDefinition());
-    }
-    else if (projectedNr) {
-        sourceSeries.set(NR_RATE_SERIES, createOracleRateSeries(projectedNr, oracleFrame.time));
-    }
+    populateResourceNativeSupportSeries(oracleFrame, sourceSeries, prepared, constantsUsed, canUseNativeNrFlow);
     for (const variable of sourceVariables) {
         const definition = STEPPED_SOURCE_STATE_DEFINITIONS.get(variable);
         if (!definition) {
@@ -254,22 +129,8 @@ export function createRuntimeStateFrame(prepared, fixture) {
     };
     const series = new Map();
     for (const variable of prepared.outputVariables) {
-        if (variable === "nrfr") {
-            populateDerivedBufferFromDefinition(sourceFrame, series, createNrfrDerivedDefinition(constantsUsed));
+        if (maybePopulateResourceOutputSeries(variable, sourceFrame, series, prepared, fixture, projectedIndices, constantsUsed)) {
             continue;
-        }
-        if (variable === "fcaor") {
-            const fcaor1Lookup = prepared.lookupLibrary.get("FCAOR1");
-            const fcaor2Lookup = prepared.lookupLibrary.get("FCAOR2");
-            if (fcaor1Lookup && fcaor2Lookup) {
-                populateDerivedBufferFromDefinition(sourceFrame, series, createFcaorDerivedDefinition(constantsUsed, fcaor1Lookup, fcaor2Lookup, prepared.request.pyear ?? DEFAULT_POLICY_YEAR));
-                continue;
-            }
-            if (fixture.series.fcaor) {
-                series.set("fcaor", resolveSourceSeriesValues("fcaor", fixture, projectedIndices));
-                continue;
-            }
-            throw new Error("Fixture-backed runtime cannot derive 'fcaor' because lookup tables 'FCAOR1' and 'FCAOR2' are missing.");
         }
         const values = sourceSeries.get(variable);
         if (!values) {
