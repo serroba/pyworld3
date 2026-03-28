@@ -88,6 +88,23 @@ export function createRuntimeStateFrame(prepared, fixture) {
             return currentValue + (nextObserved - observed);
         }));
     }
+    if (sourceVariables.has("iopc")) {
+        const projectedIopc = sourceSeries.get("iopc");
+        if (!projectedIopc) {
+            throw new Error("Fixture-backed runtime cannot populate the source variable 'iopc' because it is missing.");
+        }
+        sourceSeries.set("iopc", populateStateBufferFromStepper(oracleFrame, projectedIopc[0] ?? 0, (currentValue, observation, nextObservation) => {
+            const observed = observation.values.iopc;
+            const nextObserved = nextObservation?.values.iopc;
+            if (observed === undefined) {
+                throw new Error("Runtime state advance is missing the observed 'iopc' value.");
+            }
+            if (nextObserved === undefined) {
+                return currentValue;
+            }
+            return currentValue + (nextObserved - observed);
+        }));
+    }
     const sourceFrame = {
         request: prepared.request,
         time: oracleFrame.time,

@@ -34,6 +34,7 @@ const fixture: SimulationResult = {
   series: {
     nr: { name: "nr", values: [100, 95, 90, 85, 80] },
     pop: { name: "pop", values: [10, 12, 14, 16, 18] },
+    iopc: { name: "iopc", values: [1, 1.5, 2, 2.5, 3] },
     nrfr: { name: "nrfr", values: [99, 99, 99, 99, 99] },
   },
 };
@@ -349,5 +350,39 @@ describe("runtime state frame", () => {
     );
 
     expect(Array.from(replayedPop)).toEqual([10, 14, 18]);
+  });
+
+  test("can populate the iopc source series through the stepped state path", () => {
+    const prepared = prepareRuntime(
+      ModelData,
+      {
+        year_min: 1900,
+        year_max: 1902,
+        dt: 1,
+        output_variables: ["iopc"],
+      },
+      tables,
+    );
+    const frame = createRuntimeStateFrame(prepared, fixture);
+
+    expect(Array.from(frame.series.get("iopc") ?? [])).toEqual([1, 2, 3]);
+
+    const replayedIopc = populateStateBufferFromStepper(
+      frame,
+      frame.series.get("iopc")?.[0] ?? 0,
+      (currentValue, observation, nextObservation) => {
+        const observed = observation.values.iopc;
+        const nextObserved = nextObservation?.values.iopc;
+        if (observed === undefined) {
+          throw new Error("Missing iopc during state buffer population.");
+        }
+        if (nextObserved === undefined) {
+          return currentValue;
+        }
+        return currentValue + (nextObserved - observed);
+      },
+    );
+
+    expect(Array.from(replayedIopc)).toEqual([1, 2, 3]);
   });
 });
