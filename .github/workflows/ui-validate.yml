@@ -90,7 +90,9 @@ jobs:
           git diff --exit-code js/cli/browser-native-cli.js
           git diff --exit-code js/browser-native.js
           git diff --exit-code js/core/local-simulation-core.js
+          git diff --exit-code js/core/runtime-primitives.js
           git diff --exit-code js/core/simulation-artifacts.js
+          git diff --exit-code js/core/world3-tables.js
           git diff --exit-code js/model-data.js
           git diff --exit-code js/simulation-contracts.js
           git diff --exit-code js/simulation-provider.js

@@ -283,6 +283,13 @@ def test_static_local_standard_run_fixture_served():
     assert '"pop"' in resp.text
 
 
+def test_static_world3_lookup_tables_served():
+    resp = client.get("/data/functions-table-world3.json")
+    assert resp.status_code == 200
+    assert '"y.name": "M1"' in resp.text
+    assert '"sector": "Population"' in resp.text
+
+
 def test_static_css_served():
     resp = client.get("/css/variables.css")
     assert resp.status_code == 200

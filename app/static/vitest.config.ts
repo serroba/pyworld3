@@ -10,7 +10,9 @@ export default defineConfig({
       include: [
         "ts/browser-native.ts",
         "ts/core/local-simulation-core.ts",
+        "ts/core/runtime-primitives.ts",
         "ts/core/simulation-artifacts.ts",
+        "ts/core/world3-tables.ts",
         "ts/simulation-contracts.ts",
         "ts/simulation-provider.ts",
       ],
