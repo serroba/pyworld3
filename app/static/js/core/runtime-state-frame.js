@@ -1,6 +1,8 @@
 const TIME_KEY_PRECISION = 8;
 const DEFAULT_POLICY_YEAR = 1975;
 const NR_RATE_SERIES = "__nr_rate";
+const NRUF_SERIES = "__nruf";
+const PCRUM_SERIES = "__pcrum";
 function toTimeKey(value) {
     return value.toFixed(TIME_KEY_PRECISION);
 }
@@ -57,28 +59,6 @@ function createOracleRateSeries(values, time) {
     }
     return rates;
 }
-function clipAtPolicyYear(beforeValue, afterValue, time, policyYear) {
-    return time <= policyYear ? beforeValue : afterValue;
-}
-function createNrResourceUsageRateSeries(pop, iopc, time, constantsUsed, pcrumLookup) {
-    const rates = new Float64Array(time.length);
-    const nruf1 = constantsUsed.nruf1 ?? 1;
-    const nruf2 = constantsUsed.nruf2 ?? 1;
-    for (let index = 0; index < time.length; index += 1) {
-        const population = pop[index];
-        const industrialOutputPerCapita = iopc[index];
-        const year = time[index];
-        if (population === undefined ||
-            industrialOutputPerCapita === undefined ||
-            year === undefined) {
-            throw new Error("Native nr flow construction is missing a source value.");
-        }
-        const nruf = clipAtPolicyYear(nruf1, nruf2, year, DEFAULT_POLICY_YEAR);
-        const pcrum = pcrumLookup.evaluate(industrialOutputPerCapita);
-        rates[index] = population * pcrum * nruf;
-    }
-    return rates;
-}
 function createObservedDeltaAdvance(variable) {
     return (currentValue, observation, nextObservation) => {
         const observed = observation.values[variable];
@@ -110,9 +90,45 @@ export function createEulerStateDefinition(variable, rateVariable, multiplier = 
                 return currentValue;
             }
             const dt = nextObservation.time - observation.time;
-            return currentValue + multiplier * dt * rate;
+            return currentValue + dt * rate * multiplier;
         },
     };
+}
+function clipAtPolicyYear(beforeValue, afterValue, time, policyYear) {
+    return time > policyYear ? afterValue : beforeValue;
+}
+export function createNrufDerivedDefinition(constantsUsed, policyYear = DEFAULT_POLICY_YEAR) {
+    return createDerivedSeriesDefinition(NRUF_SERIES, (observation) => {
+        const nruf1 = constantsUsed.nruf1 ?? 1;
+        const nruf2 = constantsUsed.nruf2 ?? 1;
+        return clipAtPolicyYear(nruf1, nruf2, observation.time, policyYear);
+    });
+}
+export function createPcrumDerivedDefinition(pcrumLookup) {
+    return createDerivedSeriesDefinition(PCRUM_SERIES, (observation) => {
+        const iopc = observation.values.iopc;
+        if (iopc === undefined) {
+            throw new Error("Fixture-backed runtime cannot derive '__pcrum' because the source variable 'iopc' is missing.");
+        }
+        return pcrumLookup.evaluate(iopc);
+    });
+}
+export function createNrResourceUsageRateDefinition() {
+    return createDerivedSeriesDefinition(NR_RATE_SERIES, (observation) => {
+        const pop = observation.values.pop;
+        const pcrum = observation.values[PCRUM_SERIES];
+        const nruf = observation.values[NRUF_SERIES];
+        if (pop === undefined) {
+            throw new Error("Fixture-backed runtime cannot derive '__nr_rate' because the source variable 'pop' is missing.");
+        }
+        if (pcrum === undefined) {
+            throw new Error("Fixture-backed runtime cannot derive '__nr_rate' because the source variable '__pcrum' is missing.");
+        }
+        if (nruf === undefined) {
+            throw new Error("Fixture-backed runtime cannot derive '__nr_rate' because the source variable '__nruf' is missing.");
+        }
+        return pop * pcrum * nruf;
+    });
 }
 const STEPPED_SOURCE_STATE_DEFINITIONS = new Map([
     ["nr", createEulerStateDefinition("nr", NR_RATE_SERIES, -1)],
@@ -162,11 +178,13 @@ export function createRuntimeStateFrame(prepared, fixture) {
     if (prepared.outputVariables.includes("nrfr")) {
         sourceVariables.add("nr");
     }
-    const canComputeNativeNrRate = (sourceVariables.has("nr") || prepared.outputVariables.includes("nrfr")) &&
-        fixture.series.pop !== undefined &&
-        fixture.series.iopc !== undefined &&
-        prepared.lookupLibrary.has("PCRUM");
-    if (canComputeNativeNrRate) {
+    const shouldComputeNativeNrFlow = sourceVariables.has("nr");
+    const pcrumLookup = prepared.lookupLibrary.get("PCRUM");
+    const canUseNativeNrFlow = shouldComputeNativeNrFlow &&
+        Boolean(fixture.series.pop) &&
+        Boolean(fixture.series.iopc) &&
+        Boolean(pcrumLookup);
+    if (canUseNativeNrFlow) {
         sourceVariables.add("pop");
         sourceVariables.add("iopc");
     }
@@ -184,18 +202,25 @@ export function createRuntimeStateFrame(prepared, fixture) {
         series: sourceSeries,
     };
     const projectedNr = sourceSeries.get("nr");
-    if (projectedNr) {
-        if (canComputeNativeNrRate) {
-            const pop = sourceSeries.get("pop");
-            const iopc = sourceSeries.get("iopc");
-            const pcrumLookup = prepared.lookupLibrary.get("PCRUM");
-            if (pop && iopc && pcrumLookup) {
-                sourceSeries.set(NR_RATE_SERIES, createNrResourceUsageRateSeries(pop, iopc, oracleFrame.time, constantsUsed, pcrumLookup));
-            }
-        }
-        else {
-            sourceSeries.set(NR_RATE_SERIES, createOracleRateSeries(projectedNr, oracleFrame.time));
-        }
+    if (projectedNr && canUseNativeNrFlow && pcrumLookup) {
+        populateDerivedBufferFromDefinition(oracleFrame, sourceSeries, createNrufDerivedDefinition(constantsUsed, prepared.request.pyear ?? DEFAULT_POLICY_YEAR));
+        const nrFlowFrame = {
+            request: oracleFrame.request,
+            time: oracleFrame.time,
+            constantsUsed,
+            series: sourceSeries,
+        };
+        populateDerivedBufferFromDefinition(nrFlowFrame, sourceSeries, createPcrumDerivedDefinition(pcrumLookup));
+        const nrRateFrame = {
+            request: oracleFrame.request,
+            time: oracleFrame.time,
+            constantsUsed,
+            series: sourceSeries,
+        };
+        populateDerivedBufferFromDefinition(nrRateFrame, sourceSeries, createNrResourceUsageRateDefinition());
+    }
+    else if (projectedNr) {
+        sourceSeries.set(NR_RATE_SERIES, createOracleRateSeries(projectedNr, oracleFrame.time));
     }
     for (const variable of sourceVariables) {
         const definition = STEPPED_SOURCE_STATE_DEFINITIONS.get(variable);
