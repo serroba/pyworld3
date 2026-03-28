@@ -63,4 +63,41 @@ describe("browser-native runtime", () => {
     expect(loadTables).toHaveBeenCalledTimes(1);
     expect(loadFixture).toHaveBeenCalledTimes(1);
   });
+
+  test("projects fixture results onto the requested output variables and aligned grid", async () => {
+    const runtime = createFixtureBackedRuntime(
+      ModelData,
+      async () => tables,
+      async () => ({
+        year_min: 1900,
+        year_max: 1902,
+        dt: 0.5,
+        time: [1900, 1900.5, 1901, 1901.5, 1902],
+        constants_used: { nri: 2_000_000_000_000 },
+        series: {
+          pop: { name: "pop", values: [1, 2, 3, 4, 5] },
+          nr: { name: "nr", values: [5, 4, 3, 2, 1] },
+        },
+      }),
+    );
+
+    await expect(
+      runtime.simulateStandardRun({
+        year_min: 1900,
+        year_max: 1902,
+        dt: 1,
+        output_variables: ["nr"],
+        constants: { nri: 123 },
+      }),
+    ).resolves.toEqual({
+      year_min: 1900,
+      year_max: 1902,
+      dt: 1,
+      time: [1900, 1901, 1902],
+      constants_used: { nri: 123 },
+      series: {
+        nr: { name: "nr", values: [5, 3, 1] },
+      },
+    });
+  });
 });

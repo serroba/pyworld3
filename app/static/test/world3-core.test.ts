@@ -56,4 +56,39 @@ describe("world3 core facade", () => {
     expect(loadTables).toHaveBeenCalledTimes(1);
     expect(loadFixture).toHaveBeenCalledTimes(1);
   });
+
+  test("allows the shared core facade to project aligned standard-run overrides", async () => {
+    const alignedFixture = {
+      ...fixture,
+      year_max: 1902,
+      time: [1900, 1900.5, 1901, 1901.5, 1902],
+      series: {
+        pop: { name: "pop", values: [100, 110, 120, 130, 140] },
+        nr: { name: "nr", values: [10, 9, 8, 7, 6] },
+      },
+    } satisfies SimulationResult;
+    const core = createWorld3Core(
+      ModelData,
+      async () => tables,
+      async () => alignedFixture,
+    );
+
+    await expect(
+      core.simulateStandardRun({
+        year_min: 1900,
+        year_max: 1902,
+        dt: 1,
+        output_variables: ["pop"],
+      }),
+    ).resolves.toEqual({
+      year_min: 1900,
+      year_max: 1902,
+      dt: 1,
+      time: [1900, 1901, 1902],
+      constants_used: {},
+      series: {
+        pop: { name: "pop", values: [100, 120, 140] },
+      },
+    });
+  });
 });

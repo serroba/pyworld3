@@ -20,6 +20,7 @@ export {
   formatSimulationSummary,
   renderSimulationSvg,
 } from "./simulation-artifacts.js";
+export { projectSimulationResult } from "./simulation-results.js";
 export {
   createLookupInterpolator,
   createLookupLibrary,

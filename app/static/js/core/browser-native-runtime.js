@@ -1,6 +1,21 @@
 import { buildSimulationRequestFromPreset, } from "../simulation-contracts.js";
 import { createTimeGrid } from "./runtime-primitives.js";
+import { projectSimulationResult } from "./simulation-results.js";
 import { createLookupLibrary, } from "./world3-tables.js";
+function hasRequestOverrides(request) {
+    if (!request) {
+        return false;
+    }
+    return Object.entries(request).some(([, value]) => {
+        if (Array.isArray(value)) {
+            return value.length > 0;
+        }
+        if (value && typeof value === "object") {
+            return Object.keys(value).length > 0;
+        }
+        return value !== undefined;
+    });
+}
 export function prepareRuntime(modelData, request, rawTables) {
     const yearMin = request.year_min ?? 1900;
     const yearMax = request.year_max ?? 2100;
@@ -37,8 +52,13 @@ export function createFixtureBackedRuntime(modelData, loadTables, loadStandardRu
             const tables = await getTables();
             return prepareRuntime(modelData, request, tables);
         },
-        async simulateStandardRun(_overrides, options) {
-            return getFixture(options);
+        async simulateStandardRun(overrides = {}, options) {
+            const fixture = await getFixture(options);
+            if (!hasRequestOverrides(overrides)) {
+                return fixture;
+            }
+            const prepared = await this.prepareStandardRun(overrides);
+            return projectSimulationResult(prepared, fixture);
         },
     };
 }

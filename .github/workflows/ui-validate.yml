@@ -94,6 +94,7 @@ jobs:
           git diff --exit-code js/core/local-simulation-core.js
           git diff --exit-code js/core/runtime-primitives.js
           git diff --exit-code js/core/simulation-artifacts.js
+          git diff --exit-code js/core/simulation-results.js
           git diff --exit-code js/core/world3-core.js
           git diff --exit-code js/core/world3-tables.js
           git diff --exit-code js/model-data.js
