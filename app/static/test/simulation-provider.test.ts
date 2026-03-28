@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
+import type { SimulationProviderApi } from "../ts/simulation-provider.ts";
 
 type MockSimulationResult = {
   year_min: number;
@@ -9,15 +10,21 @@ type MockSimulationResult = {
   series: Record<string, { name: string; values: number[] }>;
 };
 
-declare global {
-  type ApiMock = {
-    simulatePreset: ReturnType<typeof vi.fn>;
-    simulate: ReturnType<typeof vi.fn>;
-    compare: ReturnType<typeof vi.fn>;
+function createApiMock() {
+  return {
+    simulatePreset: vi.fn<SimulationProviderApi["simulatePreset"]>(),
+    simulate: vi.fn<SimulationProviderApi["simulate"]>(),
+    compare: vi.fn<SimulationProviderApi["compare"]>(),
   };
-
-  var API: ApiMock;
 }
+
+type ApiMock = ReturnType<typeof createApiMock>;
+
+type TestWindow = Window &
+  typeof globalThis & {
+    API?: ApiMock;
+    SimulationProvider?: SimulationProviderApi;
+  };
 
 const fixture: MockSimulationResult = {
   year_min: 1900,
@@ -41,19 +48,15 @@ async function loadProviderSuite() {
 
 describe("simulation provider", () => {
   beforeEach(() => {
-    delete window.__PYWORLD3_PROVIDER_MODE__;
-    delete window.SimulationProvider;
-    delete window.resolveScenarioRequest;
-    (globalThis as typeof globalThis & { API: ApiMock }).API = {
-      simulatePreset: vi.fn(),
-      simulate: vi.fn(),
-      compare: vi.fn(),
-    };
+    Reflect.deleteProperty(window, "__PYWORLD3_PROVIDER_MODE__");
+    Reflect.deleteProperty(window, "SimulationProvider");
+    Reflect.deleteProperty(window, "resolveScenarioRequest");
+    (window as TestWindow).API = createApiMock();
     globalThis.fetch = vi.fn();
   });
 
   test("defaults to the HTTP provider and delegates API calls", async () => {
-    const api = (globalThis as typeof globalThis & { API: ApiMock }).API;
+    const api = (window as TestWindow).API!;
     api.simulatePreset.mockResolvedValue(fixture);
     const { ModelData, createSimulationProvider } = await loadProviderSuite();
     const simulationProvider = createSimulationProvider(ModelData);
@@ -69,9 +72,15 @@ describe("simulation provider", () => {
   });
 
   test("delegates generic simulate and compare calls in HTTP mode", async () => {
-    const api = (globalThis as typeof globalThis & { API: ApiMock }).API;
+    const api = (window as TestWindow).API!;
     api.simulate.mockResolvedValue(fixture);
-    api.compare.mockResolvedValue({ metrics: [] });
+    api.compare.mockResolvedValue({
+      scenario_a: "standard-run",
+      scenario_b: "custom",
+      results_a: fixture,
+      results_b: fixture,
+      metrics: [],
+    });
     const signal = new AbortController().signal;
 
     const { ModelData, createSimulationProvider } = await loadProviderSuite();
@@ -85,7 +94,13 @@ describe("simulation provider", () => {
         { preset: "standard-run" },
         { request: { year_max: 2050 } },
       ),
-    ).resolves.toEqual({ metrics: [] });
+    ).resolves.toEqual({
+      scenario_a: "standard-run",
+      scenario_b: "custom",
+      results_a: fixture,
+      results_b: fixture,
+      metrics: [],
+    });
 
     expect(api.simulate).toHaveBeenCalledWith(
       { output_variables: ["pop"] },

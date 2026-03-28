@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "module": "ES2022",
+    "moduleResolution": "Bundler",
+    "allowImportingTsExtensions": true,
+    "types": ["vitest/globals"]
+  },
+  "include": [
+    "ts/**/*.ts",
+    "test/**/*.ts",
+    "vitest.config.ts"
+  ]
+}

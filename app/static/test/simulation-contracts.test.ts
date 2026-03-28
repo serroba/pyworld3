@@ -1,35 +1,5 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
-declare global {
-  interface Window {
-    ModelData?: {
-      presets: Array<{
-        name: string;
-        description: string;
-        constants: Record<string, number>;
-        year_min?: number;
-        year_max?: number;
-        dt?: number;
-        pyear?: number;
-        iphst?: number;
-        output_variables?: string[];
-      }>;
-    };
-    buildSimulationRequestFromPreset?: (
-      name: string,
-      overrides?: {
-        year_min?: number;
-        constants?: Record<string, number>;
-        output_variables?: string[];
-      },
-    ) => Record<string, unknown>;
-    resolveScenarioRequest?: (spec: {
-      preset?: string;
-      request?: Record<string, unknown>;
-    }) => Record<string, unknown>;
-  }
-}
-
 async function loadContractsSuite() {
   vi.resetModules();
   const { ModelData } = await import("../ts/model-data.ts");
@@ -39,9 +9,9 @@ async function loadContractsSuite() {
 
 describe("simulation contracts", () => {
   beforeEach(() => {
-    delete window.ModelData;
-    delete window.buildSimulationRequestFromPreset;
-    delete window.resolveScenarioRequest;
+    Reflect.deleteProperty(window, "ModelData");
+    Reflect.deleteProperty(window, "buildSimulationRequestFromPreset");
+    Reflect.deleteProperty(window, "resolveScenarioRequest");
   });
 
   test("builds a preset request with merged constant overrides", async () => {
