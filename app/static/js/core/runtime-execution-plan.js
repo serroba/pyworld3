@@ -1,11 +1,9 @@
-import { extendAgricultureSourceVariables, populateAgricultureNativeSupportSeries, } from "./agriculture-sector.js";
-import { extendCapitalSourceVariables, populateCapitalNativeSupportSeries, } from "./capital-sector.js";
-import { computeCoupledCapitalResourceSeries } from "./coupled-capital-resource-runtime.js";
-import { extendResourceSourceVariables, populateResourceNativeSupportSeries, } from "./resource-sector.js";
-import { createBirthRateDerivedDefinition, createP1StockStateDefinition, createPopulationStockStateDefinitions, extendPopulationSourceVariables, createPopulationSumDerivedDefinition, } from "./population-sector.js";
-import { populatePopulationBirthNativeSupportSeries, populatePopulationNativeSupportSeries, } from "./population-runtime.js";
-import { extendPollutionSourceVariables, POLLUTION_OUTPUTS, populatePollutionNativeSupportSeries, } from "./pollution-sector.js";
-import { populateDerivedBufferFromDefinition, } from "./runtime-state-frame.js";
+import { extendAgricultureSourceVariables, } from "./agriculture-sector.js";
+import { extendCapitalSourceVariables, } from "./capital-sector.js";
+import { extendResourceSourceVariables, } from "./resource-sector.js";
+import { extendPopulationSourceVariables, } from "./population-sector.js";
+import { extendPollutionSourceVariables, POLLUTION_OUTPUTS, } from "./pollution-sector.js";
+import { applyRuntimeExecutionGraph } from "./runtime-execution-graph.js";
 const AGRICULTURE_NATIVE_OUTPUTS = new Set([
     "al",
     "f",
@@ -135,35 +133,20 @@ export function createRuntimeExecutionPlan(prepared, fixture) {
     };
 }
 export function applyRuntimeExecutionPlan(sourceFrame, sourceSeries, prepared, constantsUsed, plan, stepNr, nrStateDefinition) {
-    if (plan.canUseCoupledCapitalResource) {
-        const coupledSeries = computeCoupledCapitalResourceSeries(sourceFrame, prepared, constantsUsed);
-        for (const [name, values] of Object.entries(coupledSeries)) {
-            sourceSeries.set(name, values);
-        }
-    }
-    else {
-        populateCapitalNativeSupportSeries(sourceFrame, sourceSeries, prepared, constantsUsed, plan.capitalCapabilities.canUseNativeCapitalAllocation, plan.capitalCapabilities.canUseNativeCapitalInvestment, plan.capitalCapabilities.canUseNativeCapitalStocks, plan.capitalCapabilities.canUseNativeCapitalVisibleOutputFormulas, plan.capitalCapabilities.canUseNativeCapitalOrdering);
-        populateResourceNativeSupportSeries(sourceFrame, sourceSeries, prepared, constantsUsed, plan.canUseNativeNrFlow);
-    }
-    populateAgricultureNativeSupportSeries(sourceFrame, sourceSeries, prepared, constantsUsed, plan.agricultureCapabilities.canUseNativeFoodPath, plan.agricultureCapabilities.canUseNativeAgriculturalAllocation, plan.agricultureCapabilities.canUseNativeAgricultureProductivity, plan.agricultureCapabilities.canUseNativeAgricultureOrdering);
-    populatePollutionNativeSupportSeries(sourceFrame, sourceSeries, prepared, constantsUsed, plan.pollutionCapabilities.canUseNativePollutionPath);
-    populatePopulationNativeSupportSeries(sourceFrame, sourceSeries, prepared, constantsUsed, plan.canUseNativeLifeExpectancy, plan.canUseNativeMortality, plan.canUseNativeCohortSupport, plan.canUseNativeDeathPath, plan.canUseNativePopulationStocks);
-    if (plan.canUseNativePopulationStocks) {
-        for (const definition of createPopulationStockStateDefinitions()) {
-            stepNr(definition);
-        }
-    }
-    populatePopulationBirthNativeSupportSeries(sourceFrame, sourceSeries, prepared, constantsUsed, plan.canUseNativeBirthSupport);
-    if (plan.canUseNativeP1Stock) {
-        stepNr(createP1StockStateDefinition());
-    }
-    if (plan.canUseNativePopulationStocks || plan.canUseNativeP1Stock) {
-        populateDerivedBufferFromDefinition(sourceFrame, sourceSeries, createPopulationSumDerivedDefinition());
-    }
-    if (plan.canUseNativeBirthSupport) {
-        populateDerivedBufferFromDefinition(sourceFrame, sourceSeries, createBirthRateDerivedDefinition());
-    }
+    const executionContext = {
+        sourceFrame,
+        sourceSeries,
+        prepared,
+        constantsUsed,
+        plan,
+        stepState: stepNr,
+    };
     if (!plan.canUseCoupledCapitalResource && sourceSeries.has("nr") && nrStateDefinition) {
-        stepNr(nrStateDefinition);
+        applyRuntimeExecutionGraph({
+            ...executionContext,
+            nrStateDefinition,
+        });
+        return;
     }
+    applyRuntimeExecutionGraph(executionContext);
 }

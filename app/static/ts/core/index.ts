@@ -132,6 +132,10 @@ export {
   createRuntimeExecutionPlan,
 } from "./runtime-execution-plan.js";
 export {
+  applyRuntimeExecutionGraph,
+  createRuntimeExecutionGraph,
+} from "./runtime-execution-graph.js";
+export {
   assembleSimulationResultFromStepper,
   createEulerStateDefinition,
   createReplayStateDefinition,
@@ -169,6 +173,11 @@ export type {} from "./population-sector.js";
 export type {
   RuntimeExecutionPlan,
 } from "./runtime-execution-plan.js";
+export type {
+  RuntimeExecutionContext,
+  RuntimeExecutionStage,
+  RuntimeExecutionStageId,
+} from "./runtime-execution-graph.js";
 export type {
   RuntimeDerivedDefinition,
   RuntimeObservation,
