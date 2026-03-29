@@ -4,7 +4,7 @@ export { LOCAL_PROVIDER_ERROR, createLocalSimulationCore, createRuntimeBackedLoc
 export { createSeriesBuffer, createTimeGrid, Delay3, Dlinf3, Smooth, } from "./runtime-primitives.js";
 export { formatSimulationSummary, renderSimulationSvg, } from "./simulation-artifacts.js";
 export { projectSimulationResult } from "./simulation-results.js";
-export { createIoDerivedDefinition, extendCapitalSourceVariables, maybePopulateCapitalOutputSeries, } from "./capital-sector.js";
+export { createFioacDerivedDefinition, createIoDerivedDefinition, createIopcDerivedDefinition, createIsopcDerivedDefinition, extendCapitalSourceVariables, maybePopulateCapitalOutputSeries, } from "./capital-sector.js";
 export { createFcaorDerivedDefinition, createNrfrDerivedDefinition, createNrResourceUsageRateDefinition, createNrufDerivedDefinition, createOracleRateSeries, createPcrumDerivedDefinition, extendResourceSourceVariables, maybePopulateResourceOutputSeries, populateResourceNativeSupportSeries, RESOURCE_HIDDEN_SERIES, } from "./resource-sector.js";
 export { assembleSimulationResultFromStepper, createEulerStateDefinition, createReplayStateDefinition, createDerivedSeriesDefinition, createRuntimeStepper, createRuntimeStateFrame, listRuntimeObservations, observeRuntimeStateAt, populateDerivedBufferFromDefinition, populateSeriesBufferFromStepper, populateStateBufferFromDefinition, populateStateBufferFromStepper, runtimeStateFrameToSimulationResult, } from "./runtime-state-frame.js";
 export { createLookupInterpolator, createLookupLibrary, evaluateLookupTable, normalizeLookupTable, } from "./world3-tables.js";

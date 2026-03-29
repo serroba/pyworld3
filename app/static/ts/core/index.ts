@@ -22,7 +22,10 @@ export {
 } from "./simulation-artifacts.js";
 export { projectSimulationResult } from "./simulation-results.js";
 export {
+  createFioacDerivedDefinition,
   createIoDerivedDefinition,
+  createIopcDerivedDefinition,
+  createIsopcDerivedDefinition,
   extendCapitalSourceVariables,
   maybePopulateCapitalOutputSeries,
 } from "./capital-sector.js";
