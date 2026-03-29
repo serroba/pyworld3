@@ -79,6 +79,13 @@ const tables: RawLookupTable[] = [
     "y.name": "FCAOR2",
     "y.values": [0.5, 0.2],
   },
+  {
+    sector: "Pollution",
+    "x.name": "PPOLX",
+    "x.values": [0, 1],
+    "y.name": "AHLM",
+    "y.values": [1, 1],
+  },
 ];
 
 const fixture: SimulationResult = {
@@ -180,5 +187,51 @@ describe("runtime execution plan", () => {
     ]);
     expect(sourceSeries.has(CAPITAL_HIDDEN_SERIES.fioac)).toBe(true);
     expect(sourceSeries.has(RESOURCE_HIDDEN_SERIES.nrRate)).toBe(true);
+  });
+
+  test("plans the native pollution path when pollution support inputs are available", () => {
+    const prepared = prepareRuntime(
+      ModelData,
+      { year_min: 1900, year_max: 1902, dt: 1, output_variables: ["ppolx", "ppol"] },
+      tables,
+    );
+    const pollutionFixture: SimulationResult = {
+      year_min: 1900,
+      year_max: 1902,
+      dt: 1,
+      time: [1900, 1901, 1902],
+      constants_used: {
+        ppoli: 25,
+        ppol70: 100,
+        ahl70: 100,
+        amti: 1,
+        imti: 10,
+        imef: 0.1,
+        fipm: 0.001,
+        frpm: 0.02,
+        ppgf1: 1,
+        ppgf2: 1,
+        pptd1: 20,
+        pptd2: 20,
+      },
+      series: {
+        pop: { name: "pop", values: [10, 12, 14] },
+        al: { name: "al", values: [100, 100, 100] },
+        aiph: { name: "aiph", values: [10, 10, 10] },
+        pcrum: { name: "pcrum", values: [2, 2, 2] },
+        ppolx: { name: "ppolx", values: [9, 9, 9] },
+        ppol: { name: "ppol", values: [9, 9, 9] },
+      },
+    };
+
+    const plan = createRuntimeExecutionPlan(prepared, pollutionFixture);
+
+    expect(plan.pollutionCapabilities.canUseNativePollutionPath).toBe(true);
+    expect(Array.from(plan.sourceVariables).sort()).toEqual([
+      "aiph",
+      "al",
+      "pcrum",
+      "pop",
+    ]);
   });
 });

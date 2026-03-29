@@ -56,6 +56,13 @@ export {
   maybePopulatePopulationOutputSeries,
 } from "./population-sector.js";
 export {
+  POLLUTION_OUTPUTS,
+  computePollutionOrderedSeries,
+  extendPollutionSourceVariables,
+  maybePopulatePollutionOutputSeries,
+  populatePollutionNativeSupportSeries,
+} from "./pollution-sector.js";
+export {
   populatePopulationBirthNativeSupportSeries,
   populatePopulationNativeSupportSeries,
 } from "./population-runtime.js";
@@ -157,6 +164,7 @@ export type {
   CapitalOrderedSeries,
   CoupledCapitalResourceSeries,
 } from "./capital-sector.js";
+export type { PollutionOrderedSeries } from "./pollution-sector.js";
 export type {} from "./population-sector.js";
 export type {
   RuntimeExecutionPlan,

@@ -14,6 +14,9 @@ import {
   maybePopulatePopulationOutputSeries,
 } from "./population-sector.js";
 import {
+  maybePopulatePollutionOutputSeries,
+} from "./pollution-sector.js";
+import {
   RESOURCE_HIDDEN_SERIES,
   maybePopulateResourceOutputSeries,
 } from "./resource-sector.js";
@@ -322,6 +325,17 @@ export function createRuntimeStateFrame(
         variable,
         sourceFrame,
         series,
+      )
+    ) {
+      continue;
+    }
+    if (
+      maybePopulatePollutionOutputSeries(
+        variable,
+        sourceFrame,
+        series,
+        fixture,
+        projectedIndices,
       )
     ) {
       continue;

@@ -510,7 +510,7 @@ export function createCdrDerivedDefinition() {
         },
     };
 }
-export function extendPopulationSourceVariables(sourceVariables, outputVariables, fixture, lookupLibrary, canUseNativeFoodPath = false) {
+export function extendPopulationSourceVariables(sourceVariables, outputVariables, fixture, lookupLibrary, canUseNativeFoodPath = false, canUseNativePollutionPath = false) {
     const needsLifeExpectancy = outputVariables.includes("le") ||
         outputVariables.some((variable) => POPULATION_MORTALITY_OUTPUTS.includes(variable)) ||
         outputVariables.some((variable) => POPULATION_STOCK_OUTPUTS.includes(variable)) ||
@@ -522,7 +522,7 @@ export function extendPopulationSourceVariables(sourceVariables, outputVariables
         (Boolean(fixture.series.fpc) || canUseNativeFoodPath) &&
         Boolean(fixture.series.iopc) &&
         Boolean(fixture.series.sopc) &&
-        Boolean(fixture.series.ppolx) &&
+        (Boolean(fixture.series.ppolx) || canUseNativePollutionPath) &&
         fixture.constants_used.len !== undefined &&
         fixture.constants_used.sfpc !== undefined &&
         Boolean(lookupLibrary?.has("FPU")) &&
@@ -539,7 +539,9 @@ export function extendPopulationSourceVariables(sourceVariables, outputVariables
         }
         sourceVariables.add("iopc");
         sourceVariables.add("sopc");
-        sourceVariables.add("ppolx");
+        if (!canUseNativePollutionPath) {
+            sourceVariables.add("ppolx");
+        }
     }
     const canUseNativeMortality = outputVariables.some((variable) => POPULATION_MORTALITY_OUTPUTS.includes(variable) ||
         POPULATION_STOCK_OUTPUTS.includes(variable) ||

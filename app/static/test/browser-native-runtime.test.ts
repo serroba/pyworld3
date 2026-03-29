@@ -175,6 +175,13 @@ const tables: RawLookupTable[] = [
     "y.values": [0.2, 0.2],
   },
   {
+    sector: "Pollution",
+    "x.name": "PPOLX",
+    "x.values": [0, 1],
+    "y.name": "AHLM",
+    "y.values": [1, 1],
+  },
+  {
     sector: "Agriculture",
     "x.name": "FPCR",
     "x.values": [0, 1, 2],
@@ -506,6 +513,64 @@ describe("browser-native runtime", () => {
       expect.closeTo(50, 8),
       expect.closeTo(70, 8),
       expect.closeTo(78, 8),
+    ]);
+  });
+
+  test("derives pollution outputs natively through the runtime projection seam", async () => {
+    const runtime = createFixtureBackedRuntime(
+      ModelData,
+      async () => tables,
+      async () => ({
+        year_min: 1900,
+        year_max: 1902,
+        dt: 1,
+        time: [1900, 1901, 1902],
+        constants_used: {
+          ppoli: 25,
+          ppol70: 100,
+          ahl70: 100,
+          amti: 1,
+          imti: 10,
+          imef: 0.1,
+          fipm: 0.001,
+          frpm: 0.02,
+          ppgf1: 1,
+          ppgf2: 1,
+          pptd1: 20,
+          pptd2: 20,
+        },
+        series: {
+          pop: { name: "pop", values: [10, 12, 14] },
+          al: { name: "al", values: [100, 100, 100] },
+          aiph: { name: "aiph", values: [10, 10, 10] },
+          pcrum: { name: "pcrum", values: [2, 2, 2] },
+          ppolx: { name: "ppolx", values: [9, 9, 9] },
+          ppol: { name: "ppol", values: [9, 9, 9] },
+        },
+      }),
+    );
+
+    const result = await runtime.simulateStandardRun({
+      year_min: 1900,
+      year_max: 1902,
+      dt: 1,
+      output_variables: ["ppolx", "ppol", "ppgr"],
+    });
+
+    expect(result.series.ppgr?.values).toEqual([
+      expect.closeTo(1.4, 8),
+      expect.closeTo(1.48, 8),
+      expect.closeTo(1.56, 8),
+    ]);
+    expect(result.series.ppol?.values).toEqual([
+      expect.closeTo(25, 8),
+      expect.closeTo(25.03142857142857, 8),
+      expect.closeTo(25.062632653061222, 8),
+    ]);
+    expect(result.series.ppolx?.values).toEqual([
+      expect.closeTo(0.25, 8),
+      expect.closeTo(0.2503142857142857, 8),
+      expect.closeTo(0.25062632653061223, 8),
     ]);
   });
 

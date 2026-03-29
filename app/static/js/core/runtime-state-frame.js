@@ -2,6 +2,7 @@ import { applyRuntimeExecutionPlan, createRuntimeExecutionPlan, } from "./runtim
 import { maybePopulateAgricultureOutputSeries, } from "./agriculture-sector.js";
 import { maybePopulateCapitalOutputSeries, } from "./capital-sector.js";
 import { maybePopulatePopulationOutputSeries, } from "./population-sector.js";
+import { maybePopulatePollutionOutputSeries, } from "./pollution-sector.js";
 import { RESOURCE_HIDDEN_SERIES, maybePopulateResourceOutputSeries, } from "./resource-sector.js";
 const TIME_KEY_PRECISION = 8;
 function toTimeKey(value) {
@@ -148,6 +149,9 @@ export function createRuntimeStateFrame(prepared, fixture) {
             continue;
         }
         if (maybePopulatePopulationOutputSeries(variable, sourceFrame, series)) {
+            continue;
+        }
+        if (maybePopulatePollutionOutputSeries(variable, sourceFrame, series, fixture, projectedIndices)) {
             continue;
         }
         const values = sourceSeries.get(variable);
