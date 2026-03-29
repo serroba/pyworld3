@@ -136,4 +136,41 @@ describe("browser-native runtime", () => {
       },
     });
   });
+
+  test("derives iopc natively through the runtime projection seam", async () => {
+    const runtime = createFixtureBackedRuntime(
+      ModelData,
+      async () => tables,
+      async () => ({
+        year_min: 1900,
+        year_max: 1902,
+        dt: 0.5,
+        time: [1900, 1900.5, 1901, 1901.5, 1902],
+        constants_used: {},
+        series: {
+          pop: { name: "pop", values: [10, 12, 14, 16, 18] },
+          io: { name: "io", values: [10, 18, 28, 40, 54] },
+          iopc: { name: "iopc", values: [99, 99, 99, 99, 99] },
+        },
+      }),
+    );
+
+    await expect(
+      runtime.simulateStandardRun({
+        year_min: 1900,
+        year_max: 1902,
+        dt: 1,
+        output_variables: ["iopc"],
+      }),
+    ).resolves.toEqual({
+      year_min: 1900,
+      year_max: 1902,
+      dt: 1,
+      time: [1900, 1901, 1902],
+      constants_used: {},
+      series: {
+        iopc: { name: "iopc", values: [1, 2, 3] },
+      },
+    });
+  });
 });

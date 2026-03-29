@@ -223,10 +223,11 @@ export function createRuntimeStateFrame(
       (variable) =>
         variable !== "nrfr" &&
         variable !== "fcaor" &&
-        variable !== "io",
+        variable !== "io" &&
+        variable !== "iopc",
     ),
   );
-  const { canDeriveIo } = extendCapitalSourceVariables(
+  const capitalCapabilities = extendCapitalSourceVariables(
     sourceVariables,
     prepared.outputVariables,
     fixture,
@@ -291,7 +292,7 @@ export function createRuntimeStateFrame(
         fixture,
         projectedIndices,
         prepared,
-        canDeriveIo,
+        capitalCapabilities,
       )
     ) {
       continue;

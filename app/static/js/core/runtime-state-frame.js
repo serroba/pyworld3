@@ -101,8 +101,9 @@ export function createRuntimeStateFrame(prepared, fixture) {
     };
     const sourceVariables = new Set(prepared.outputVariables.filter((variable) => variable !== "nrfr" &&
         variable !== "fcaor" &&
-        variable !== "io"));
-    const { canDeriveIo } = extendCapitalSourceVariables(sourceVariables, prepared.outputVariables, fixture);
+        variable !== "io" &&
+        variable !== "iopc"));
+    const capitalCapabilities = extendCapitalSourceVariables(sourceVariables, prepared.outputVariables, fixture);
     const { canUseNativeNrFlow } = extendResourceSourceVariables(sourceVariables, prepared.outputVariables, fixture, prepared.lookupLibrary);
     const sourceSeries = new Map();
     for (const variable of sourceVariables) {
@@ -133,7 +134,7 @@ export function createRuntimeStateFrame(prepared, fixture) {
     };
     const series = new Map();
     for (const variable of prepared.outputVariables) {
-        if (maybePopulateCapitalOutputSeries(variable, sourceFrame, series, fixture, projectedIndices, prepared, canDeriveIo)) {
+        if (maybePopulateCapitalOutputSeries(variable, sourceFrame, series, fixture, projectedIndices, prepared, capitalCapabilities)) {
             continue;
         }
         if (maybePopulateResourceOutputSeries(variable, sourceFrame, series, prepared, fixture, projectedIndices, constantsUsed)) {
