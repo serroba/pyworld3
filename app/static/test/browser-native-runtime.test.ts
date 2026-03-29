@@ -1027,4 +1027,180 @@ describe("browser-native runtime", () => {
       expect(series?.values[2]).toBeCloseTo(expected[2], 6);
     }
   });
+
+  test("derives the native birth path through the browser seam", async () => {
+    const runtime = createFixtureBackedRuntime(
+      ModelData,
+      async () => [
+        ...tables,
+        {
+          sector: "Population",
+          "x.name": "POP",
+          "x.values": [0, 100, 200],
+          "y.name": "FPU",
+          "y.values": [0, 0.1, 0.2],
+        },
+        {
+          sector: "Population",
+          "x.name": "FPC/SFPC",
+          "x.values": [0, 1, 2],
+          "y.name": "LMF",
+          "y.values": [0.8, 1, 1.2],
+        },
+        {
+          sector: "Population",
+          "x.name": "SOPC",
+          "x.values": [0, 10, 20],
+          "y.name": "HSAPC",
+          "y.values": [0, 10, 20],
+        },
+        {
+          sector: "Population",
+          "x.name": "EHSPC",
+          "x.values": [0, 10, 20],
+          "y.name": "LMHS1",
+          "y.values": [0.5, 1, 1.5],
+        },
+        {
+          sector: "Population",
+          "x.name": "EHSPC",
+          "x.values": [0, 10, 20],
+          "y.name": "LMHS2",
+          "y.values": [0.4, 0.9, 1.4],
+        },
+        {
+          sector: "Population",
+          "x.name": "IOPC",
+          "x.values": [0, 10, 20],
+          "y.name": "CMI",
+          "y.values": [0, 0.1, 0.2],
+        },
+        {
+          sector: "Population",
+          "x.name": "PPOLX",
+          "x.values": [0, 1, 2],
+          "y.name": "LMP",
+          "y.values": [1.2, 1, 0.8],
+        },
+        {
+          sector: "Population",
+          "x.name": "LE",
+          "x.values": [20, 30, 40],
+          "y.name": "M2",
+          "y.values": [0.03, 0.02, 0.01],
+        },
+        {
+          sector: "Population",
+          "x.name": "LE",
+          "x.values": [20, 30, 40],
+          "y.name": "M3",
+          "y.values": [0.06, 0.04, 0.02],
+        },
+        {
+          sector: "Population",
+          "x.name": "LE",
+          "x.values": [20, 30, 40],
+          "y.name": "M4",
+          "y.values": [0.12, 0.1, 0.08],
+        },
+        {
+          sector: "Population",
+          "x.name": "LE",
+          "x.values": [20, 30, 40],
+          "y.name": "FM",
+          "y.values": [0.4, 0.8, 1.0],
+        },
+        {
+          sector: "Population",
+          "x.name": "PLE",
+          "x.values": [20, 30, 40],
+          "y.name": "CMPLE",
+          "y.values": [1.6, 1.4, 1.2],
+        },
+        {
+          sector: "Population",
+          "x.name": "DIOPC",
+          "x.values": [0, 5, 10],
+          "y.name": "SFSN",
+          "y.values": [1.1, 0.8, 0.6],
+        },
+        {
+          sector: "Population",
+          "x.name": "FIE",
+          "x.values": [-0.2, 0, 0.2],
+          "y.name": "FRSN",
+          "y.values": [0.6, 0.8, 1.0],
+        },
+        {
+          sector: "Population",
+          "x.name": "FCFPC",
+          "x.values": [0, 1, 2],
+          "y.name": "FCE_TOCLIP",
+          "y.values": [0.8, 0.9, 1.0],
+        },
+        {
+          sector: "Population",
+          "x.name": "NFC",
+          "x.values": [0, 2, 4],
+          "y.name": "FSAFC",
+          "y.values": [0, 0.01, 0.02],
+        },
+      ],
+      async () => ({
+        year_min: 1900,
+        year_max: 1902,
+        dt: 0.5,
+        time: [1900, 1900.5, 1901, 1901.5, 1902],
+        constants_used: {
+          dcfsn: 3.8,
+          fcest: 4000,
+          hsid: 20,
+          ieat: 3,
+          iphst: 1940,
+          len: 28,
+          lpd: 20,
+          mtfn: 12,
+          pet: 4000,
+          rlt: 30,
+          sad: 20,
+          sfpc: 230,
+          zpgt: 4000,
+        },
+        series: {
+          pop: { name: "pop", values: [10, 12, 14, 16, 18] },
+          p1: { name: "p1", values: [1, 1.5, 2, 2.5, 3] },
+          p2: { name: "p2", values: [2, 2.5, 3, 3.5, 4] },
+          p3: { name: "p3", values: [3, 3.5, 4, 4.5, 5] },
+          p4: { name: "p4", values: [4, 4.5, 5, 5.5, 6] },
+          fpc: { name: "fpc", values: [230, 253, 276, 299, 322] },
+          iopc: { name: "iopc", values: [10, 10, 10, 10, 10] },
+          sopc: { name: "sopc", values: [10, 10, 10, 10, 10] },
+          ppolx: { name: "ppolx", values: [1, 1, 1, 1, 1] },
+        },
+      }),
+    );
+
+    const result = await runtime.simulateStandardRun({
+      year_min: 1900,
+      year_max: 1902,
+      dt: 1,
+      output_variables: ["p1", "b", "cbr", "tf", "pop"],
+    });
+
+    const expectations = {
+      p1: [1, 1.0194037470997106, 0.9354030535095691],
+      b: [0.12529654709971055, 0.1257180733431918, 0.12654756393802175],
+      cbr: [12.529654709971055, 13.246280731923632, 14.387989823808349],
+      tf: [3.7588964129913167, 3.859123726903247, 3.950871070251402],
+      pop: [10, 9.49082054709971, 8.795360956442902],
+    } as const;
+
+    for (const [variable, expected] of Object.entries(expectations)) {
+      const series = result.series[variable];
+      expect(series?.name).toBe(variable);
+      expect(series?.values[0]).toBeCloseTo(expected[0], 6);
+      expect(series?.values[1]).toBeCloseTo(expected[1], 6);
+      expect(series?.values[2]).toBeCloseTo(expected[2], 6);
+    }
+  });
 });

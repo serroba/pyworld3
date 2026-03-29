@@ -2,17 +2,34 @@ import { describe, expect, test } from "vitest";
 
 import {
   POPULATION_HIDDEN_SERIES,
+  createBirthRateDerivedDefinition,
+  createBirthsDerivedDefinition,
   createCdrDerivedDefinition,
+  createCmpleDerivedDefinition,
+  createDcfsDerivedDefinition,
   createDeathDerivedDefinition,
+  createDtfDerivedDefinition,
+  createFcapcDerivedDefinition,
+  createFceDerivedDefinition,
+  createFieDerivedDefinition,
+  createFmDerivedDefinition,
+  createFrsnDerivedDefinition,
+  createFsafcDerivedDefinition,
   createLeDerivedDefinition,
   createMaturationDerivedDefinition,
+  createMtfDerivedDefinition,
   createMortalityDerivedDefinition,
+  createNfcDerivedDefinition,
+  createP1StockStateDefinition,
   createPopulationStockStateDefinition,
   createPopulationStockStateDefinitions,
   createPopulationSumDerivedDefinition,
+  createSfsnDerivedDefinition,
+  createTfDerivedDefinition,
   createTotalDeathsDerivedDefinition,
   extendPopulationSourceVariables,
   maybePopulatePopulationOutputSeries,
+  populatePopulationBirthNativeSupportSeries,
   populatePopulationNativeSupportSeries,
   prepareRuntime,
 } from "../ts/core/index.ts";
@@ -98,6 +115,48 @@ const tables: RawLookupTable[] = [
     "y.name": "M4",
     "y.values": [0.12, 0.1, 0.08],
   },
+  {
+    sector: "Population",
+    "x.name": "LE",
+    "x.values": [20, 30, 40],
+    "y.name": "FM",
+    "y.values": [0.4, 0.8, 1.0],
+  },
+  {
+    sector: "Population",
+    "x.name": "PLE",
+    "x.values": [20, 30, 40],
+    "y.name": "CMPLE",
+    "y.values": [1.6, 1.4, 1.2],
+  },
+  {
+    sector: "Population",
+    "x.name": "DIOPC",
+    "x.values": [0, 5, 10],
+    "y.name": "SFSN",
+    "y.values": [1.1, 0.8, 0.6],
+  },
+  {
+    sector: "Population",
+    "x.name": "FIE",
+    "x.values": [-0.2, 0, 0.2],
+    "y.name": "FRSN",
+    "y.values": [0.6, 0.8, 1.0],
+  },
+  {
+    sector: "Population",
+    "x.name": "FCFPC",
+    "x.values": [0, 1, 2],
+    "y.name": "FCE_TOCLIP",
+    "y.values": [0.8, 0.9, 1.0],
+  },
+  {
+    sector: "Population",
+    "x.name": "NFC",
+    "x.values": [0, 2, 4],
+    "y.name": "FSAFC",
+    "y.values": [0, 0.01, 0.02],
+  },
 ];
 
 const fixture: SimulationResult = {
@@ -106,10 +165,19 @@ const fixture: SimulationResult = {
   dt: 0.5,
   time: [1900, 1900.5, 1901, 1901.5, 1902],
   constants_used: {
+    dcfsn: 3.8,
+    fcest: 4000,
+    ieat: 3,
     len: 28,
+    lpd: 20,
+    mtfn: 12,
+    pet: 4000,
+    rlt: 30,
+    sad: 20,
     sfpc: 230,
     hsid: 20,
     iphst: 1940,
+    zpgt: 4000,
   },
   series: {
     pop: { name: "pop", values: [10, 12, 14, 16, 18] },
@@ -162,6 +230,8 @@ describe("population sector core", () => {
       canUseNativeCohortSupport: false,
       canUseNativeDeathPath: false,
       canUseNativePopulationStocks: false,
+      canUseNativeBirthSupport: false,
+      canUseNativeP1Stock: false,
     });
     expect(Array.from(sourceVariables).sort()).toEqual([
       "fpc",
@@ -298,6 +368,59 @@ describe("population sector core", () => {
     ).toBeCloseTo(2.2, 8);
   });
 
+  test("derives the native fertility and birth chain", () => {
+    expect(
+      createFieDerivedDefinition().derive({
+        index: 0,
+        time: 1900,
+        values: {
+          iopc: 12,
+          [POPULATION_HIDDEN_SERIES.aiopc]: 10,
+        },
+      }),
+    ).toBeCloseTo(0.2, 8);
+    expect(
+      createSfsnDerivedDefinition(
+        prepareRuntime(ModelData, { output_variables: ["tf"] }, tables).lookupLibrary.get("SFSN")!,
+      ).derive({
+        index: 0,
+        time: 1900,
+        values: {
+          [POPULATION_HIDDEN_SERIES.diopc]: 5,
+        },
+      }),
+    ).toBeCloseTo(0.8, 8);
+    expect(
+      createBirthsDerivedDefinition(deathFixture.constants_used).derive({
+        index: 0,
+        time: 1900,
+        values: { d: 0.5, p2: 2, tf: 6 },
+      }),
+    ).toBeCloseTo(0.2, 8);
+    expect(
+      createBirthRateDerivedDefinition().derive({
+        index: 0,
+        time: 1900,
+        values: { b: 0.2, pop: 10 },
+      }),
+    ).toBeCloseTo(20, 8);
+    expect(
+      createP1StockStateDefinition().advance(
+        1,
+        {
+          index: 0,
+          time: 1900,
+          values: { b: 0.2, d1: 0.03, mat1: 0.05 },
+        },
+        {
+          index: 1,
+          time: 1901,
+          values: { b: 0.2, d1: 0.03, mat1: 0.05 },
+        },
+      ),
+    ).toBeCloseTo(1.12, 8);
+  });
+
   test("extends runtime source requirements for native mortality outputs", () => {
     const sourceVariables = new Set<string>();
     const prepared = prepareRuntime(
@@ -319,6 +442,8 @@ describe("population sector core", () => {
       canUseNativeCohortSupport: false,
       canUseNativeDeathPath: false,
       canUseNativePopulationStocks: false,
+      canUseNativeBirthSupport: false,
+      canUseNativeP1Stock: false,
     });
     expect(Array.from(sourceVariables).sort()).toEqual([
       "fpc",
@@ -350,6 +475,8 @@ describe("population sector core", () => {
       canUseNativeCohortSupport: true,
       canUseNativeDeathPath: true,
       canUseNativePopulationStocks: false,
+      canUseNativeBirthSupport: false,
+      canUseNativeP1Stock: false,
     });
     expect(Array.from(sourceVariables).sort()).toEqual([
       "fpc",
@@ -385,6 +512,8 @@ describe("population sector core", () => {
       canUseNativeCohortSupport: true,
       canUseNativeDeathPath: false,
       canUseNativePopulationStocks: true,
+      canUseNativeBirthSupport: false,
+      canUseNativeP1Stock: false,
     });
     expect(Array.from(sourceVariables).sort()).toEqual([
       "fpc",
@@ -420,6 +549,45 @@ describe("population sector core", () => {
       canUseNativeCohortSupport: true,
       canUseNativeDeathPath: false,
       canUseNativePopulationStocks: false,
+      canUseNativeBirthSupport: false,
+      canUseNativeP1Stock: false,
+    });
+    expect(Array.from(sourceVariables).sort()).toEqual([
+      "fpc",
+      "iopc",
+      "p1",
+      "p2",
+      "p3",
+      "p4",
+      "pop",
+      "ppolx",
+      "sopc",
+    ]);
+  });
+
+  test("extends runtime source requirements for the native birth path", () => {
+    const sourceVariables = new Set<string>();
+    const prepared = prepareRuntime(
+      ModelData,
+      { output_variables: ["p1", "b", "cbr", "tf"] },
+      tables,
+    );
+
+    const result = extendPopulationSourceVariables(
+      sourceVariables,
+      prepared.outputVariables,
+      deathFixture,
+      prepared.lookupLibrary,
+    );
+
+    expect(result).toEqual({
+      canUseNativeLifeExpectancy: true,
+      canUseNativeMortality: true,
+      canUseNativeCohortSupport: true,
+      canUseNativeDeathPath: false,
+      canUseNativePopulationStocks: true,
+      canUseNativeBirthSupport: true,
+      canUseNativeP1Stock: true,
     });
     expect(Array.from(sourceVariables).sort()).toEqual([
       "fpc",
