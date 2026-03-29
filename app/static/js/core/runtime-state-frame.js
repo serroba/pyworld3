@@ -1,5 +1,6 @@
 import { applyRuntimeExecutionPlan, createRuntimeExecutionPlan, } from "./runtime-execution-plan.js";
 import { maybePopulateCapitalOutputSeries, } from "./capital-sector.js";
+import { maybePopulatePopulationOutputSeries, } from "./population-sector.js";
 import { RESOURCE_HIDDEN_SERIES, maybePopulateResourceOutputSeries, } from "./resource-sector.js";
 const TIME_KEY_PRECISION = 8;
 function toTimeKey(value) {
@@ -140,6 +141,9 @@ export function createRuntimeStateFrame(prepared, fixture) {
             continue;
         }
         if (maybePopulateResourceOutputSeries(variable, sourceFrame, series, prepared, fixture, projectedIndices, constantsUsed)) {
+            continue;
+        }
+        if (maybePopulatePopulationOutputSeries(variable, sourceFrame, series)) {
             continue;
         }
         const values = sourceSeries.get(variable);

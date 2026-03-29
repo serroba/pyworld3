@@ -8,6 +8,9 @@ import {
   maybePopulateCapitalOutputSeries,
 } from "./capital-sector.js";
 import {
+  maybePopulatePopulationOutputSeries,
+} from "./population-sector.js";
+import {
   RESOURCE_HIDDEN_SERIES,
   maybePopulateResourceOutputSeries,
 } from "./resource-sector.js";
@@ -296,6 +299,15 @@ export function createRuntimeStateFrame(
         fixture,
         projectedIndices,
         constantsUsed,
+      )
+    ) {
+      continue;
+    }
+    if (
+      maybePopulatePopulationOutputSeries(
+        variable,
+        sourceFrame,
+        series,
       )
     ) {
       continue;

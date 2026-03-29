@@ -9,6 +9,10 @@ import {
   extendResourceSourceVariables,
   populateResourceNativeSupportSeries,
 } from "./resource-sector.js";
+import {
+  extendPopulationSourceVariables,
+  populatePopulationNativeSupportSeries,
+} from "./population-sector.js";
 import type { RuntimeStateDefinition, RuntimeStateFrame } from "./runtime-state-frame.js";
 
 export type RuntimeExecutionPlan = {
@@ -16,6 +20,7 @@ export type RuntimeExecutionPlan = {
   readonly capitalCapabilities: ReturnType<typeof extendCapitalSourceVariables>;
   readonly canUseNativeNrFlow: boolean;
   readonly canUseCoupledCapitalResource: boolean;
+  readonly canUseNativeLifeExpectancy: boolean;
 };
 
 export function createRuntimeExecutionPlan(
@@ -48,6 +53,12 @@ export function createRuntimeExecutionPlan(
     prepared.lookupLibrary,
     capitalCapabilities.canUseNativeCapitalOrdering,
   );
+  const { canUseNativeLifeExpectancy } = extendPopulationSourceVariables(
+    sourceVariables,
+    prepared.outputVariables,
+    fixture,
+    prepared.lookupLibrary,
+  );
 
   return {
     sourceVariables,
@@ -57,6 +68,7 @@ export function createRuntimeExecutionPlan(
       capitalCapabilities.canUseNativeCapitalOrdering &&
       canUseNativeNrFlow &&
       sourceVariables.has("nr"),
+    canUseNativeLifeExpectancy,
   };
 }
 
@@ -99,6 +111,14 @@ export function applyRuntimeExecutionPlan(
     prepared,
     constantsUsed,
     plan.canUseNativeNrFlow,
+  );
+
+  populatePopulationNativeSupportSeries(
+    sourceFrame,
+    sourceSeries,
+    prepared,
+    constantsUsed,
+    plan.canUseNativeLifeExpectancy,
   );
 
   if (sourceSeries.has("nr") && nrStateDefinition) {

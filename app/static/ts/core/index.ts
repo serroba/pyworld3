@@ -2,6 +2,20 @@ export {
   computeCoupledCapitalResourceSeries,
 } from "./coupled-capital-resource-runtime.js";
 export {
+  POPULATION_HIDDEN_SERIES,
+  createCmiDerivedDefinition,
+  createFpuDerivedDefinition,
+  createHsapcDerivedDefinition,
+  createLeDerivedDefinition,
+  createLmcDerivedDefinition,
+  createLmfDerivedDefinition,
+  createLmhsDerivedDefinitions,
+  createLmpDerivedDefinition,
+  extendPopulationSourceVariables,
+  maybePopulatePopulationOutputSeries,
+  populatePopulationNativeSupportSeries,
+} from "./population-sector.js";
+export {
   createFixtureBackedRuntime,
   prepareRuntime,
 } from "./browser-native-runtime.js";
@@ -98,6 +112,7 @@ export type {
   CapitalOrderedSeries,
   CoupledCapitalResourceSeries,
 } from "./capital-sector.js";
+export type {} from "./population-sector.js";
 export type {
   RuntimeExecutionPlan,
 } from "./runtime-execution-plan.js";

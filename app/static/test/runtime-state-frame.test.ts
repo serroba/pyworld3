@@ -376,6 +376,106 @@ describe("runtime state frame", () => {
     expect(result.series.fcaor?.values[2]).toBeCloseTo(0.62, 8);
   });
 
+  test("can derive le through the native population support path", () => {
+    const prepared = prepareRuntime(
+      ModelData,
+      {
+        year_min: 1900,
+        year_max: 1902,
+        dt: 1,
+        output_variables: ["le"],
+      },
+      [
+        ...tables,
+        {
+          sector: "Population",
+          "x.name": "POP",
+          "x.values": [0, 100, 200],
+          "y.name": "FPU",
+          "y.values": [0, 0.1, 0.2],
+        },
+        {
+          sector: "Population",
+          "x.name": "FPC/SFPC",
+          "x.values": [0, 1, 2],
+          "y.name": "LMF",
+          "y.values": [0.8, 1, 1.2],
+        },
+        {
+          sector: "Population",
+          "x.name": "SOPC",
+          "x.values": [0, 10, 20],
+          "y.name": "HSAPC",
+          "y.values": [0, 10, 20],
+        },
+        {
+          sector: "Population",
+          "x.name": "EHSPC",
+          "x.values": [0, 10, 20],
+          "y.name": "LMHS1",
+          "y.values": [0.5, 1, 1.5],
+        },
+        {
+          sector: "Population",
+          "x.name": "EHSPC",
+          "x.values": [0, 10, 20],
+          "y.name": "LMHS2",
+          "y.values": [0.4, 0.9, 1.4],
+        },
+        {
+          sector: "Population",
+          "x.name": "IOPC",
+          "x.values": [0, 10, 20],
+          "y.name": "CMI",
+          "y.values": [0, 0.1, 0.2],
+        },
+        {
+          sector: "Population",
+          "x.name": "PPOLX",
+          "x.values": [0, 1, 2],
+          "y.name": "LMP",
+          "y.values": [1.2, 1, 0.8],
+        },
+      ],
+    );
+    const populationFixture: SimulationResult = {
+      year_min: 1900,
+      year_max: 1902,
+      dt: 0.5,
+      time: [1900, 1900.5, 1901, 1901.5, 1902],
+      constants_used: {
+        len: 28,
+        sfpc: 230,
+        hsid: 20,
+        iphst: 1940,
+      },
+      series: {
+        pop: { name: "pop", values: [10, 12, 14, 16, 18] },
+        fpc: { name: "fpc", values: [230, 253, 276, 299, 322] },
+        iopc: { name: "iopc", values: [10, 10, 10, 10, 10] },
+        sopc: { name: "sopc", values: [10, 10, 10, 10, 10] },
+        ppolx: { name: "ppolx", values: [1, 1, 1, 1, 1] },
+        le: { name: "le", values: [0, 0, 0, 0, 0] },
+      },
+    };
+
+    const frame = createRuntimeStateFrame(prepared, populationFixture);
+
+    expect(runtimeStateFrameToSimulationResult(frame)).toEqual({
+      year_min: 1900,
+      year_max: 1902,
+      dt: 1,
+      time: [1900, 1901, 1902],
+      constants_used: populationFixture.constants_used,
+      series: {
+        le: {
+          name: "le",
+          values: [27.972, 29.079232, 30.185568],
+        },
+      },
+    });
+  });
+
   test("can assemble the public simulation result by stepping observations", () => {
     const prepared = prepareRuntime(
       ModelData,
