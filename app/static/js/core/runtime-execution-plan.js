@@ -14,6 +14,9 @@ export function createRuntimeExecutionPlan(prepared, fixture) {
         variable !== "m2" &&
         variable !== "m3" &&
         variable !== "m4" &&
+        variable !== "mat1" &&
+        variable !== "mat2" &&
+        variable !== "mat3" &&
         variable !== "d1" &&
         variable !== "d2" &&
         variable !== "d3" &&
@@ -22,7 +25,7 @@ export function createRuntimeExecutionPlan(prepared, fixture) {
         variable !== "cdr"));
     const capitalCapabilities = extendCapitalSourceVariables(sourceVariables, prepared.outputVariables, fixture, prepared.lookupLibrary);
     const { canUseNativeNrFlow } = extendResourceSourceVariables(sourceVariables, prepared.outputVariables, fixture, prepared.lookupLibrary, capitalCapabilities.canUseNativeCapitalOrdering);
-    const { canUseNativeLifeExpectancy, canUseNativeMortality, canUseNativeDeathPath, } = extendPopulationSourceVariables(sourceVariables, prepared.outputVariables, fixture, prepared.lookupLibrary);
+    const { canUseNativeLifeExpectancy, canUseNativeMortality, canUseNativeCohortSupport, canUseNativeDeathPath, } = extendPopulationSourceVariables(sourceVariables, prepared.outputVariables, fixture, prepared.lookupLibrary);
     return {
         sourceVariables,
         capitalCapabilities,
@@ -32,6 +35,7 @@ export function createRuntimeExecutionPlan(prepared, fixture) {
             sourceVariables.has("nr"),
         canUseNativeLifeExpectancy,
         canUseNativeMortality,
+        canUseNativeCohortSupport,
         canUseNativeDeathPath,
     };
 }
@@ -45,7 +49,7 @@ export function applyRuntimeExecutionPlan(sourceFrame, sourceSeries, prepared, c
     }
     populateCapitalNativeSupportSeries(sourceFrame, sourceSeries, prepared, constantsUsed, plan.capitalCapabilities.canUseNativeCapitalAllocation, plan.capitalCapabilities.canUseNativeCapitalInvestment, plan.capitalCapabilities.canUseNativeCapitalStocks, plan.capitalCapabilities.canUseNativeCapitalVisibleOutputFormulas, plan.capitalCapabilities.canUseNativeCapitalOrdering);
     populateResourceNativeSupportSeries(sourceFrame, sourceSeries, prepared, constantsUsed, plan.canUseNativeNrFlow);
-    populatePopulationNativeSupportSeries(sourceFrame, sourceSeries, prepared, constantsUsed, plan.canUseNativeLifeExpectancy, plan.canUseNativeMortality, plan.canUseNativeDeathPath);
+    populatePopulationNativeSupportSeries(sourceFrame, sourceSeries, prepared, constantsUsed, plan.canUseNativeLifeExpectancy, plan.canUseNativeMortality, plan.canUseNativeCohortSupport, plan.canUseNativeDeathPath);
     if (sourceSeries.has("nr") && nrStateDefinition) {
         stepNr(nrStateDefinition);
     }
