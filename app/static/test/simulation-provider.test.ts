@@ -44,8 +44,34 @@ const fixture: MockSimulationResult = {
   constants_used: {},
   series: {
     pop: { name: "pop", values: [1, 2] },
+    nr: { name: "nr", values: [20, 19] },
+    iopc: { name: "iopc", values: [3, 4] },
+    fpc: { name: "fpc", values: [5, 6] },
+    ppolx: { name: "ppolx", values: [7, 8] },
+    nrfr: { name: "nrfr", values: [9, 10] },
+    le: { name: "le", values: [11, 12] },
   },
 };
+
+function mockLocalFetch() {
+  vi.mocked(globalThis.fetch).mockImplementation(async (input) => {
+    if (input === "/data/functions-table-world3.json") {
+      return {
+        ok: true,
+        json: async () => world3TablesFixture,
+      } as Response;
+    }
+
+    if (input === "/data/standard-run-explore.json") {
+      return {
+        ok: true,
+        json: async () => fixture,
+      } as Response;
+    }
+
+    throw new Error(`Unexpected fetch input: ${String(input)}`);
+  });
+}
 
 async function loadProviderSuite() {
   vi.resetModules();
@@ -177,40 +203,70 @@ describe("simulation provider", () => {
     );
   });
 
-  test("rejects unsupported local presets with a clear error", async () => {
+  test("supports local preset execution beyond the standard run", async () => {
     window.__PYWORLD3_PROVIDER_MODE__ = "local";
+    mockLocalFetch();
     const { ModelData, createSimulationProvider } = await loadProviderSuite();
     const simulationProvider = createSimulationProvider(ModelData);
 
     await expect(
-      simulationProvider.simulatePreset("doubled-resources"),
-    ).rejects.toThrow("supports only the standard-run preset without overrides");
+      simulationProvider.simulatePreset("doubled-resources", {
+        year_min: 1900,
+        year_max: 1900.5,
+        dt: 0.5,
+        output_variables: ["pop"],
+      }),
+    ).resolves.toMatchObject({
+      series: {
+        pop: { name: "pop", values: [1, 2] },
+      },
+    });
   });
 
-  test("rejects local simulate requests with explicit overrides", async () => {
+  test("supports local simulate requests with explicit overrides", async () => {
     window.__PYWORLD3_PROVIDER_MODE__ = "local";
+    mockLocalFetch();
     const { ModelData, createSimulationProvider } = await loadProviderSuite();
     const simulationProvider = createSimulationProvider(ModelData);
 
     await expect(
-      simulationProvider.simulate({ output_variables: ["pop"] }),
-    ).rejects.toThrow("supports only the standard-run preset without overrides");
+      simulationProvider.simulate({
+        year_min: 1900,
+        year_max: 1900.5,
+        dt: 0.5,
+        output_variables: ["pop"],
+      }),
+    ).resolves.toMatchObject({
+      series: {
+        pop: { name: "pop", values: [1, 2] },
+      },
+    });
   });
 
-  test("treats populated constant overrides as explicit local overrides", async () => {
+  test("supports local preset constant overrides", async () => {
     window.__PYWORLD3_PROVIDER_MODE__ = "local";
+    mockLocalFetch();
     const { ModelData, createSimulationProvider } = await loadProviderSuite();
     const simulationProvider = createSimulationProvider(ModelData);
 
     await expect(
       simulationProvider.simulatePreset("standard-run", {
+        year_min: 1900,
+        year_max: 1900.5,
+        dt: 0.5,
         constants: { nri: 2_000_000_000_000 },
+        output_variables: ["pop"],
       }),
-    ).rejects.toThrow("supports only the standard-run preset without overrides");
+    ).resolves.toMatchObject({
+      series: {
+        pop: { name: "pop", values: [1, 2] },
+      },
+    });
   });
 
-  test("rejects local compare requests after resolving their shapes", async () => {
+  test("supports local compare requests after resolving their shapes", async () => {
     window.__PYWORLD3_PROVIDER_MODE__ = "local";
+    mockLocalFetch();
     const { ModelData, createSimulationProvider, resolveScenarioRequest } =
       await loadProviderSuite();
     const simulationProvider = createSimulationProvider(ModelData);
@@ -220,10 +276,38 @@ describe("simulation provider", () => {
     ).not.toThrow();
     await expect(
       simulationProvider.compare(
-        { preset: "standard-run" },
-        { request: { year_max: 2050 } },
+        {
+          preset: "standard-run",
+          request: {
+            year_min: 1900,
+            year_max: 1900.5,
+            dt: 0.5,
+            output_variables: ["pop", "iopc", "fpc", "ppolx"],
+          },
+        },
+        {
+          request: {
+            year_min: 1900,
+            year_max: 1900.5,
+            dt: 0.5,
+            output_variables: ["pop", "iopc", "fpc", "ppolx"],
+          },
+        },
       ),
-    ).rejects.toThrow("supports only the standard-run preset without overrides");
+    ).resolves.toMatchObject({
+      scenario_a: "standard-run",
+      scenario_b: "Custom",
+      results_a: {
+        series: {
+          pop: { values: [1, 2] },
+        },
+      },
+      results_b: {
+        series: {
+          pop: { values: [1, 2] },
+        },
+      },
+    });
   });
 
   test("retries the local fixture fetch after a failed response", async () => {

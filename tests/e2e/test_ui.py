@@ -66,16 +66,14 @@ def test_local_provider_mode_standard_run_renders_explore_charts(
     assert page.locator("#explore-status .card").count() == 0
 
 
-def test_local_provider_mode_unsupported_preset_shows_clear_explore_error(
+def test_local_provider_mode_nonstandard_preset_renders_explore_charts(
     page: Page, base_url: str
 ):
-    """Unsupported local presets should still fail with a clear message."""
+    """Local provider mode should handle preset overrides without the backend."""
     set_provider_mode(page, "local")
     page.goto(f"{base_url}/#explore?preset=doubled-resources")
-    page.wait_for_selector("#explore-status .card", timeout=10_000)
-    expect(page.locator("#explore-status")).to_contain_text(
-        "supports only the standard-run preset without overrides"
-    )
+    page.wait_for_selector("#explore-charts canvas", timeout=30_000)
+    assert page.locator("#explore-status .card").count() == 0
 
 
 def test_compare_view_loads_metrics(page: Page, base_url: str):
@@ -98,6 +96,23 @@ def test_compare_view_loads_metrics(page: Page, base_url: str):
     page.wait_for_selector(
         "#compare-metrics tr, #compare-metrics .metric-row", timeout=30_000
     )
+
+
+def test_local_provider_mode_compare_view_loads_metrics(page: Page, base_url: str):
+    """Local provider mode should compare preset scenarios without HTTP calls."""
+    set_provider_mode(page, "local")
+    page.goto(f"{base_url}/#compare")
+    page.locator("#compare-select-a").wait_for(timeout=10_000)
+    page.wait_for_function(
+        "document.querySelectorAll('#compare-select-a option').length > 0",
+        timeout=10_000,
+    )
+    page.locator("#compare-select-a").select_option(index=0)
+    page.locator("#compare-select-b").select_option(index=1)
+    page.wait_for_selector(
+        "#compare-metrics tr, #compare-metrics .metric-row", timeout=30_000
+    )
+    expect(page.locator("#compare-metrics")).to_contain_text("Population")
 
 
 def test_advanced_view_has_controls(page: Page, base_url: str):

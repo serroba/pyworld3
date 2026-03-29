@@ -108,7 +108,18 @@ export function createRuntimeStateFrame(prepared, fixture) {
     const sourceSeries = new Map();
     for (const variable of sourceVariables) {
         if (variable === "nr" && !fixture.series.nr) {
+            if (fixture.series.nrfr &&
+                !prepared.outputVariables.includes("nr") &&
+                !prepared.outputVariables.includes("fcaor")) {
+                continue;
+            }
             throw new Error("Fixture-backed runtime cannot derive 'nrfr' because the source variable 'nr' is missing.");
+        }
+        sourceSeries.set(variable, resolveSourceSeriesValues(variable, fixture, projectedIndices));
+    }
+    for (const variable of prepared.outputVariables) {
+        if (sourceSeries.has(variable) || !fixture.series[variable]) {
+            continue;
         }
         sourceSeries.set(variable, resolveSourceSeriesValues(variable, fixture, projectedIndices));
     }
@@ -139,26 +150,38 @@ export function createRuntimeStateFrame(prepared, fixture) {
     }, STEPPED_SOURCE_STATE_DEFINITIONS.get("nr"));
     const series = new Map();
     for (const variable of prepared.outputVariables) {
-        if (maybePopulateAgricultureOutputSeries(variable, sourceFrame, series, fixture, projectedIndices)) {
+        try {
+            if (maybePopulateAgricultureOutputSeries(variable, sourceFrame, series, fixture, projectedIndices)) {
+                continue;
+            }
+            if (maybePopulateCapitalOutputSeries(variable, sourceFrame, series, fixture, projectedIndices, prepared, capitalCapabilities)) {
+                continue;
+            }
+            if (maybePopulateResourceOutputSeries(variable, sourceFrame, series, prepared, fixture, projectedIndices, constantsUsed)) {
+                continue;
+            }
+            if (maybePopulatePopulationOutputSeries(variable, sourceFrame, series)) {
+                continue;
+            }
+            if (maybePopulatePollutionOutputSeries(variable, sourceFrame, series, fixture, projectedIndices)) {
+                continue;
+            }
+            const values = sourceSeries.get(variable);
+            if (values) {
+                series.set(variable, values);
+                continue;
+            }
+        }
+        catch (error) {
+            if (!fixture.series[variable]) {
+                throw error;
+            }
+        }
+        if (fixture.series[variable]) {
+            series.set(variable, resolveSourceSeriesValues(variable, fixture, projectedIndices));
             continue;
         }
-        if (maybePopulateCapitalOutputSeries(variable, sourceFrame, series, fixture, projectedIndices, prepared, capitalCapabilities)) {
-            continue;
-        }
-        if (maybePopulateResourceOutputSeries(variable, sourceFrame, series, prepared, fixture, projectedIndices, constantsUsed)) {
-            continue;
-        }
-        if (maybePopulatePopulationOutputSeries(variable, sourceFrame, series)) {
-            continue;
-        }
-        if (maybePopulatePollutionOutputSeries(variable, sourceFrame, series, fixture, projectedIndices)) {
-            continue;
-        }
-        const values = sourceSeries.get(variable);
-        if (!values) {
-            throw new Error(`Fixture-backed runtime is missing the requested output variable '${variable}'.`);
-        }
-        series.set(variable, values);
+        throw new Error(`Fixture-backed runtime is missing the requested output variable '${variable}'.`);
     }
     return {
         request: prepared.request,

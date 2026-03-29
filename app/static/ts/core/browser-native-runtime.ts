@@ -26,6 +26,11 @@ export type RuntimeFixtureLoader = (
 ) => Promise<SimulationResult>;
 
 export type BrowserNativeRuntime = {
+  prepare: (request?: SimulationRequest) => Promise<RuntimePreparation>;
+  simulate: (
+    request?: SimulationRequest,
+    options?: { signal?: AbortSignal },
+  ) => Promise<SimulationResult>;
   prepareStandardRun: (overrides?: SimulationRequest) => Promise<RuntimePreparation>;
   simulateStandardRun: (
     overrides?: SimulationRequest,
@@ -95,25 +100,38 @@ export function createFixtureBackedRuntime(
   }
 
   return {
+    async prepare(request = {}) {
+      const tables = await getTables();
+      return prepareRuntime(modelData, request, tables);
+    },
+
+    async simulate(request = {}, options) {
+      const fixture = await getFixture(options);
+
+      if (!hasRequestOverrides(request)) {
+        return fixture;
+      }
+
+      const prepared = await this.prepare(request);
+      return projectSimulationResult(prepared, fixture);
+    },
+
     async prepareStandardRun(overrides = {}) {
       const request = buildSimulationRequestFromPreset(
         modelData,
         "standard-run",
         overrides,
       );
-      const tables = await getTables();
-      return prepareRuntime(modelData, request, tables);
+      return this.prepare(request);
     },
 
     async simulateStandardRun(overrides = {}, options) {
-      const fixture = await getFixture(options);
-
-      if (!hasRequestOverrides(overrides)) {
-        return fixture;
-      }
-
-      const prepared = await this.prepareStandardRun(overrides);
-      return projectSimulationResult(prepared, fixture);
+      const request = buildSimulationRequestFromPreset(
+        modelData,
+        "standard-run",
+        overrides,
+      );
+      return this.simulate(request, options);
     },
   };
 }

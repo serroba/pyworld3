@@ -47,18 +47,25 @@ export function createFixtureBackedRuntime(modelData, loadTables, loadStandardRu
         return fixturePromise;
     }
     return {
-        async prepareStandardRun(overrides = {}) {
-            const request = buildSimulationRequestFromPreset(modelData, "standard-run", overrides);
+        async prepare(request = {}) {
             const tables = await getTables();
             return prepareRuntime(modelData, request, tables);
         },
-        async simulateStandardRun(overrides = {}, options) {
+        async simulate(request = {}, options) {
             const fixture = await getFixture(options);
-            if (!hasRequestOverrides(overrides)) {
+            if (!hasRequestOverrides(request)) {
                 return fixture;
             }
-            const prepared = await this.prepareStandardRun(overrides);
+            const prepared = await this.prepare(request);
             return projectSimulationResult(prepared, fixture);
+        },
+        async prepareStandardRun(overrides = {}) {
+            const request = buildSimulationRequestFromPreset(modelData, "standard-run", overrides);
+            return this.prepare(request);
+        },
+        async simulateStandardRun(overrides = {}, options) {
+            const request = buildSimulationRequestFromPreset(modelData, "standard-run", overrides);
+            return this.simulate(request, options);
         },
     };
 }
