@@ -219,6 +219,7 @@ export function extendResourceSourceVariables(
   outputVariables: string[],
   fixture: SimulationResult,
   lookupLibrary: Map<string, LookupInterpolator>,
+  canUseNativeCapitalOrdering: boolean,
 ): { canUseNativeNrFlow: boolean } {
   if (
     outputVariables.includes("nrfr") ||
@@ -230,12 +231,14 @@ export function extendResourceSourceVariables(
   const canUseNativeNrFlow =
     sourceVariables.has("nr") &&
     Boolean(fixture.series.pop) &&
-    Boolean(fixture.series.iopc) &&
+    (Boolean(fixture.series.iopc) || canUseNativeCapitalOrdering) &&
     lookupLibrary.has("PCRUM");
 
   if (canUseNativeNrFlow) {
     sourceVariables.add("pop");
-    sourceVariables.add("iopc");
+    if (fixture.series.iopc) {
+      sourceVariables.add("iopc");
+    }
   }
 
   return { canUseNativeNrFlow };

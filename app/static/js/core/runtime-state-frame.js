@@ -106,7 +106,7 @@ export function createRuntimeStateFrame(prepared, fixture) {
         variable !== "so" &&
         variable !== "sopc"));
     const capitalCapabilities = extendCapitalSourceVariables(sourceVariables, prepared.outputVariables, fixture, prepared.lookupLibrary);
-    const { canUseNativeNrFlow } = extendResourceSourceVariables(sourceVariables, prepared.outputVariables, fixture, prepared.lookupLibrary);
+    const { canUseNativeNrFlow } = extendResourceSourceVariables(sourceVariables, prepared.outputVariables, fixture, prepared.lookupLibrary, capitalCapabilities.canUseNativeCapitalOrdering);
     const sourceSeries = new Map();
     for (const variable of sourceVariables) {
         if (variable === "nr" && !fixture.series.nr) {
@@ -120,8 +120,10 @@ export function createRuntimeStateFrame(prepared, fixture) {
         constantsUsed,
         series: sourceSeries,
     };
-    populateResourceNativeSupportSeries(oracleFrame, sourceSeries, prepared, constantsUsed, canUseNativeNrFlow);
     for (const variable of sourceVariables) {
+        if (variable === "nr") {
+            continue;
+        }
         const definition = STEPPED_SOURCE_STATE_DEFINITIONS.get(variable);
         if (!definition) {
             continue;
@@ -135,6 +137,13 @@ export function createRuntimeStateFrame(prepared, fixture) {
         series: sourceSeries,
     };
     populateCapitalNativeSupportSeries(sourceFrame, sourceSeries, prepared, constantsUsed, capitalCapabilities.canUseNativeCapitalAllocation, capitalCapabilities.canUseNativeCapitalInvestment, capitalCapabilities.canUseNativeCapitalStocks, capitalCapabilities.canUseNativeCapitalVisibleOutputFormulas, capitalCapabilities.canUseNativeCapitalOrdering);
+    populateResourceNativeSupportSeries(sourceFrame, sourceSeries, prepared, constantsUsed, canUseNativeNrFlow);
+    if (sourceSeries.has("nr")) {
+        const nrDefinition = STEPPED_SOURCE_STATE_DEFINITIONS.get("nr");
+        if (nrDefinition) {
+            populateStateBufferFromDefinition(sourceSeries, sourceFrame, nrDefinition);
+        }
+    }
     const series = new Map();
     for (const variable of prepared.outputVariables) {
         if (maybePopulateCapitalOutputSeries(variable, sourceFrame, series, fixture, projectedIndices, prepared, capitalCapabilities)) {

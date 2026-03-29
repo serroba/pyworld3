@@ -64,6 +64,7 @@ describe("resource sector core", () => {
       prepared.outputVariables,
       fixture,
       prepared.lookupLibrary,
+      false,
     );
 
     expect(result).toEqual({ canUseNativeNrFlow: true });

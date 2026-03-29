@@ -139,18 +139,20 @@ export function createFcaorDerivedDefinition(constantsUsed, fcaor1Lookup, fcaor2
         },
     };
 }
-export function extendResourceSourceVariables(sourceVariables, outputVariables, fixture, lookupLibrary) {
+export function extendResourceSourceVariables(sourceVariables, outputVariables, fixture, lookupLibrary, canUseNativeCapitalOrdering) {
     if (outputVariables.includes("nrfr") ||
         outputVariables.includes("fcaor")) {
         sourceVariables.add("nr");
     }
     const canUseNativeNrFlow = sourceVariables.has("nr") &&
         Boolean(fixture.series.pop) &&
-        Boolean(fixture.series.iopc) &&
+        (Boolean(fixture.series.iopc) || canUseNativeCapitalOrdering) &&
         lookupLibrary.has("PCRUM");
     if (canUseNativeNrFlow) {
         sourceVariables.add("pop");
-        sourceVariables.add("iopc");
+        if (fixture.series.iopc) {
+            sourceVariables.add("iopc");
+        }
     }
     return { canUseNativeNrFlow };
 }

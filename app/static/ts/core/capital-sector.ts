@@ -581,6 +581,9 @@ export function extendCapitalSourceVariables(
   const needsVisibleCapitalOutput = outputVariables.some((variable) =>
     ["io", "iopc", "so", "sopc"].includes(variable),
   );
+  const needsCapitalResourceSupport = outputVariables.some((variable) =>
+    ["nr", "nrfr", "fcaor"].includes(variable),
+  );
   const canDeriveIo =
     outputVariables.includes("io") &&
     Boolean(fixture.series.pop) &&
@@ -615,7 +618,7 @@ export function extendCapitalSourceVariables(
   }
 
   const canUseNativeCapitalOrdering =
-    needsVisibleCapitalOutput &&
+    (needsVisibleCapitalOutput || needsCapitalResourceSupport) &&
     Boolean(fixture.series.pop) &&
     Boolean(fixture.series.fioaa) &&
     Boolean(fixture.series.fcaor) &&

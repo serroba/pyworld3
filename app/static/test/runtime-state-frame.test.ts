@@ -147,6 +147,39 @@ const capitalFixture: SimulationResult = {
   },
 };
 
+const capitalResourceFixture: SimulationResult = {
+  year_min: 1900,
+  year_max: 1902,
+  dt: 0.5,
+  time: [1900, 1900.5, 1901, 1901.5, 1902],
+  constants_used: {
+    nri: 100,
+    nruf1: 0.1,
+    nruf2: 0.1,
+    fioac1: 0.43,
+    fioac2: 0.5,
+    iopcd: 100,
+    iet: 1950,
+    ici: 210,
+    sci: 144,
+    alic1: 14,
+    alic2: 14,
+    alsc1: 20,
+    alsc2: 20,
+    icor1: 3,
+    icor2: 3,
+    scor1: 1,
+    scor2: 1,
+  },
+  series: {
+    nr: { name: "nr", values: [100, 100, 100, 100, 100] },
+    fioaa: { name: "fioaa", values: [0.1, 0.1, 0.1, 0.1, 0.1] },
+    fcaor: { name: "fcaor", values: [0.2, 0.2, 0.2, 0.2, 0.2] },
+    luf: { name: "luf", values: [2, 2, 2, 2, 2] },
+    pop: { name: "pop", values: [10, 12, 14, 16, 18] },
+  },
+};
+
 describe("runtime state frame", () => {
   test("creates a typed aligned state frame from runtime preparation", () => {
     const prepared = prepareRuntime(
@@ -936,6 +969,37 @@ describe("runtime state frame", () => {
 
     expect(Array.from(frame.series.get("nr") ?? [])).toEqual([100, 80, 38]);
     expect(Array.from(frame.series.get("nrfr") ?? [])).toEqual([1, 0.8, 0.38]);
+  });
+
+  test("uses native capital iopc to drive native resource flow when sectors are linked", () => {
+    const prepared = prepareRuntime(
+      ModelData,
+      {
+        year_min: 1900,
+        year_max: 1902,
+        dt: 1,
+        output_variables: ["nr", "nrfr", "iopc"],
+      },
+      tables,
+    );
+
+    const frame = createRuntimeStateFrame(prepared, capitalResourceFixture);
+
+    expect(Array.from(frame.series.get("iopc") ?? [])).toEqual([
+      5.6,
+      3.8568311688311696,
+      2.9158462736956245,
+    ]);
+    expect(Array.from(frame.series.get("nr") ?? [])).toEqual([
+      100,
+      96,
+      90.4,
+    ]);
+    expect(Array.from(frame.series.get("nrfr") ?? [])).toEqual([
+      1,
+      0.96,
+      0.904,
+    ]);
   });
 
   test("can populate a stock series from an Euler-style runtime state definition", () => {

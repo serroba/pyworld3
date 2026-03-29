@@ -325,4 +325,91 @@ describe("browser-native runtime", () => {
       },
     });
   });
+
+  test("derives nrfr through linked capital and resource native seams", async () => {
+    const runtime = createFixtureBackedRuntime(
+      ModelData,
+      async () => [
+        ...tables,
+        {
+          sector: "Resources",
+          "x.name": "IOPC",
+          "x.values": [1, 2, 3],
+          "y.name": "PCRUM",
+          "y.values": [2, 3, 4],
+        },
+      ],
+      async () => ({
+        year_min: 1900,
+        year_max: 1902,
+        dt: 0.5,
+        time: [1900, 1900.5, 1901, 1901.5, 1902],
+        constants_used: {
+          nri: 100,
+          nruf1: 0.1,
+          nruf2: 0.1,
+          fioac1: 0.43,
+          fioac2: 0.5,
+          iopcd: 100,
+          iet: 1950,
+          ici: 210,
+          sci: 144,
+          alic1: 14,
+          alic2: 14,
+          alsc1: 20,
+          alsc2: 20,
+          icor1: 3,
+          icor2: 3,
+          scor1: 1,
+          scor2: 1,
+        },
+        series: {
+          nr: { name: "nr", values: [100, 100, 100, 100, 100] },
+          fioaa: { name: "fioaa", values: [0.1, 0.1, 0.1, 0.1, 0.1] },
+          fcaor: { name: "fcaor", values: [0.2, 0.2, 0.2, 0.2, 0.2] },
+          luf: { name: "luf", values: [2, 2, 2, 2, 2] },
+          pop: { name: "pop", values: [10, 12, 14, 16, 18] },
+        },
+      }),
+    );
+
+    await expect(
+      runtime.simulateStandardRun({
+        year_min: 1900,
+        year_max: 1902,
+        dt: 1,
+        output_variables: ["nrfr"],
+      }),
+    ).resolves.toEqual({
+      year_min: 1900,
+      year_max: 1902,
+      dt: 1,
+      time: [1900, 1901, 1902],
+      constants_used: {
+        nri: 100,
+        nruf1: 0.1,
+        nruf2: 0.1,
+        fioac1: 0.43,
+        fioac2: 0.5,
+        iopcd: 100,
+        iet: 1950,
+        ici: 210,
+        sci: 144,
+        alic1: 14,
+        alic2: 14,
+        alsc1: 20,
+        alsc2: 20,
+        icor1: 3,
+        icor2: 3,
+        scor1: 1,
+        scor2: 1,
+      },
+      series: {
+        nrfr: {
+          name: "nrfr",
+          values: [1, 0.96, 0.904],
+        },
+      },
+    });
+  });
 });

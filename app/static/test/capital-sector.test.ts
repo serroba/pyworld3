@@ -160,6 +160,44 @@ describe("capital sector core", () => {
     ]);
   });
 
+  test("extends runtime source requirements for resource flow support through ordered capital output", () => {
+    const sourceVariables = new Set<string>(["nr"]);
+    const prepared = prepareRuntime(
+      ModelData,
+      { output_variables: ["nrfr"] },
+      tables,
+    );
+    const resourceFixture: SimulationResult = {
+      ...fixture,
+      constants_used: {
+        ...fixture.constants_used,
+        nri: 100,
+        nruf1: 0.1,
+        nruf2: 0.1,
+      },
+      series: {
+        ...fixture.series,
+        nr: { name: "nr", values: [100, 100, 100, 100, 100] },
+      },
+    };
+
+    const result = extendCapitalSourceVariables(
+      sourceVariables,
+      prepared.outputVariables,
+      resourceFixture,
+      prepared.lookupLibrary,
+    );
+
+    expect(result.canUseNativeCapitalOrdering).toBe(true);
+    expect(Array.from(sourceVariables).sort()).toEqual([
+      "fcaor",
+      "fioaa",
+      "luf",
+      "nr",
+      "pop",
+    ]);
+  });
+
   test("derives io from pop and iopc", () => {
     const definition = createIoDerivedDefinition();
 

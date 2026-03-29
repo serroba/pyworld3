@@ -241,6 +241,7 @@ export function createRuntimeStateFrame(
     prepared.outputVariables,
     fixture,
     prepared.lookupLibrary,
+    capitalCapabilities.canUseNativeCapitalOrdering,
   );
 
   const sourceSeries = new Map<string, Float64Array>();
@@ -263,15 +264,10 @@ export function createRuntimeStateFrame(
     series: sourceSeries,
   };
 
-  populateResourceNativeSupportSeries(
-    oracleFrame,
-    sourceSeries,
-    prepared,
-    constantsUsed,
-    canUseNativeNrFlow,
-  );
-
   for (const variable of sourceVariables) {
+    if (variable === "nr") {
+      continue;
+    }
     const definition = STEPPED_SOURCE_STATE_DEFINITIONS.get(variable);
     if (!definition) {
       continue;
@@ -297,6 +293,21 @@ export function createRuntimeStateFrame(
     capitalCapabilities.canUseNativeCapitalVisibleOutputFormulas,
     capitalCapabilities.canUseNativeCapitalOrdering,
   );
+
+  populateResourceNativeSupportSeries(
+    sourceFrame,
+    sourceSeries,
+    prepared,
+    constantsUsed,
+    canUseNativeNrFlow,
+  );
+
+  if (sourceSeries.has("nr")) {
+    const nrDefinition = STEPPED_SOURCE_STATE_DEFINITIONS.get("nr");
+    if (nrDefinition) {
+      populateStateBufferFromDefinition(sourceSeries, sourceFrame, nrDefinition);
+    }
+  }
 
   const series = new Map<string, Float64Array>();
   for (const variable of prepared.outputVariables) {

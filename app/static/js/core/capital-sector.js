@@ -351,6 +351,7 @@ export function createScorDerivedDefinition(constantsUsed, policyYear = DEFAULT_
 }
 export function extendCapitalSourceVariables(sourceVariables, outputVariables, fixture, lookupLibrary) {
     const needsVisibleCapitalOutput = outputVariables.some((variable) => ["io", "iopc", "so", "sopc"].includes(variable));
+    const needsCapitalResourceSupport = outputVariables.some((variable) => ["nr", "nrfr", "fcaor"].includes(variable));
     const canDeriveIo = outputVariables.includes("io") &&
         Boolean(fixture.series.pop) &&
         Boolean(fixture.series.iopc);
@@ -378,7 +379,7 @@ export function extendCapitalSourceVariables(sourceVariables, outputVariables, f
     if (canDeriveSopc) {
         sourceVariables.add("so");
     }
-    const canUseNativeCapitalOrdering = needsVisibleCapitalOutput &&
+    const canUseNativeCapitalOrdering = (needsVisibleCapitalOutput || needsCapitalResourceSupport) &&
         Boolean(fixture.series.pop) &&
         Boolean(fixture.series.fioaa) &&
         Boolean(fixture.series.fcaor) &&
