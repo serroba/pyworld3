@@ -9,11 +9,17 @@ import type { LookupInterpolator } from "./world3-tables.js";
 
 const DEFAULT_CAPITAL_POLICY_YEAR = 1975;
 export const CAPITAL_HIDDEN_SERIES = {
+  alic: "__alic",
+  alsc: "__alsc",
   fioac: "__fioac",
   fioai: "__fioai",
+  ic: "__ic",
+  icdr: "__icdr",
   fioas: "__fioas",
   icir: "__icir",
   isopc: "__isopc",
+  sc: "__sc",
+  scdr: "__scdr",
   scir: "__scir",
 } as const;
 
@@ -69,6 +75,41 @@ function deriveSeriesValues(
       time,
       values: observationValues,
     });
+  }
+
+  return values;
+}
+
+function populateStockValues(
+  time: Float64Array,
+  initialValue: number,
+  inflow: Float64Array,
+  lifetime: Float64Array,
+): Float64Array {
+  const values = new Float64Array(time.length);
+  if (values.length === 0) {
+    return values;
+  }
+
+  values[0] = initialValue;
+  let currentValue = initialValue;
+  for (let index = 0; index < time.length - 1; index += 1) {
+    const currentTime = time[index];
+    const nextTime = time[index + 1];
+    const inflowValue = inflow[index];
+    const lifetimeValue = lifetime[index];
+    if (
+      currentTime === undefined ||
+      nextTime === undefined ||
+      inflowValue === undefined ||
+      lifetimeValue === undefined
+    ) {
+      throw new Error("Capital stock stepping is missing a source value.");
+    }
+    const dt = nextTime - currentTime;
+    const depreciation = lifetimeValue === 0 ? 0 : currentValue / lifetimeValue;
+    currentValue = currentValue + dt * (inflowValue - depreciation);
+    values[index + 1] = currentValue;
   }
 
   return values;
@@ -145,6 +186,38 @@ export function createFioacDerivedDefinition(
       );
       return clipAtPolicyYear(fioacc, fioacv, observation.time, constantsUsed.iet ?? 4000);
     },
+  };
+}
+
+export function createAlicDerivedDefinition(
+  constantsUsed: ConstantMap,
+  policyYear = DEFAULT_CAPITAL_POLICY_YEAR,
+): RuntimeDerivedDefinition {
+  return {
+    variable: CAPITAL_HIDDEN_SERIES.alic,
+    derive: (observation: RuntimeObservation) =>
+      clipAtPolicyYear(
+        constantsUsed.alic1 ?? 14,
+        constantsUsed.alic2 ?? 14,
+        observation.time,
+        policyYear,
+      ),
+  };
+}
+
+export function createAlscDerivedDefinition(
+  constantsUsed: ConstantMap,
+  policyYear = DEFAULT_CAPITAL_POLICY_YEAR,
+): RuntimeDerivedDefinition {
+  return {
+    variable: CAPITAL_HIDDEN_SERIES.alsc,
+    derive: (observation: RuntimeObservation) =>
+      clipAtPolicyYear(
+        constantsUsed.alsc1 ?? 20,
+        constantsUsed.alsc2 ?? 20,
+        observation.time,
+        policyYear,
+      ),
   };
 }
 
@@ -313,6 +386,48 @@ export function createIcirDerivedDefinition(): RuntimeDerivedDefinition {
   };
 }
 
+export function createIcdrDerivedDefinition(): RuntimeDerivedDefinition {
+  return {
+    variable: CAPITAL_HIDDEN_SERIES.icdr,
+    derive: (observation: RuntimeObservation) => {
+      const ic = observation.values[CAPITAL_HIDDEN_SERIES.ic];
+      const alic = observation.values[CAPITAL_HIDDEN_SERIES.alic];
+      if (ic === undefined) {
+        throw new Error(
+          "Fixture-backed runtime cannot derive '__icdr' because the source variable '__ic' is missing.",
+        );
+      }
+      if (alic === undefined || alic === 0) {
+        throw new Error(
+          "Fixture-backed runtime cannot derive '__icdr' because the source variable '__alic' is missing or zero.",
+        );
+      }
+      return ic / alic;
+    },
+  };
+}
+
+export function createScdrDerivedDefinition(): RuntimeDerivedDefinition {
+  return {
+    variable: CAPITAL_HIDDEN_SERIES.scdr,
+    derive: (observation: RuntimeObservation) => {
+      const sc = observation.values[CAPITAL_HIDDEN_SERIES.sc];
+      const alsc = observation.values[CAPITAL_HIDDEN_SERIES.alsc];
+      if (sc === undefined) {
+        throw new Error(
+          "Fixture-backed runtime cannot derive '__scdr' because the source variable '__sc' is missing.",
+        );
+      }
+      if (alsc === undefined || alsc === 0) {
+        throw new Error(
+          "Fixture-backed runtime cannot derive '__scdr' because the source variable '__alsc' is missing or zero.",
+        );
+      }
+      return sc / alsc;
+    },
+  };
+}
+
 export function extendCapitalSourceVariables(
   sourceVariables: Set<string>,
   outputVariables: string[],
@@ -325,6 +440,7 @@ export function extendCapitalSourceVariables(
   canDeriveSopc: boolean;
   canUseNativeCapitalAllocation: boolean;
   canUseNativeCapitalInvestment: boolean;
+  canUseNativeCapitalStocks: boolean;
 } {
   const canDeriveIo =
     outputVariables.includes("io") &&
@@ -384,6 +500,10 @@ export function extendCapitalSourceVariables(
     }
   }
 
+  const canUseNativeCapitalStocks =
+    canUseNativeCapitalInvestment &&
+    constantsUsedHasCapitalStockSeeds(fixture.constants_used);
+
   return {
     canDeriveIo,
     canDeriveIopc,
@@ -391,7 +511,19 @@ export function extendCapitalSourceVariables(
     canDeriveSopc,
     canUseNativeCapitalAllocation,
     canUseNativeCapitalInvestment,
+    canUseNativeCapitalStocks,
   };
+}
+
+function constantsUsedHasCapitalStockSeeds(constantsUsed: ConstantMap): boolean {
+  return Boolean(
+    constantsUsed.ici !== undefined &&
+      constantsUsed.sci !== undefined &&
+      constantsUsed.alic1 !== undefined &&
+      constantsUsed.alic2 !== undefined &&
+      constantsUsed.alsc1 !== undefined &&
+      constantsUsed.alsc2 !== undefined,
+  );
 }
 
 export function populateCapitalNativeSupportSeries(
@@ -401,6 +533,7 @@ export function populateCapitalNativeSupportSeries(
   constantsUsed: ConstantMap,
   canUseNativeCapitalAllocation: boolean,
   canUseNativeCapitalInvestment: boolean,
+  canUseNativeCapitalStocks: boolean,
 ): void {
   const fioacvLookup = prepared.lookupLibrary.get("FIOACV");
   if (sourceSeries.has("iopc") && fioacvLookup) {
@@ -470,6 +603,73 @@ export function populateCapitalNativeSupportSeries(
     deriveSeriesValues(
       sourceFrame,
       createIcirDerivedDefinition(),
+    ),
+  );
+
+  if (!canUseNativeCapitalStocks) {
+    return;
+  }
+
+  sourceSeries.set(
+    CAPITAL_HIDDEN_SERIES.alic,
+    deriveSeriesValues(
+      sourceFrame,
+      createAlicDerivedDefinition(constantsUsed),
+    ),
+  );
+  sourceSeries.set(
+    CAPITAL_HIDDEN_SERIES.alsc,
+    deriveSeriesValues(
+      sourceFrame,
+      createAlscDerivedDefinition(constantsUsed),
+    ),
+  );
+
+  const icir = sourceSeries.get(CAPITAL_HIDDEN_SERIES.icir);
+  const alic = sourceSeries.get(CAPITAL_HIDDEN_SERIES.alic);
+  const scir = sourceSeries.get(CAPITAL_HIDDEN_SERIES.scir);
+  const alsc = sourceSeries.get(CAPITAL_HIDDEN_SERIES.alsc);
+  if (!icir || !alic || !scir || !alsc) {
+    return;
+  }
+
+  sourceSeries.set(
+    CAPITAL_HIDDEN_SERIES.ic,
+    populateStockValues(
+      sourceFrame.time,
+      constantsUsed.ici ?? 0,
+      icir,
+      alic,
+    ),
+  );
+  sourceSeries.set(
+    CAPITAL_HIDDEN_SERIES.sc,
+    populateStockValues(
+      sourceFrame.time,
+      constantsUsed.sci ?? 0,
+      scir,
+      alsc,
+    ),
+  );
+
+  const supportFrame: RuntimeStateFrame = {
+    request: sourceFrame.request,
+    time: sourceFrame.time,
+    constantsUsed: sourceFrame.constantsUsed,
+    series: sourceSeries,
+  };
+  sourceSeries.set(
+    CAPITAL_HIDDEN_SERIES.icdr,
+    deriveSeriesValues(
+      supportFrame,
+      createIcdrDerivedDefinition(),
+    ),
+  );
+  sourceSeries.set(
+    CAPITAL_HIDDEN_SERIES.scdr,
+    deriveSeriesValues(
+      supportFrame,
+      createScdrDerivedDefinition(),
     ),
   );
 }

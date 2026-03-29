@@ -293,6 +293,7 @@ export function createRuntimeStateFrame(
     constantsUsed,
     capitalCapabilities.canUseNativeCapitalAllocation,
     capitalCapabilities.canUseNativeCapitalInvestment,
+    capitalCapabilities.canUseNativeCapitalStocks,
   );
 
   const series = new Map<string, Float64Array>();
