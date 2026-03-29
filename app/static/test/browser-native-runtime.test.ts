@@ -627,7 +627,7 @@ describe("browser-native runtime", () => {
     });
   });
 
-  test("derives m1 through the native population mortality seam", async () => {
+  test("derives the native population mortality family through the browser seam", async () => {
     const runtime = createFixtureBackedRuntime(
       ModelData,
       async () => [
@@ -735,7 +735,7 @@ describe("browser-native runtime", () => {
       year_min: 1900,
       year_max: 1902,
       dt: 1,
-      output_variables: ["m1"],
+      output_variables: ["m1", "m2", "m3", "m4"],
     });
 
     expect(result.year_min).toBe(1900);
@@ -748,9 +748,19 @@ describe("browser-native runtime", () => {
       hsid: 20,
       iphst: 1940,
     });
-    expect(result.series.m1?.name).toBe("m1");
-    expect(result.series.m1?.values[0]).toBeCloseTo(0.034056, 8);
-    expect(result.series.m1?.values[1]).toBeCloseTo(0.031841536, 8);
-    expect(result.series.m1?.values[2]).toBeCloseTo(0.029628864, 8);
+    const mortalityExpectations = {
+      m1: [0.034056, 0.031841536, 0.029628864],
+      m2: [0.022028, 0.020920768, 0.019814432],
+      m3: [0.044056, 0.041841536, 0.039628864],
+      m4: [0.104056, 0.101841536, 0.099628864],
+    } as const;
+
+    for (const [variable, expected] of Object.entries(mortalityExpectations)) {
+      const series = result.series[variable];
+      expect(series?.name).toBe(variable);
+      expect(series?.values[0]).toBeCloseTo(expected[0], 8);
+      expect(series?.values[1]).toBeCloseTo(expected[1], 8);
+      expect(series?.values[2]).toBeCloseTo(expected[2], 8);
+    }
   });
 });

@@ -175,6 +175,38 @@ describe("population sector core", () => {
     ).toBeCloseTo(0.03, 8);
   });
 
+  test("derives the full mortality family from native life expectancy", () => {
+    const prepared = prepareRuntime(
+      ModelData,
+      { output_variables: ["m1", "m2", "m3", "m4"] },
+      tables,
+    );
+
+    const mortalityExpectations = {
+      m1: 0.03,
+      m2: 0.02,
+      m3: 0.04,
+      m4: 0.1,
+    } as const;
+
+    for (const [variable, expected] of Object.entries(mortalityExpectations)) {
+      const lookup = prepared.lookupLibrary.get(variable.toUpperCase());
+      expect(lookup).toBeDefined();
+
+      const definition = createMortalityDerivedDefinition(
+        variable as "m1" | "m2" | "m3" | "m4",
+        lookup!,
+      );
+      expect(
+        definition.derive({
+          index: 0,
+          time: 1900,
+          values: { le: 30 },
+        }),
+      ).toBeCloseTo(expected, 8);
+    }
+  });
+
   test("extends runtime source requirements for native mortality outputs", () => {
     const sourceVariables = new Set<string>();
     const prepared = prepareRuntime(
@@ -203,7 +235,7 @@ describe("population sector core", () => {
     ]);
   });
 
-  test("populates life expectancy support and output natively", () => {
+  test("populates life expectancy and the mortality family natively", () => {
     const prepared = prepareRuntime(
       ModelData,
       { year_min: 1900, year_max: 1902, dt: 1, output_variables: ["le"] },
@@ -241,10 +273,19 @@ describe("population sector core", () => {
     expect(leValues[0]).toBeCloseTo(27.972, 6);
     expect(leValues[1]).toBeCloseTo(29.079232, 6);
     expect(leValues[2]).toBeCloseTo(30.185568, 6);
-    const m1Values = Array.from(sourceSeries.get("m1") ?? []);
-    expect(m1Values[0]).toBeCloseTo(0.034056, 6);
-    expect(m1Values[1]).toBeCloseTo(0.031841536, 6);
-    expect(m1Values[2]).toBeCloseTo(0.029628864, 6);
+    const mortalityExpectations = {
+      m1: [0.034056, 0.031841536, 0.029628864],
+      m2: [0.022028, 0.020920768, 0.019814432],
+      m3: [0.044056, 0.041841536, 0.039628864],
+      m4: [0.104056, 0.101841536, 0.099628864],
+    } as const;
+
+    for (const [variable, expected] of Object.entries(mortalityExpectations)) {
+      const values = Array.from(sourceSeries.get(variable) ?? []);
+      expect(values[0]).toBeCloseTo(expected[0], 6);
+      expect(values[1]).toBeCloseTo(expected[1], 6);
+      expect(values[2]).toBeCloseTo(expected[2], 6);
+    }
   });
 
   test("publishes native le from the runtime frame", () => {
@@ -275,17 +316,25 @@ describe("population sector core", () => {
       constantsUsed: fixture.constants_used,
       series: new Map([
         ["m1", Float64Array.from([0.034056, 0.031841536, 0.029628864])],
+        ["m2", Float64Array.from([0.022028, 0.020920768, 0.019814432])],
+        ["m3", Float64Array.from([0.044056, 0.041841536, 0.039628864])],
+        ["m4", Float64Array.from([0.104056, 0.101841536, 0.099628864])],
       ]),
     };
     const series = new Map<string, Float64Array>();
 
-    const handled = maybePopulatePopulationOutputSeries("m1", sourceFrame, series);
+    const mortalityExpectations = {
+      m1: [0.034056, 0.031841536, 0.029628864],
+      m2: [0.022028, 0.020920768, 0.019814432],
+      m3: [0.044056, 0.041841536, 0.039628864],
+      m4: [0.104056, 0.101841536, 0.099628864],
+    } as const;
 
-    expect(handled).toBe(true);
-    expect(Array.from(series.get("m1") ?? [])).toEqual([
-      0.034056,
-      0.031841536,
-      0.029628864,
-    ]);
+    for (const [variable, expected] of Object.entries(mortalityExpectations)) {
+      const handled = maybePopulatePopulationOutputSeries(variable, sourceFrame, series);
+
+      expect(handled).toBe(true);
+      expect(Array.from(series.get(variable) ?? [])).toEqual(expected);
+    }
   });
 });
