@@ -24,10 +24,13 @@ export { projectSimulationResult } from "./simulation-results.js";
 export {
   CAPITAL_HIDDEN_SERIES,
   createFioacDerivedDefinition,
+  createFioaiDerivedDefinition,
   createFioasDerivedDefinition,
+  createIcirDerivedDefinition,
   createIoDerivedDefinition,
   createIopcDerivedDefinition,
   createIsopcDerivedDefinition,
+  createScirDerivedDefinition,
   createSoDerivedDefinition,
   createSopcDerivedDefinition,
   extendCapitalSourceVariables,

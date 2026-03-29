@@ -134,7 +134,7 @@ export function createRuntimeStateFrame(prepared, fixture) {
         constantsUsed,
         series: sourceSeries,
     };
-    populateCapitalNativeSupportSeries(sourceFrame, sourceSeries, prepared, constantsUsed, capitalCapabilities.canUseNativeCapitalAllocation);
+    populateCapitalNativeSupportSeries(sourceFrame, sourceSeries, prepared, constantsUsed, capitalCapabilities.canUseNativeCapitalAllocation, capitalCapabilities.canUseNativeCapitalInvestment);
     const series = new Map();
     for (const variable of prepared.outputVariables) {
         if (maybePopulateCapitalOutputSeries(variable, sourceFrame, series, fixture, projectedIndices, prepared, capitalCapabilities)) {

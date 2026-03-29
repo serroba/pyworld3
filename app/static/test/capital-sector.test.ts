@@ -3,10 +3,13 @@ import { describe, expect, test } from "vitest";
 import {
   CAPITAL_HIDDEN_SERIES,
   createFioacDerivedDefinition,
+  createFioaiDerivedDefinition,
   createFioasDerivedDefinition,
+  createIcirDerivedDefinition,
   createIoDerivedDefinition,
   createIopcDerivedDefinition,
   createIsopcDerivedDefinition,
+  createScirDerivedDefinition,
   createSoDerivedDefinition,
   createSopcDerivedDefinition,
   extendCapitalSourceVariables,
@@ -63,6 +66,7 @@ const fixture: SimulationResult = {
   time: [1900, 1900.5, 1901, 1901.5, 1902],
   constants_used: { fioac1: 0.43, fioac2: 0.5, iopcd: 100, iet: 1950 },
   series: {
+    fioaa: { name: "fioaa", values: [0.1, 0.1, 0.1, 0.1, 0.1] },
     pop: { name: "pop", values: [10, 12, 14, 16, 18] },
     iopc: { name: "iopc", values: [1, 1.5, 2, 2.5, 3] },
     io: { name: "io", values: [10, 18, 28, 40, 54] },
@@ -88,8 +92,35 @@ describe("capital sector core", () => {
       canDeriveSo: false,
       canDeriveSopc: false,
       canUseNativeCapitalAllocation: false,
+      canUseNativeCapitalInvestment: false,
     });
     expect(Array.from(sourceVariables).sort()).toEqual(["iopc", "pop"]);
+  });
+
+  test("extends runtime source requirements for capital investment support", () => {
+    const sourceVariables = new Set<string>(["iopc", "sopc"]);
+    const prepared = prepareRuntime(
+      ModelData,
+      { output_variables: ["so"] },
+      tables,
+    );
+
+    const result = extendCapitalSourceVariables(
+      sourceVariables,
+      prepared.outputVariables,
+      fixture,
+      prepared.lookupLibrary,
+    );
+
+    expect(result.canUseNativeCapitalAllocation).toBe(true);
+    expect(result.canUseNativeCapitalInvestment).toBe(true);
+    expect(Array.from(sourceVariables).sort()).toEqual([
+      "fioaa",
+      "io",
+      "iopc",
+      "pop",
+      "sopc",
+    ]);
   });
 
   test("derives io from pop and iopc", () => {
@@ -248,6 +279,52 @@ describe("capital sector core", () => {
     ).toBeCloseTo(0.45, 8);
   });
 
+  test("derives fioai from fioaa, fioas, and fioac", () => {
+    const definition = createFioaiDerivedDefinition();
+
+    expect(
+      definition.derive({
+        index: 0,
+        time: 1900,
+        values: {
+          fioaa: 0.1,
+          [CAPITAL_HIDDEN_SERIES.fioas]: 0.4,
+          [CAPITAL_HIDDEN_SERIES.fioac]: 0.43,
+        },
+      }),
+    ).toBeCloseTo(0.07, 8);
+  });
+
+  test("derives scir from io and fioas", () => {
+    const definition = createScirDerivedDefinition();
+
+    expect(
+      definition.derive({
+        index: 0,
+        time: 1900,
+        values: {
+          io: 40,
+          [CAPITAL_HIDDEN_SERIES.fioas]: 0.4,
+        },
+      }),
+    ).toBeCloseTo(16, 8);
+  });
+
+  test("derives icir from io and fioai", () => {
+    const definition = createIcirDerivedDefinition();
+
+    expect(
+      definition.derive({
+        index: 0,
+        time: 1900,
+        values: {
+          io: 40,
+          [CAPITAL_HIDDEN_SERIES.fioai]: 0.07,
+        },
+      }),
+    ).toBeCloseTo(2.8, 8);
+  });
+
   test("populates hidden capital allocation support series when lookups are available", () => {
     const prepared = prepareRuntime(
       ModelData,
@@ -255,6 +332,7 @@ describe("capital sector core", () => {
       tables,
     );
     const sourceSeries = new Map<string, Float64Array>([
+      ["fioaa", Float64Array.from([0.1, 0.1, 0.1])],
       ["iopc", Float64Array.from([100, 100, 100])],
       ["sopc", Float64Array.from([40, 40, 40])],
       ["pop", Float64Array.from([10, 10, 10])],
@@ -272,6 +350,7 @@ describe("capital sector core", () => {
       prepared,
       fixture.constants_used,
       true,
+      true,
     );
 
     expect(Array.from(sourceSeries.get(CAPITAL_HIDDEN_SERIES.fioac) ?? [])).toEqual([
@@ -288,6 +367,18 @@ describe("capital sector core", () => {
     expect(fioas[0]).toBeCloseTo(0.4, 8);
     expect(fioas[1]).toBeCloseTo(0.4, 8);
     expect(fioas[2]).toBeCloseTo(0.41, 8);
+    const fioai = Array.from(sourceSeries.get(CAPITAL_HIDDEN_SERIES.fioai) ?? []);
+    expect(fioai[0]).toBeCloseTo(0.07, 8);
+    expect(fioai[1]).toBeCloseTo(0.07, 8);
+    expect(fioai[2]).toBeCloseTo(0.09, 8);
+    const scir = Array.from(sourceSeries.get(CAPITAL_HIDDEN_SERIES.scir) ?? []);
+    expect(scir[0]).toBeCloseTo(400, 8);
+    expect(scir[1]).toBeCloseTo(400, 8);
+    expect(scir[2]).toBeCloseTo(410, 8);
+    const icir = Array.from(sourceSeries.get(CAPITAL_HIDDEN_SERIES.icir) ?? []);
+    expect(icir[0]).toBeCloseTo(70, 8);
+    expect(icir[1]).toBeCloseTo(70, 8);
+    expect(icir[2]).toBeCloseTo(90, 8);
   });
 
   test("populates io natively when source variables are present", () => {
