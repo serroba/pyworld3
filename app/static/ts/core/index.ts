@@ -61,6 +61,10 @@ export {
   RESOURCE_HIDDEN_SERIES,
 } from "./resource-sector.js";
 export {
+  applyRuntimeExecutionPlan,
+  createRuntimeExecutionPlan,
+} from "./runtime-execution-plan.js";
+export {
   assembleSimulationResultFromStepper,
   createEulerStateDefinition,
   createReplayStateDefinition,
@@ -92,6 +96,9 @@ export type {
   CapitalOrderedSeries,
   CoupledCapitalResourceSeries,
 } from "./capital-sector.js";
+export type {
+  RuntimeExecutionPlan,
+} from "./runtime-execution-plan.js";
 export type {
   RuntimeDerivedDefinition,
   RuntimeObservation,

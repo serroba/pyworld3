@@ -1,16 +1,15 @@
 import type { ConstantMap, SimulationResult } from "../simulation-contracts.js";
 import type { RuntimePreparation } from "./browser-native-runtime.js";
 import {
-  computeCoupledCapitalResourceSeries,
-  extendCapitalSourceVariables,
+  applyRuntimeExecutionPlan,
+  createRuntimeExecutionPlan,
+} from "./runtime-execution-plan.js";
+import {
   maybePopulateCapitalOutputSeries,
-  populateCapitalNativeSupportSeries,
 } from "./capital-sector.js";
 import {
   RESOURCE_HIDDEN_SERIES,
-  extendResourceSourceVariables,
   maybePopulateResourceOutputSeries,
-  populateResourceNativeSupportSeries,
 } from "./resource-sector.js";
 
 const TIME_KEY_PRECISION = 8;
@@ -220,34 +219,8 @@ export function createRuntimeStateFrame(
     ...(prepared.request.constants ?? {}),
   };
 
-  const sourceVariables = new Set(
-    prepared.outputVariables.filter(
-      (variable) =>
-        variable !== "nrfr" &&
-        variable !== "fcaor" &&
-        variable !== "io" &&
-        variable !== "iopc" &&
-        variable !== "so" &&
-        variable !== "sopc",
-    ),
-  );
-  const capitalCapabilities = extendCapitalSourceVariables(
-    sourceVariables,
-    prepared.outputVariables,
-    fixture,
-    prepared.lookupLibrary,
-  );
-  const { canUseNativeNrFlow } = extendResourceSourceVariables(
-    sourceVariables,
-    prepared.outputVariables,
-    fixture,
-    prepared.lookupLibrary,
-    capitalCapabilities.canUseNativeCapitalOrdering,
-  );
-  const canUseCoupledCapitalResource =
-    capitalCapabilities.canUseNativeCapitalOrdering &&
-    canUseNativeNrFlow &&
-    sourceVariables.has("nr");
+  const executionPlan = createRuntimeExecutionPlan(prepared, fixture);
+  const { sourceVariables, capitalCapabilities } = executionPlan;
 
   const sourceSeries = new Map<string, Float64Array>();
   for (const variable of sourceVariables) {
@@ -287,43 +260,17 @@ export function createRuntimeStateFrame(
     series: sourceSeries,
   };
 
-  if (canUseCoupledCapitalResource) {
-    const coupledSeries = computeCoupledCapitalResourceSeries(
-      sourceFrame,
-      prepared,
-      constantsUsed,
-    );
-    for (const [name, values] of Object.entries(coupledSeries)) {
-      sourceSeries.set(name, values);
-    }
-  } else {
-    populateCapitalNativeSupportSeries(
-      sourceFrame,
-      sourceSeries,
-      prepared,
-      constantsUsed,
-      capitalCapabilities.canUseNativeCapitalAllocation,
-      capitalCapabilities.canUseNativeCapitalInvestment,
-      capitalCapabilities.canUseNativeCapitalStocks,
-      capitalCapabilities.canUseNativeCapitalVisibleOutputFormulas,
-      capitalCapabilities.canUseNativeCapitalOrdering,
-    );
-
-    populateResourceNativeSupportSeries(
-      sourceFrame,
-      sourceSeries,
-      prepared,
-      constantsUsed,
-      canUseNativeNrFlow,
-    );
-
-    if (sourceSeries.has("nr")) {
-      const nrDefinition = STEPPED_SOURCE_STATE_DEFINITIONS.get("nr");
-      if (nrDefinition) {
-        populateStateBufferFromDefinition(sourceSeries, sourceFrame, nrDefinition);
-      }
-    }
-  }
+  applyRuntimeExecutionPlan(
+    sourceFrame,
+    sourceSeries,
+    prepared,
+    constantsUsed,
+    executionPlan,
+    (definition) => {
+      populateStateBufferFromDefinition(sourceSeries, sourceFrame, definition);
+    },
+    STEPPED_SOURCE_STATE_DEFINITIONS.get("nr"),
+  );
 
   const series = new Map<string, Float64Array>();
   for (const variable of prepared.outputVariables) {
