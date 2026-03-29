@@ -145,6 +145,7 @@ export function extendResourceSourceVariables(sourceVariables, outputVariables, 
         sourceVariables.add("nr");
     }
     const canUseNativeNrFlow = sourceVariables.has("nr") &&
+        Boolean(fixture.series.nr) &&
         Boolean(fixture.series.pop) &&
         (Boolean(fixture.series.iopc) || canUseNativeCapitalOrdering) &&
         lookupLibrary.has("PCRUM");
@@ -186,6 +187,16 @@ export function populateResourceNativeSupportSeries(oracleFrame, sourceSeries, p
 }
 export function maybePopulateResourceOutputSeries(variable, sourceFrame, series, prepared, fixture, projectedIndices, constantsUsed) {
     if (variable === "nrfr") {
+        const nr = sourceFrame.series.get("nr");
+        const nri = constantsUsed.nri;
+        if (nr && nri !== undefined && nri !== 0) {
+            series.set("nrfr", deriveSeriesValues(sourceFrame, createNrfrDerivedDefinition(constantsUsed)));
+            return true;
+        }
+        if (fixture.series.nrfr) {
+            series.set("nrfr", projectSeriesValues(fixture.series.nrfr.values, projectedIndices, "nrfr"));
+            return true;
+        }
         series.set("nrfr", deriveSeriesValues(sourceFrame, createNrfrDerivedDefinition(constantsUsed)));
         return true;
     }
