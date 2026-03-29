@@ -1,4 +1,4 @@
-import { extendCapitalSourceVariables, maybePopulateCapitalOutputSeries, populateCapitalNativeSupportSeries, } from "./capital-sector.js";
+import { computeCoupledCapitalResourceSeries, extendCapitalSourceVariables, maybePopulateCapitalOutputSeries, populateCapitalNativeSupportSeries, } from "./capital-sector.js";
 import { RESOURCE_HIDDEN_SERIES, extendResourceSourceVariables, maybePopulateResourceOutputSeries, populateResourceNativeSupportSeries, } from "./resource-sector.js";
 const TIME_KEY_PRECISION = 8;
 function toTimeKey(value) {
@@ -107,6 +107,9 @@ export function createRuntimeStateFrame(prepared, fixture) {
         variable !== "sopc"));
     const capitalCapabilities = extendCapitalSourceVariables(sourceVariables, prepared.outputVariables, fixture, prepared.lookupLibrary);
     const { canUseNativeNrFlow } = extendResourceSourceVariables(sourceVariables, prepared.outputVariables, fixture, prepared.lookupLibrary, capitalCapabilities.canUseNativeCapitalOrdering);
+    const canUseCoupledCapitalResource = capitalCapabilities.canUseNativeCapitalOrdering &&
+        canUseNativeNrFlow &&
+        sourceVariables.has("nr");
     const sourceSeries = new Map();
     for (const variable of sourceVariables) {
         if (variable === "nr" && !fixture.series.nr) {
@@ -136,12 +139,20 @@ export function createRuntimeStateFrame(prepared, fixture) {
         constantsUsed,
         series: sourceSeries,
     };
-    populateCapitalNativeSupportSeries(sourceFrame, sourceSeries, prepared, constantsUsed, capitalCapabilities.canUseNativeCapitalAllocation, capitalCapabilities.canUseNativeCapitalInvestment, capitalCapabilities.canUseNativeCapitalStocks, capitalCapabilities.canUseNativeCapitalVisibleOutputFormulas, capitalCapabilities.canUseNativeCapitalOrdering);
-    populateResourceNativeSupportSeries(sourceFrame, sourceSeries, prepared, constantsUsed, canUseNativeNrFlow);
-    if (sourceSeries.has("nr")) {
-        const nrDefinition = STEPPED_SOURCE_STATE_DEFINITIONS.get("nr");
-        if (nrDefinition) {
-            populateStateBufferFromDefinition(sourceSeries, sourceFrame, nrDefinition);
+    if (canUseCoupledCapitalResource) {
+        const coupledSeries = computeCoupledCapitalResourceSeries(sourceFrame, prepared, constantsUsed);
+        for (const [name, values] of Object.entries(coupledSeries)) {
+            sourceSeries.set(name, values);
+        }
+    }
+    else {
+        populateCapitalNativeSupportSeries(sourceFrame, sourceSeries, prepared, constantsUsed, capitalCapabilities.canUseNativeCapitalAllocation, capitalCapabilities.canUseNativeCapitalInvestment, capitalCapabilities.canUseNativeCapitalStocks, capitalCapabilities.canUseNativeCapitalVisibleOutputFormulas, capitalCapabilities.canUseNativeCapitalOrdering);
+        populateResourceNativeSupportSeries(sourceFrame, sourceSeries, prepared, constantsUsed, canUseNativeNrFlow);
+        if (sourceSeries.has("nr")) {
+            const nrDefinition = STEPPED_SOURCE_STATE_DEFINITIONS.get("nr");
+            if (nrDefinition) {
+                populateStateBufferFromDefinition(sourceSeries, sourceFrame, nrDefinition);
+            }
         }
     }
     const series = new Map();

@@ -338,6 +338,20 @@ describe("browser-native runtime", () => {
           "y.name": "PCRUM",
           "y.values": [2, 3, 4],
         },
+        {
+          sector: "Resources",
+          "x.name": "NRFR",
+          "x.values": [0, 1],
+          "y.name": "FCAOR1",
+          "y.values": [1, 0],
+        },
+        {
+          sector: "Resources",
+          "x.name": "NRFR",
+          "x.values": [0, 1],
+          "y.name": "FCAOR2",
+          "y.values": [0.5, 0.2],
+        },
       ],
       async () => ({
         year_min: 1900,
@@ -420,6 +434,13 @@ describe("browser-native runtime", () => {
         ...tables,
         {
           sector: "Resources",
+          "x.name": "IOPC",
+          "x.values": [1, 2, 3],
+          "y.name": "PCRUM",
+          "y.values": [2, 3, 4],
+        },
+        {
+          sector: "Resources",
           "x.name": "NRFR",
           "x.values": [0, 1],
           "y.name": "FCAOR1",
@@ -496,7 +517,7 @@ describe("browser-native runtime", () => {
       series: {
         iopc: {
           name: "iopc",
-          values: [7, 3.8948464619492653, 1.3974843410350508],
+          values: [7, 2.9211348464619493, 0.18560842240895634],
         },
       },
     });

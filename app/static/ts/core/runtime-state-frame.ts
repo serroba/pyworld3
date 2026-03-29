@@ -1,6 +1,7 @@
 import type { ConstantMap, SimulationResult } from "../simulation-contracts.js";
 import type { RuntimePreparation } from "./browser-native-runtime.js";
 import {
+  computeCoupledCapitalResourceSeries,
   extendCapitalSourceVariables,
   maybePopulateCapitalOutputSeries,
   populateCapitalNativeSupportSeries,
@@ -243,6 +244,10 @@ export function createRuntimeStateFrame(
     prepared.lookupLibrary,
     capitalCapabilities.canUseNativeCapitalOrdering,
   );
+  const canUseCoupledCapitalResource =
+    capitalCapabilities.canUseNativeCapitalOrdering &&
+    canUseNativeNrFlow &&
+    sourceVariables.has("nr");
 
   const sourceSeries = new Map<string, Float64Array>();
   for (const variable of sourceVariables) {
@@ -282,30 +287,41 @@ export function createRuntimeStateFrame(
     series: sourceSeries,
   };
 
-  populateCapitalNativeSupportSeries(
-    sourceFrame,
-    sourceSeries,
-    prepared,
-    constantsUsed,
-    capitalCapabilities.canUseNativeCapitalAllocation,
-    capitalCapabilities.canUseNativeCapitalInvestment,
-    capitalCapabilities.canUseNativeCapitalStocks,
-    capitalCapabilities.canUseNativeCapitalVisibleOutputFormulas,
-    capitalCapabilities.canUseNativeCapitalOrdering,
-  );
+  if (canUseCoupledCapitalResource) {
+    const coupledSeries = computeCoupledCapitalResourceSeries(
+      sourceFrame,
+      prepared,
+      constantsUsed,
+    );
+    for (const [name, values] of Object.entries(coupledSeries)) {
+      sourceSeries.set(name, values);
+    }
+  } else {
+    populateCapitalNativeSupportSeries(
+      sourceFrame,
+      sourceSeries,
+      prepared,
+      constantsUsed,
+      capitalCapabilities.canUseNativeCapitalAllocation,
+      capitalCapabilities.canUseNativeCapitalInvestment,
+      capitalCapabilities.canUseNativeCapitalStocks,
+      capitalCapabilities.canUseNativeCapitalVisibleOutputFormulas,
+      capitalCapabilities.canUseNativeCapitalOrdering,
+    );
 
-  populateResourceNativeSupportSeries(
-    sourceFrame,
-    sourceSeries,
-    prepared,
-    constantsUsed,
-    canUseNativeNrFlow,
-  );
+    populateResourceNativeSupportSeries(
+      sourceFrame,
+      sourceSeries,
+      prepared,
+      constantsUsed,
+      canUseNativeNrFlow,
+    );
 
-  if (sourceSeries.has("nr")) {
-    const nrDefinition = STEPPED_SOURCE_STATE_DEFINITIONS.get("nr");
-    if (nrDefinition) {
-      populateStateBufferFromDefinition(sourceSeries, sourceFrame, nrDefinition);
+    if (sourceSeries.has("nr")) {
+      const nrDefinition = STEPPED_SOURCE_STATE_DEFINITIONS.get("nr");
+      if (nrDefinition) {
+        populateStateBufferFromDefinition(sourceSeries, sourceFrame, nrDefinition);
+      }
     }
   }
 

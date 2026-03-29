@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 
 import {
   CAPITAL_HIDDEN_SERIES,
+  computeCoupledCapitalResourceSeries,
   computeCapitalOrderedSeries,
   createAlicDerivedDefinition,
   createAlscDerivedDefinition,
@@ -859,4 +860,55 @@ describe("capital sector core", () => {
 
     expect(Array.from(result.io)).toEqual([70, 54.52785046728972, 25.154718138630916]);
     expect(Array.from(result.iopc)).toEqual([7, 3.8948464619492653, 1.3974843410350508]);
+  });
+
+  test("computes coupled capital-resource series through one ordered timestep loop", () => {
+    const prepared = prepareRuntime(
+      ModelData,
+      { year_min: 1900, year_max: 1902, dt: 1, output_variables: ["iopc", "nrfr"] },
+      [
+        ...tables,
+        {
+          sector: "Resources",
+          "x.name": "IOPC",
+          "x.values": [1, 2, 3],
+          "y.name": "PCRUM",
+          "y.values": [2, 3, 4],
+        },
+      ],
+    );
+    const sourceFrame: RuntimeStateFrame = {
+      request: prepared.request,
+      time: Float64Array.from(prepared.time),
+      constantsUsed: {
+        ...fixture.constants_used,
+        nri: 100,
+        nruf1: 0.1,
+        nruf2: 0.1,
+      },
+      series: new Map([
+        ["nr", Float64Array.from([100, 100, 100])],
+        ["fioaa", Float64Array.from([0.1, 0.1, 0.1])],
+        ["fcaor", Float64Array.from([0.2, 0.2, 0.2])],
+        ["luf", Float64Array.from([2, 2, 2])],
+        ["pop", Float64Array.from([10, 14, 18])],
+      ]),
+    };
+
+    const result = computeCoupledCapitalResourceSeries(
+      sourceFrame,
+      prepared,
+      sourceFrame.constantsUsed,
+    );
+
+    expect(Array.from(result.iopc)).toEqual([
+      5.6,
+      3.8568311688311696,
+      2.9158462736956245,
+    ]);
+    expect(Array.from(result.nr)).toEqual([
+      100,
+      96,
+      90.4,
+    ]);
   });
