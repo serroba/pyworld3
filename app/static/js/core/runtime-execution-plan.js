@@ -5,6 +5,38 @@ import { extendResourceSourceVariables, populateResourceNativeSupportSeries, } f
 import { createBirthRateDerivedDefinition, createP1StockStateDefinition, createPopulationStockStateDefinitions, extendPopulationSourceVariables, createPopulationSumDerivedDefinition, } from "./population-sector.js";
 import { populatePopulationBirthNativeSupportSeries, populatePopulationNativeSupportSeries, } from "./population-runtime.js";
 import { populateDerivedBufferFromDefinition, } from "./runtime-state-frame.js";
+const AGRICULTURE_NATIVE_OUTPUTS = new Set([
+    "al",
+    "f",
+    "fioaa",
+    "fpc",
+    "ly",
+    "tai",
+    "pal",
+    "ldr",
+    "ler",
+    "lrui",
+    "dcph",
+    "fiald",
+    "cai",
+    "ai",
+    "falm",
+    "fr",
+    "pfr",
+    "all",
+    "llmy",
+    "uil",
+    "uilpc",
+    "uilr",
+    "lfert",
+    "lfr",
+    "lfrt",
+    "lfd",
+    "lfdr",
+    "mpld",
+    "mpai",
+    "mlymc",
+]);
 const POPULATION_OUTPUTS_REQUIRING_FOOD = new Set([
     "le",
     "m1",
@@ -53,16 +85,13 @@ export function createRuntimeExecutionPlan(prepared, fixture) {
         variable !== "cbr" &&
         variable !== "tf" &&
         variable !== "p1" &&
-        variable !== "f" &&
-        variable !== "fpc" &&
-        variable !== "fioaa" &&
-        variable !== "tai" &&
-        variable !== "ly"));
+        !AGRICULTURE_NATIVE_OUTPUTS.has(variable)));
     const needsNativeFoodPath = prepared.outputVariables.some((variable) => POPULATION_OUTPUTS_REQUIRING_FOOD.has(variable));
     const agricultureCapabilities = extendAgricultureSourceVariables(sourceVariables, prepared.outputVariables, fixture, prepared.lookupLibrary, needsNativeFoodPath);
     const capitalCapabilities = extendCapitalSourceVariables(sourceVariables, prepared.outputVariables, fixture, prepared.lookupLibrary);
     const { canUseNativeNrFlow } = extendResourceSourceVariables(sourceVariables, prepared.outputVariables, fixture, prepared.lookupLibrary, capitalCapabilities.canUseNativeCapitalOrdering);
-    const { canUseNativeLifeExpectancy, canUseNativeMortality, canUseNativeCohortSupport, canUseNativeDeathPath, canUseNativePopulationStocks, canUseNativeBirthSupport, canUseNativeP1Stock, } = extendPopulationSourceVariables(sourceVariables, prepared.outputVariables, fixture, prepared.lookupLibrary, agricultureCapabilities.canUseNativeFoodPath);
+    const { canUseNativeLifeExpectancy, canUseNativeMortality, canUseNativeCohortSupport, canUseNativeDeathPath, canUseNativePopulationStocks, canUseNativeBirthSupport, canUseNativeP1Stock, } = extendPopulationSourceVariables(sourceVariables, prepared.outputVariables, fixture, prepared.lookupLibrary, agricultureCapabilities.canUseNativeFoodPath ||
+        agricultureCapabilities.canUseNativeAgricultureOrdering);
     return {
         sourceVariables,
         agricultureCapabilities,
@@ -91,7 +120,7 @@ export function applyRuntimeExecutionPlan(sourceFrame, sourceSeries, prepared, c
         populateCapitalNativeSupportSeries(sourceFrame, sourceSeries, prepared, constantsUsed, plan.capitalCapabilities.canUseNativeCapitalAllocation, plan.capitalCapabilities.canUseNativeCapitalInvestment, plan.capitalCapabilities.canUseNativeCapitalStocks, plan.capitalCapabilities.canUseNativeCapitalVisibleOutputFormulas, plan.capitalCapabilities.canUseNativeCapitalOrdering);
         populateResourceNativeSupportSeries(sourceFrame, sourceSeries, prepared, constantsUsed, plan.canUseNativeNrFlow);
     }
-    populateAgricultureNativeSupportSeries(sourceFrame, sourceSeries, prepared, constantsUsed, plan.agricultureCapabilities.canUseNativeFoodPath, plan.agricultureCapabilities.canUseNativeAgriculturalAllocation, plan.agricultureCapabilities.canUseNativeAgricultureProductivity);
+    populateAgricultureNativeSupportSeries(sourceFrame, sourceSeries, prepared, constantsUsed, plan.agricultureCapabilities.canUseNativeFoodPath, plan.agricultureCapabilities.canUseNativeAgriculturalAllocation, plan.agricultureCapabilities.canUseNativeAgricultureProductivity, plan.agricultureCapabilities.canUseNativeAgricultureOrdering);
     populatePopulationNativeSupportSeries(sourceFrame, sourceSeries, prepared, constantsUsed, plan.canUseNativeLifeExpectancy, plan.canUseNativeMortality, plan.canUseNativeCohortSupport, plan.canUseNativeDeathPath, plan.canUseNativePopulationStocks);
     if (plan.canUseNativePopulationStocks) {
         for (const definition of createPopulationStockStateDefinitions()) {

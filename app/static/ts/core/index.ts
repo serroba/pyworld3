@@ -1,5 +1,6 @@
 export {
   AGRICULTURE_HIDDEN_SERIES,
+  computeAgricultureOrderedSeries,
   createFioaaDerivedDefinition,
   createAiphDerivedDefinition,
   createFoodDerivedDefinition,
@@ -145,6 +146,7 @@ export {
   normalizeLookupTable,
 } from "./world3-tables.js";
 
+export type { AgricultureOrderedSeries } from "./agriculture-sector.js";
 export type {
   BrowserNativeRuntime,
   RuntimeFixtureLoader,

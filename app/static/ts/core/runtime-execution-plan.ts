@@ -44,6 +44,39 @@ export type RuntimeExecutionPlan = {
   readonly canUseNativeP1Stock: boolean;
 };
 
+const AGRICULTURE_NATIVE_OUTPUTS = new Set([
+  "al",
+  "f",
+  "fioaa",
+  "fpc",
+  "ly",
+  "tai",
+  "pal",
+  "ldr",
+  "ler",
+  "lrui",
+  "dcph",
+  "fiald",
+  "cai",
+  "ai",
+  "falm",
+  "fr",
+  "pfr",
+  "all",
+  "llmy",
+  "uil",
+  "uilpc",
+  "uilr",
+  "lfert",
+  "lfr",
+  "lfrt",
+  "lfd",
+  "lfdr",
+  "mpld",
+  "mpai",
+  "mlymc",
+]);
+
 const POPULATION_OUTPUTS_REQUIRING_FOOD = new Set([
   "le",
   "m1",
@@ -99,11 +132,7 @@ export function createRuntimeExecutionPlan(
         variable !== "cbr" &&
         variable !== "tf" &&
         variable !== "p1" &&
-        variable !== "f" &&
-        variable !== "fpc" &&
-        variable !== "fioaa" &&
-        variable !== "tai" &&
-        variable !== "ly",
+        !AGRICULTURE_NATIVE_OUTPUTS.has(variable),
     ),
   );
 
@@ -146,7 +175,8 @@ export function createRuntimeExecutionPlan(
     prepared.outputVariables,
     fixture,
     prepared.lookupLibrary,
-    agricultureCapabilities.canUseNativeFoodPath,
+    agricultureCapabilities.canUseNativeFoodPath ||
+      agricultureCapabilities.canUseNativeAgricultureOrdering,
   );
 
   return {
@@ -216,6 +246,7 @@ export function applyRuntimeExecutionPlan(
     plan.agricultureCapabilities.canUseNativeFoodPath,
     plan.agricultureCapabilities.canUseNativeAgriculturalAllocation,
     plan.agricultureCapabilities.canUseNativeAgricultureProductivity,
+    plan.agricultureCapabilities.canUseNativeAgricultureOrdering,
   );
 
   populatePopulationNativeSupportSeries(

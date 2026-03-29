@@ -113,6 +113,69 @@ const tables: RawLookupTable[] = [
   },
   {
     sector: "Agriculture",
+    "x.name": "PALR",
+    "x.values": [0, 1],
+    "y.name": "DCPH",
+    "y.values": [100, 100],
+  },
+  {
+    sector: "Agriculture",
+    "x.name": "MPLD/MPAI",
+    "x.values": [0, 2],
+    "y.name": "FIALD",
+    "y.values": [0.5, 0.5],
+  },
+  {
+    sector: "Agriculture",
+    "x.name": "AIPH",
+    "x.values": [0, 20, 40],
+    "y.name": "MLYMC",
+    "y.values": [1, 1.5, 2],
+  },
+  {
+    sector: "Agriculture",
+    "x.name": "LY/ILF",
+    "x.values": [0, 2],
+    "y.name": "LLMY1",
+    "y.values": [1, 1],
+  },
+  {
+    sector: "Agriculture",
+    "x.name": "LY/ILF",
+    "x.values": [0, 2],
+    "y.name": "LLMY2",
+    "y.values": [1, 1],
+  },
+  {
+    sector: "Agriculture",
+    "x.name": "IOPC",
+    "x.values": [0, 100, 200],
+    "y.name": "UILPC",
+    "y.values": [0.1, 0.1, 0.1],
+  },
+  {
+    sector: "Agriculture",
+    "x.name": "PPOLX",
+    "x.values": [0, 1],
+    "y.name": "LFDR",
+    "y.values": [0.1, 0.1],
+  },
+  {
+    sector: "Agriculture",
+    "x.name": "FALM",
+    "x.values": [0, 1],
+    "y.name": "LFRT",
+    "y.values": [2, 2],
+  },
+  {
+    sector: "Agriculture",
+    "x.name": "PFR",
+    "x.values": [0, 2],
+    "y.name": "FALM",
+    "y.values": [0.2, 0.2],
+  },
+  {
+    sector: "Agriculture",
     "x.name": "FPCR",
     "x.values": [0, 1, 2],
     "y.name": "FIOAA2",
@@ -372,6 +435,77 @@ describe("browser-native runtime", () => {
     expect(result.series.ly?.values).toEqual([
       expect.closeTo(1008, 10),
       expect.closeTo(1040.05, 10),
+    ]);
+  });
+
+  test("derives ordered agriculture land and food outputs from exogenous inputs and seed constants", async () => {
+    const runtime = createFixtureBackedRuntime(
+      ModelData,
+      async () => tables,
+      async () => ({
+        year_min: 1900,
+        year_max: 1902,
+        dt: 1,
+        time: [1900, 1901, 1902],
+        constants_used: {
+          ali: 100,
+          pali: 200,
+          uili: 10,
+          lferti: 50,
+          palt: 200,
+          uildt: 10,
+          alln: 100,
+          ilf: 100,
+          lfh: 0.7,
+          pl: 0.1,
+          sfpc: 100,
+          fspd: 2,
+          sd: 1,
+          alai1: 2,
+          alai2: 2,
+          io70: 1000,
+          lyf1: 1,
+          lyf2: 1,
+        },
+        series: {
+          pop: { name: "pop", values: [10, 12, 14] },
+          iopc: { name: "iopc", values: [100, 110, 120] },
+          ppolx: { name: "ppolx", values: [0.5, 0.5, 0.5] },
+        },
+      }),
+    );
+
+    const result = await runtime.simulateStandardRun({
+      year_min: 1900,
+      year_max: 1902,
+      dt: 1,
+      output_variables: ["al", "fpc", "ly", "pal", "lfert"],
+    });
+
+    expect(result.series.al?.values).toEqual([
+      expect.closeTo(100, 8),
+      expect.closeTo(100.47283661196613, 8),
+      expect.closeTo(101.44810824584647, 8),
+    ]);
+    expect(result.series.ly?.values).toEqual([
+      expect.closeTo(61.76740393435786, 8),
+      expect.closeTo(89.77703298743377, 8),
+      expect.closeTo(106.99831835807024, 8),
+    ]);
+    expect(result.series.fpc?.values).toEqual([
+      expect.closeTo(389.1346447864545, 8),
+      expect.closeTo(473.5580412598101, 8),
+      expect.closeTo(488.46496423108727, 8),
+    ]);
+    expect(result.series.pal?.values).toEqual([
+      expect.closeTo(200, 8),
+      expect.closeTo(198.52716338803387, 8),
+      expect.closeTo(196.54716338803388, 8),
+    ]);
+    expect(result.series.lfert?.values).toEqual([
+      expect.closeTo(50, 8),
+      expect.closeTo(70, 8),
+      expect.closeTo(78, 8),
     ]);
   });
 
