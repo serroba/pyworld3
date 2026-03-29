@@ -11,14 +11,17 @@ const DEFAULT_CAPITAL_POLICY_YEAR = 1975;
 export const CAPITAL_HIDDEN_SERIES = {
   alic: "__alic",
   alsc: "__alsc",
+  cuf: "__cuf",
   fioac: "__fioac",
   fioai: "__fioai",
   ic: "__ic",
   icdr: "__icdr",
+  icor: "__icor",
   fioas: "__fioas",
   icir: "__icir",
   isopc: "__isopc",
   sc: "__sc",
+  scor: "__scor",
   scdr: "__scdr",
   scir: "__scir",
 } as const;
@@ -132,6 +135,39 @@ export function createIoDerivedDefinition(): RuntimeDerivedDefinition {
         );
       }
       return pop * iopc;
+    },
+  };
+}
+
+export function createCapitalIoDerivedDefinition(): RuntimeDerivedDefinition {
+  return {
+    variable: "io",
+    derive: (observation: RuntimeObservation) => {
+      const ic = observation.values[CAPITAL_HIDDEN_SERIES.ic];
+      const fcaor = observation.values.fcaor;
+      const cuf = observation.values[CAPITAL_HIDDEN_SERIES.cuf];
+      const icor = observation.values[CAPITAL_HIDDEN_SERIES.icor];
+      if (ic === undefined) {
+        throw new Error(
+          "Fixture-backed runtime cannot derive 'io' because the source variable '__ic' is missing.",
+        );
+      }
+      if (fcaor === undefined) {
+        throw new Error(
+          "Fixture-backed runtime cannot derive 'io' because the source variable 'fcaor' is missing.",
+        );
+      }
+      if (cuf === undefined) {
+        throw new Error(
+          "Fixture-backed runtime cannot derive 'io' because the source variable '__cuf' is missing.",
+        );
+      }
+      if (icor === undefined || icor === 0) {
+        throw new Error(
+          "Fixture-backed runtime cannot derive 'io' because the source variable '__icor' is missing or zero.",
+        );
+      }
+      return ic * (1 - fcaor) * cuf / icor;
     },
   };
 }
@@ -262,6 +298,33 @@ export function createSoDerivedDefinition(): RuntimeDerivedDefinition {
         );
       }
       return pop * sopc;
+    },
+  };
+}
+
+export function createCapitalSoDerivedDefinition(): RuntimeDerivedDefinition {
+  return {
+    variable: "so",
+    derive: (observation: RuntimeObservation) => {
+      const sc = observation.values[CAPITAL_HIDDEN_SERIES.sc];
+      const cuf = observation.values[CAPITAL_HIDDEN_SERIES.cuf];
+      const scor = observation.values[CAPITAL_HIDDEN_SERIES.scor];
+      if (sc === undefined) {
+        throw new Error(
+          "Fixture-backed runtime cannot derive 'so' because the source variable '__sc' is missing.",
+        );
+      }
+      if (cuf === undefined) {
+        throw new Error(
+          "Fixture-backed runtime cannot derive 'so' because the source variable '__cuf' is missing.",
+        );
+      }
+      if (scor === undefined || scor === 0) {
+        throw new Error(
+          "Fixture-backed runtime cannot derive 'so' because the source variable '__scor' is missing or zero.",
+        );
+      }
+      return sc * cuf / scor;
     },
   };
 }
@@ -428,6 +491,55 @@ export function createScdrDerivedDefinition(): RuntimeDerivedDefinition {
   };
 }
 
+export function createCufDerivedDefinition(
+  cufLookup: LookupInterpolator,
+): RuntimeDerivedDefinition {
+  return {
+    variable: CAPITAL_HIDDEN_SERIES.cuf,
+    derive: (observation: RuntimeObservation) => {
+      const luf = observation.values.luf;
+      if (luf === undefined) {
+        throw new Error(
+          "Fixture-backed runtime cannot derive '__cuf' because the source variable 'luf' is missing.",
+        );
+      }
+      return cufLookup.evaluate(luf);
+    },
+  };
+}
+
+export function createIcorDerivedDefinition(
+  constantsUsed: ConstantMap,
+  policyYear = DEFAULT_CAPITAL_POLICY_YEAR,
+): RuntimeDerivedDefinition {
+  return {
+    variable: CAPITAL_HIDDEN_SERIES.icor,
+    derive: (observation: RuntimeObservation) =>
+      clipAtPolicyYear(
+        constantsUsed.icor1 ?? 3,
+        constantsUsed.icor2 ?? 3,
+        observation.time,
+        policyYear,
+      ),
+  };
+}
+
+export function createScorDerivedDefinition(
+  constantsUsed: ConstantMap,
+  policyYear = DEFAULT_CAPITAL_POLICY_YEAR,
+): RuntimeDerivedDefinition {
+  return {
+    variable: CAPITAL_HIDDEN_SERIES.scor,
+    derive: (observation: RuntimeObservation) =>
+      clipAtPolicyYear(
+        constantsUsed.scor1 ?? 1,
+        constantsUsed.scor2 ?? 1,
+        observation.time,
+        policyYear,
+      ),
+  };
+}
+
 export function extendCapitalSourceVariables(
   sourceVariables: Set<string>,
   outputVariables: string[],
@@ -441,6 +553,7 @@ export function extendCapitalSourceVariables(
   canUseNativeCapitalAllocation: boolean;
   canUseNativeCapitalInvestment: boolean;
   canUseNativeCapitalStocks: boolean;
+  canUseNativeCapitalVisibleOutputFormulas: boolean;
 } {
   const canDeriveIo =
     outputVariables.includes("io") &&
@@ -503,6 +616,16 @@ export function extendCapitalSourceVariables(
   const canUseNativeCapitalStocks =
     canUseNativeCapitalInvestment &&
     constantsUsedHasCapitalStockSeeds(fixture.constants_used);
+  const canUseNativeCapitalVisibleOutputFormulas =
+    canUseNativeCapitalStocks &&
+    Boolean(fixture.series.fcaor) &&
+    Boolean(fixture.series.luf) &&
+    Boolean(lookupLibrary?.has("CUF"));
+
+  if (canUseNativeCapitalVisibleOutputFormulas) {
+    sourceVariables.add("fcaor");
+    sourceVariables.add("luf");
+  }
 
   return {
     canDeriveIo,
@@ -512,6 +635,7 @@ export function extendCapitalSourceVariables(
     canUseNativeCapitalAllocation,
     canUseNativeCapitalInvestment,
     canUseNativeCapitalStocks,
+    canUseNativeCapitalVisibleOutputFormulas,
   };
 }
 
@@ -534,6 +658,7 @@ export function populateCapitalNativeSupportSeries(
   canUseNativeCapitalAllocation: boolean,
   canUseNativeCapitalInvestment: boolean,
   canUseNativeCapitalStocks: boolean,
+  canUseNativeCapitalVisibleOutputFormulas: boolean,
 ): void {
   const fioacvLookup = prepared.lookupLibrary.get("FIOACV");
   if (sourceSeries.has("iopc") && fioacvLookup) {
@@ -672,6 +797,37 @@ export function populateCapitalNativeSupportSeries(
       createScdrDerivedDefinition(),
     ),
   );
+
+  if (!canUseNativeCapitalVisibleOutputFormulas) {
+    return;
+  }
+
+  const cufLookup = prepared.lookupLibrary.get("CUF");
+  if (!cufLookup) {
+    return;
+  }
+
+  sourceSeries.set(
+    CAPITAL_HIDDEN_SERIES.cuf,
+    deriveSeriesValues(
+      supportFrame,
+      createCufDerivedDefinition(cufLookup),
+    ),
+  );
+  sourceSeries.set(
+    CAPITAL_HIDDEN_SERIES.icor,
+    deriveSeriesValues(
+      supportFrame,
+      createIcorDerivedDefinition(constantsUsed),
+    ),
+  );
+  sourceSeries.set(
+    CAPITAL_HIDDEN_SERIES.scor,
+    deriveSeriesValues(
+      supportFrame,
+      createScorDerivedDefinition(constantsUsed),
+    ),
+  );
 }
 
 export function maybePopulateCapitalOutputSeries(
@@ -686,9 +842,14 @@ export function maybePopulateCapitalOutputSeries(
     canDeriveIopc: boolean;
     canDeriveSo: boolean;
     canDeriveSopc: boolean;
+    canUseNativeCapitalVisibleOutputFormulas: boolean;
   },
 ): boolean {
   if (variable === "io") {
+    if (capabilities.canUseNativeCapitalVisibleOutputFormulas) {
+      series.set("io", deriveSeriesValues(sourceFrame, createCapitalIoDerivedDefinition()));
+      return true;
+    }
     if (capabilities.canDeriveIo) {
       series.set("io", deriveSeriesValues(sourceFrame, createIoDerivedDefinition()));
       return true;
@@ -720,6 +881,10 @@ export function maybePopulateCapitalOutputSeries(
   }
 
   if (variable === "so") {
+    if (capabilities.canUseNativeCapitalVisibleOutputFormulas) {
+      series.set("so", deriveSeriesValues(sourceFrame, createCapitalSoDerivedDefinition()));
+      return true;
+    }
     if (capabilities.canDeriveSo) {
       series.set("so", deriveSeriesValues(sourceFrame, createSoDerivedDefinition()));
       return true;

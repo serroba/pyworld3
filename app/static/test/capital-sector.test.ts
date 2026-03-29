@@ -4,14 +4,17 @@ import {
   CAPITAL_HIDDEN_SERIES,
   createAlicDerivedDefinition,
   createAlscDerivedDefinition,
+  createCufDerivedDefinition,
   createFioacDerivedDefinition,
   createFioaiDerivedDefinition,
   createFioasDerivedDefinition,
   createIcdrDerivedDefinition,
   createIcirDerivedDefinition,
+  createIcorDerivedDefinition,
   createIoDerivedDefinition,
   createIopcDerivedDefinition,
   createIsopcDerivedDefinition,
+  createScorDerivedDefinition,
   createScdrDerivedDefinition,
   createScirDerivedDefinition,
   createSoDerivedDefinition,
@@ -61,6 +64,13 @@ const tables: RawLookupTable[] = [
     "y.name": "FIOAS2",
     "y.values": [0.25, 0.45, 0.65],
   },
+  {
+    sector: "Capital",
+    "x.name": "LUFD",
+    "x.values": [0, 1, 2],
+    "y.name": "CUF",
+    "y.values": [0, 0.5, 1],
+  },
 ];
 
 const fixture: SimulationResult = {
@@ -82,6 +92,8 @@ const fixture: SimulationResult = {
   },
   series: {
     fioaa: { name: "fioaa", values: [0.1, 0.1, 0.1, 0.1, 0.1] },
+    fcaor: { name: "fcaor", values: [0.2, 0.2, 0.2, 0.2, 0.2] },
+    luf: { name: "luf", values: [2, 2, 2, 2, 2] },
     pop: { name: "pop", values: [10, 12, 14, 16, 18] },
     iopc: { name: "iopc", values: [1, 1.5, 2, 2.5, 3] },
     io: { name: "io", values: [10, 18, 28, 40, 54] },
@@ -109,6 +121,7 @@ describe("capital sector core", () => {
       canUseNativeCapitalAllocation: false,
       canUseNativeCapitalInvestment: false,
       canUseNativeCapitalStocks: false,
+      canUseNativeCapitalVisibleOutputFormulas: false,
     });
     expect(Array.from(sourceVariables).sort()).toEqual(["iopc", "pop"]);
   });
@@ -131,10 +144,13 @@ describe("capital sector core", () => {
     expect(result.canUseNativeCapitalAllocation).toBe(true);
     expect(result.canUseNativeCapitalInvestment).toBe(true);
     expect(result.canUseNativeCapitalStocks).toBe(true);
+    expect(result.canUseNativeCapitalVisibleOutputFormulas).toBe(true);
     expect(Array.from(sourceVariables).sort()).toEqual([
+      "fcaor",
       "fioaa",
       "io",
       "iopc",
+      "luf",
       "pop",
       "sopc",
     ]);
@@ -313,6 +329,41 @@ describe("capital sector core", () => {
     ).toBe(20);
   });
 
+  test("derives cuf from the labor utilization lookup", () => {
+    const prepared = prepareRuntime(
+      ModelData,
+      { output_variables: ["io"] },
+      tables,
+    );
+    const cufLookup = prepared.lookupLibrary.get("CUF");
+    expect(cufLookup).toBeDefined();
+
+    expect(
+      createCufDerivedDefinition(cufLookup!).derive({
+        index: 0,
+        time: 1900,
+        values: { luf: 2 },
+      }),
+    ).toBeCloseTo(1, 8);
+  });
+
+  test("derives icor and scor from capital ratio constants", () => {
+    expect(
+      createIcorDerivedDefinition(fixture.constants_used).derive({
+        index: 0,
+        time: 1900,
+        values: {},
+      }),
+    ).toBe(3);
+    expect(
+      createScorDerivedDefinition(fixture.constants_used).derive({
+        index: 0,
+        time: 1900,
+        values: {},
+      }),
+    ).toBe(1);
+  });
+
   test("derives fioai from fioaa, fioas, and fioac", () => {
     const definition = createFioaiDerivedDefinition();
 
@@ -416,6 +467,7 @@ describe("capital sector core", () => {
       true,
       true,
       false,
+      false,
     );
 
     expect(Array.from(sourceSeries.get(CAPITAL_HIDDEN_SERIES.fioac) ?? [])).toEqual([
@@ -453,8 +505,10 @@ describe("capital sector core", () => {
       tables,
     );
     const sourceSeries = new Map<string, Float64Array>([
+      ["fcaor", Float64Array.from([0.2, 0.2, 0.2])],
       ["fioaa", Float64Array.from([0.1, 0.1, 0.1])],
       ["iopc", Float64Array.from([100, 100, 100])],
+      ["luf", Float64Array.from([2, 2, 2])],
       ["sopc", Float64Array.from([40, 40, 40])],
       ["pop", Float64Array.from([10, 10, 10])],
     ]);
@@ -470,6 +524,7 @@ describe("capital sector core", () => {
       sourceSeries,
       prepared,
       fixture.constants_used,
+      true,
       true,
       true,
       true,
@@ -501,6 +556,21 @@ describe("capital sector core", () => {
     expect(scdr[0]).toBeCloseTo(7.2, 8);
     expect(scdr[1]).toBeCloseTo(26.84, 8);
     expect(scdr[2]).toBeCloseTo(45.498, 8);
+    expect(Array.from(sourceSeries.get(CAPITAL_HIDDEN_SERIES.cuf) ?? [])).toEqual([
+      1,
+      1,
+      1,
+    ]);
+    expect(Array.from(sourceSeries.get(CAPITAL_HIDDEN_SERIES.icor) ?? [])).toEqual([
+      3,
+      3,
+      3,
+    ]);
+    expect(Array.from(sourceSeries.get(CAPITAL_HIDDEN_SERIES.scor) ?? [])).toEqual([
+      1,
+      1,
+      1,
+    ]);
   });
 
   test("populates io natively when source variables are present", () => {
@@ -532,6 +602,7 @@ describe("capital sector core", () => {
         canDeriveIopc: false,
         canDeriveSo: false,
         canDeriveSopc: false,
+        canUseNativeCapitalVisibleOutputFormulas: false,
       },
     );
 
@@ -568,6 +639,7 @@ describe("capital sector core", () => {
         canDeriveIopc: true,
         canDeriveSo: false,
         canDeriveSopc: false,
+        canUseNativeCapitalVisibleOutputFormulas: false,
       },
     );
 
@@ -604,6 +676,7 @@ describe("capital sector core", () => {
         canDeriveIopc: false,
         canDeriveSo: true,
         canDeriveSopc: false,
+        canUseNativeCapitalVisibleOutputFormulas: false,
       },
     );
 
@@ -640,6 +713,7 @@ describe("capital sector core", () => {
         canDeriveIopc: false,
         canDeriveSo: false,
         canDeriveSopc: true,
+        canUseNativeCapitalVisibleOutputFormulas: false,
       },
     );
 

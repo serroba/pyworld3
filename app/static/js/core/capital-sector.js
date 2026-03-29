@@ -2,14 +2,17 @@ const DEFAULT_CAPITAL_POLICY_YEAR = 1975;
 export const CAPITAL_HIDDEN_SERIES = {
     alic: "__alic",
     alsc: "__alsc",
+    cuf: "__cuf",
     fioac: "__fioac",
     fioai: "__fioai",
     ic: "__ic",
     icdr: "__icdr",
+    icor: "__icor",
     fioas: "__fioas",
     icir: "__icir",
     isopc: "__isopc",
     sc: "__sc",
+    scor: "__scor",
     scdr: "__scdr",
     scir: "__scir",
 };
@@ -88,6 +91,30 @@ export function createIoDerivedDefinition() {
         },
     };
 }
+export function createCapitalIoDerivedDefinition() {
+    return {
+        variable: "io",
+        derive: (observation) => {
+            const ic = observation.values[CAPITAL_HIDDEN_SERIES.ic];
+            const fcaor = observation.values.fcaor;
+            const cuf = observation.values[CAPITAL_HIDDEN_SERIES.cuf];
+            const icor = observation.values[CAPITAL_HIDDEN_SERIES.icor];
+            if (ic === undefined) {
+                throw new Error("Fixture-backed runtime cannot derive 'io' because the source variable '__ic' is missing.");
+            }
+            if (fcaor === undefined) {
+                throw new Error("Fixture-backed runtime cannot derive 'io' because the source variable 'fcaor' is missing.");
+            }
+            if (cuf === undefined) {
+                throw new Error("Fixture-backed runtime cannot derive 'io' because the source variable '__cuf' is missing.");
+            }
+            if (icor === undefined || icor === 0) {
+                throw new Error("Fixture-backed runtime cannot derive 'io' because the source variable '__icor' is missing or zero.");
+            }
+            return ic * (1 - fcaor) * cuf / icor;
+        },
+    };
+}
 export function createIopcDerivedDefinition() {
     return {
         variable: "iopc",
@@ -159,6 +186,26 @@ export function createSoDerivedDefinition() {
                 throw new Error("Fixture-backed runtime cannot derive 'so' because the source variable 'sopc' is missing.");
             }
             return pop * sopc;
+        },
+    };
+}
+export function createCapitalSoDerivedDefinition() {
+    return {
+        variable: "so",
+        derive: (observation) => {
+            const sc = observation.values[CAPITAL_HIDDEN_SERIES.sc];
+            const cuf = observation.values[CAPITAL_HIDDEN_SERIES.cuf];
+            const scor = observation.values[CAPITAL_HIDDEN_SERIES.scor];
+            if (sc === undefined) {
+                throw new Error("Fixture-backed runtime cannot derive 'so' because the source variable '__sc' is missing.");
+            }
+            if (cuf === undefined) {
+                throw new Error("Fixture-backed runtime cannot derive 'so' because the source variable '__cuf' is missing.");
+            }
+            if (scor === undefined || scor === 0) {
+                throw new Error("Fixture-backed runtime cannot derive 'so' because the source variable '__scor' is missing or zero.");
+            }
+            return sc * cuf / scor;
         },
     };
 }
@@ -278,6 +325,30 @@ export function createScdrDerivedDefinition() {
         },
     };
 }
+export function createCufDerivedDefinition(cufLookup) {
+    return {
+        variable: CAPITAL_HIDDEN_SERIES.cuf,
+        derive: (observation) => {
+            const luf = observation.values.luf;
+            if (luf === undefined) {
+                throw new Error("Fixture-backed runtime cannot derive '__cuf' because the source variable 'luf' is missing.");
+            }
+            return cufLookup.evaluate(luf);
+        },
+    };
+}
+export function createIcorDerivedDefinition(constantsUsed, policyYear = DEFAULT_CAPITAL_POLICY_YEAR) {
+    return {
+        variable: CAPITAL_HIDDEN_SERIES.icor,
+        derive: (observation) => clipAtPolicyYear(constantsUsed.icor1 ?? 3, constantsUsed.icor2 ?? 3, observation.time, policyYear),
+    };
+}
+export function createScorDerivedDefinition(constantsUsed, policyYear = DEFAULT_CAPITAL_POLICY_YEAR) {
+    return {
+        variable: CAPITAL_HIDDEN_SERIES.scor,
+        derive: (observation) => clipAtPolicyYear(constantsUsed.scor1 ?? 1, constantsUsed.scor2 ?? 1, observation.time, policyYear),
+    };
+}
 export function extendCapitalSourceVariables(sourceVariables, outputVariables, fixture, lookupLibrary) {
     const canDeriveIo = outputVariables.includes("io") &&
         Boolean(fixture.series.pop) &&
@@ -329,6 +400,14 @@ export function extendCapitalSourceVariables(sourceVariables, outputVariables, f
     }
     const canUseNativeCapitalStocks = canUseNativeCapitalInvestment &&
         constantsUsedHasCapitalStockSeeds(fixture.constants_used);
+    const canUseNativeCapitalVisibleOutputFormulas = canUseNativeCapitalStocks &&
+        Boolean(fixture.series.fcaor) &&
+        Boolean(fixture.series.luf) &&
+        Boolean(lookupLibrary?.has("CUF"));
+    if (canUseNativeCapitalVisibleOutputFormulas) {
+        sourceVariables.add("fcaor");
+        sourceVariables.add("luf");
+    }
     return {
         canDeriveIo,
         canDeriveIopc,
@@ -337,6 +416,7 @@ export function extendCapitalSourceVariables(sourceVariables, outputVariables, f
         canUseNativeCapitalAllocation,
         canUseNativeCapitalInvestment,
         canUseNativeCapitalStocks,
+        canUseNativeCapitalVisibleOutputFormulas,
     };
 }
 function constantsUsedHasCapitalStockSeeds(constantsUsed) {
@@ -347,7 +427,7 @@ function constantsUsedHasCapitalStockSeeds(constantsUsed) {
         constantsUsed.alsc1 !== undefined &&
         constantsUsed.alsc2 !== undefined);
 }
-export function populateCapitalNativeSupportSeries(sourceFrame, sourceSeries, prepared, constantsUsed, canUseNativeCapitalAllocation, canUseNativeCapitalInvestment, canUseNativeCapitalStocks) {
+export function populateCapitalNativeSupportSeries(sourceFrame, sourceSeries, prepared, constantsUsed, canUseNativeCapitalAllocation, canUseNativeCapitalInvestment, canUseNativeCapitalStocks, canUseNativeCapitalVisibleOutputFormulas) {
     const fioacvLookup = prepared.lookupLibrary.get("FIOACV");
     if (sourceSeries.has("iopc") && fioacvLookup) {
         sourceSeries.set(CAPITAL_HIDDEN_SERIES.fioac, deriveSeriesValues(sourceFrame, createFioacDerivedDefinition(constantsUsed, fioacvLookup)));
@@ -395,9 +475,23 @@ export function populateCapitalNativeSupportSeries(sourceFrame, sourceSeries, pr
     };
     sourceSeries.set(CAPITAL_HIDDEN_SERIES.icdr, deriveSeriesValues(supportFrame, createIcdrDerivedDefinition()));
     sourceSeries.set(CAPITAL_HIDDEN_SERIES.scdr, deriveSeriesValues(supportFrame, createScdrDerivedDefinition()));
+    if (!canUseNativeCapitalVisibleOutputFormulas) {
+        return;
+    }
+    const cufLookup = prepared.lookupLibrary.get("CUF");
+    if (!cufLookup) {
+        return;
+    }
+    sourceSeries.set(CAPITAL_HIDDEN_SERIES.cuf, deriveSeriesValues(supportFrame, createCufDerivedDefinition(cufLookup)));
+    sourceSeries.set(CAPITAL_HIDDEN_SERIES.icor, deriveSeriesValues(supportFrame, createIcorDerivedDefinition(constantsUsed)));
+    sourceSeries.set(CAPITAL_HIDDEN_SERIES.scor, deriveSeriesValues(supportFrame, createScorDerivedDefinition(constantsUsed)));
 }
 export function maybePopulateCapitalOutputSeries(variable, sourceFrame, series, fixture, projectedIndices, _prepared, capabilities) {
     if (variable === "io") {
+        if (capabilities.canUseNativeCapitalVisibleOutputFormulas) {
+            series.set("io", deriveSeriesValues(sourceFrame, createCapitalIoDerivedDefinition()));
+            return true;
+        }
         if (capabilities.canDeriveIo) {
             series.set("io", deriveSeriesValues(sourceFrame, createIoDerivedDefinition()));
             return true;
@@ -420,6 +514,10 @@ export function maybePopulateCapitalOutputSeries(variable, sourceFrame, series, 
         throw new Error("Fixture-backed runtime cannot derive 'iopc' because the source variables 'io' and 'pop' are missing.");
     }
     if (variable === "so") {
+        if (capabilities.canUseNativeCapitalVisibleOutputFormulas) {
+            series.set("so", deriveSeriesValues(sourceFrame, createCapitalSoDerivedDefinition()));
+            return true;
+        }
         if (capabilities.canDeriveSo) {
             series.set("so", deriveSeriesValues(sourceFrame, createSoDerivedDefinition()));
             return true;
