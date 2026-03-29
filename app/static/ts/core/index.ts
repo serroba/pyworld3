@@ -22,12 +22,17 @@ export {
 } from "./simulation-artifacts.js";
 export { projectSimulationResult } from "./simulation-results.js";
 export {
+  CAPITAL_HIDDEN_SERIES,
   createFioacDerivedDefinition,
+  createFioasDerivedDefinition,
   createIoDerivedDefinition,
   createIopcDerivedDefinition,
   createIsopcDerivedDefinition,
+  createSoDerivedDefinition,
+  createSopcDerivedDefinition,
   extendCapitalSourceVariables,
   maybePopulateCapitalOutputSeries,
+  populateCapitalNativeSupportSeries,
 } from "./capital-sector.js";
 export {
   createFcaorDerivedDefinition,

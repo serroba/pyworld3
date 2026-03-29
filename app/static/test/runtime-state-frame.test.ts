@@ -64,6 +64,8 @@ const fixture: SimulationResult = {
   series: {
     nr: { name: "nr", values: [100, 95, 90, 85, 80] },
     pop: { name: "pop", values: [10, 12, 14, 16, 18] },
+    so: { name: "so", values: [40, 60, 84, 112, 144] },
+    sopc: { name: "sopc", values: [4, 5, 6, 7, 8] },
     iopc: { name: "iopc", values: [1, 1.5, 2, 2.5, 3] },
     fpc: { name: "fpc", values: [300, 290, 280, 270, 260] },
     ppolx: { name: "ppolx", values: [0.1, 0.15, 0.2, 0.25, 0.3] },
@@ -143,6 +145,32 @@ describe("runtime state frame", () => {
       constants_used: { nri: 100, nruf1: 1, nruf2: 0.5 },
       series: {
         io: { name: "io", values: [10, 28, 54] },
+      },
+    });
+  });
+
+  test("can derive sopc natively from so and pop through the runtime state frame", () => {
+    const prepared = prepareRuntime(
+      ModelData,
+      {
+        year_min: 1900,
+        year_max: 1902,
+        dt: 1,
+        output_variables: ["sopc"],
+      },
+      tables,
+    );
+
+    const frame = createRuntimeStateFrame(prepared, fixture);
+
+    expect(runtimeStateFrameToSimulationResult(frame)).toEqual({
+      year_min: 1900,
+      year_max: 1902,
+      dt: 1,
+      time: [1900, 1901, 1902],
+      constants_used: { nri: 100, nruf1: 1, nruf2: 0.5 },
+      series: {
+        sopc: { name: "sopc", values: [4, 6, 8] },
       },
     });
   });

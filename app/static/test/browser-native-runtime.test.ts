@@ -173,4 +173,41 @@ describe("browser-native runtime", () => {
       },
     });
   });
+
+  test("derives sopc natively through the runtime projection seam", async () => {
+    const runtime = createFixtureBackedRuntime(
+      ModelData,
+      async () => tables,
+      async () => ({
+        year_min: 1900,
+        year_max: 1902,
+        dt: 0.5,
+        time: [1900, 1900.5, 1901, 1901.5, 1902],
+        constants_used: {},
+        series: {
+          pop: { name: "pop", values: [10, 12, 14, 16, 18] },
+          so: { name: "so", values: [40, 60, 84, 112, 144] },
+          sopc: { name: "sopc", values: [99, 99, 99, 99, 99] },
+        },
+      }),
+    );
+
+    await expect(
+      runtime.simulateStandardRun({
+        year_min: 1900,
+        year_max: 1902,
+        dt: 1,
+        output_variables: ["sopc"],
+      }),
+    ).resolves.toEqual({
+      year_min: 1900,
+      year_max: 1902,
+      dt: 1,
+      time: [1900, 1901, 1902],
+      constants_used: {},
+      series: {
+        sopc: { name: "sopc", values: [4, 6, 8] },
+      },
+    });
+  });
 });

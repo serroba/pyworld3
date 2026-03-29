@@ -3,6 +3,7 @@ import type { RuntimePreparation } from "./browser-native-runtime.js";
 import {
   extendCapitalSourceVariables,
   maybePopulateCapitalOutputSeries,
+  populateCapitalNativeSupportSeries,
 } from "./capital-sector.js";
 import {
   RESOURCE_HIDDEN_SERIES,
@@ -224,13 +225,16 @@ export function createRuntimeStateFrame(
         variable !== "nrfr" &&
         variable !== "fcaor" &&
         variable !== "io" &&
-        variable !== "iopc",
+        variable !== "iopc" &&
+        variable !== "so" &&
+        variable !== "sopc",
     ),
   );
   const capitalCapabilities = extendCapitalSourceVariables(
     sourceVariables,
     prepared.outputVariables,
     fixture,
+    prepared.lookupLibrary,
   );
   const { canUseNativeNrFlow } = extendResourceSourceVariables(
     sourceVariables,
@@ -281,6 +285,14 @@ export function createRuntimeStateFrame(
     constantsUsed,
     series: sourceSeries,
   };
+
+  populateCapitalNativeSupportSeries(
+    sourceFrame,
+    sourceSeries,
+    prepared,
+    constantsUsed,
+    capitalCapabilities.canUseNativeCapitalAllocation,
+  );
 
   const series = new Map<string, Float64Array>();
   for (const variable of prepared.outputVariables) {

@@ -1,12 +1,17 @@
 import { describe, expect, test } from "vitest";
 
 import {
+  CAPITAL_HIDDEN_SERIES,
   createFioacDerivedDefinition,
+  createFioasDerivedDefinition,
   createIoDerivedDefinition,
   createIopcDerivedDefinition,
   createIsopcDerivedDefinition,
+  createSoDerivedDefinition,
+  createSopcDerivedDefinition,
   extendCapitalSourceVariables,
   maybePopulateCapitalOutputSeries,
+  populateCapitalNativeSupportSeries,
   prepareRuntime,
 } from "../ts/core/index.ts";
 import { ModelData } from "../ts/model-data.ts";
@@ -35,6 +40,20 @@ const tables: RawLookupTable[] = [
     "y.name": "ISOPC2",
     "y.values": [15, 25, 35],
   },
+  {
+    sector: "Capital",
+    "x.name": "SOR",
+    "x.values": [0, 2, 4],
+    "y.name": "FIOAS1",
+    "y.values": [0.2, 0.4, 0.6],
+  },
+  {
+    sector: "Capital",
+    "x.name": "SOR",
+    "x.values": [0, 2, 4],
+    "y.name": "FIOAS2",
+    "y.values": [0.25, 0.45, 0.65],
+  },
 ];
 
 const fixture: SimulationResult = {
@@ -47,6 +66,8 @@ const fixture: SimulationResult = {
     pop: { name: "pop", values: [10, 12, 14, 16, 18] },
     iopc: { name: "iopc", values: [1, 1.5, 2, 2.5, 3] },
     io: { name: "io", values: [10, 18, 28, 40, 54] },
+    sopc: { name: "sopc", values: [4, 5, 6, 7, 8] },
+    so: { name: "so", values: [40, 60, 84, 112, 144] },
   },
 };
 
@@ -58,9 +79,16 @@ describe("capital sector core", () => {
       sourceVariables,
       ["io"],
       fixture,
+      new Map(),
     );
 
-    expect(result).toEqual({ canDeriveIo: true, canDeriveIopc: false });
+    expect(result).toEqual({
+      canDeriveIo: true,
+      canDeriveIopc: false,
+      canDeriveSo: false,
+      canDeriveSopc: false,
+      canUseNativeCapitalAllocation: false,
+    });
     expect(Array.from(sourceVariables).sort()).toEqual(["iopc", "pop"]);
   });
 
@@ -86,6 +114,30 @@ describe("capital sector core", () => {
         values: { io: 30, pop: 10 },
       }),
     ).toBe(3);
+  });
+
+  test("derives so from pop and sopc", () => {
+    const definition = createSoDerivedDefinition();
+
+    expect(
+      definition.derive({
+        index: 0,
+        time: 1900,
+        values: { pop: 10, sopc: 4 },
+      }),
+    ).toBe(40);
+  });
+
+  test("derives sopc from so and pop", () => {
+    const definition = createSopcDerivedDefinition();
+
+    expect(
+      definition.derive({
+        index: 0,
+        time: 1900,
+        values: { so: 40, pop: 10 },
+      }),
+    ).toBe(4);
   });
 
   test("derives fioac with policy and equilibrium switches", () => {
@@ -157,6 +209,87 @@ describe("capital sector core", () => {
     ).toBeCloseTo(25, 8);
   });
 
+  test("derives fioas with isopc support and a policy-year switch", () => {
+    const prepared = prepareRuntime(
+      ModelData,
+      { year_min: 1900, year_max: 2000, dt: 50, output_variables: ["so"] },
+      tables,
+    );
+    const fioas1Lookup = prepared.lookupLibrary.get("FIOAS1");
+    const fioas2Lookup = prepared.lookupLibrary.get("FIOAS2");
+    expect(fioas1Lookup).toBeDefined();
+    expect(fioas2Lookup).toBeDefined();
+
+    const definition = createFioasDerivedDefinition(
+      fioas1Lookup!,
+      fioas2Lookup!,
+      1975,
+    );
+
+    expect(
+      definition.derive({
+        index: 0,
+        time: 1900,
+        values: {
+          sopc: 40,
+          [CAPITAL_HIDDEN_SERIES.isopc]: 20,
+        },
+      }),
+    ).toBeCloseTo(0.4, 8);
+    expect(
+      definition.derive({
+        index: 1,
+        time: 2000,
+        values: {
+          sopc: 40,
+          [CAPITAL_HIDDEN_SERIES.isopc]: 20,
+        },
+      }),
+    ).toBeCloseTo(0.45, 8);
+  });
+
+  test("populates hidden capital allocation support series when lookups are available", () => {
+    const prepared = prepareRuntime(
+      ModelData,
+      { year_min: 1900, year_max: 2000, dt: 50, output_variables: ["so", "iopc"] },
+      tables,
+    );
+    const sourceSeries = new Map<string, Float64Array>([
+      ["iopc", Float64Array.from([100, 100, 100])],
+      ["sopc", Float64Array.from([40, 40, 40])],
+      ["pop", Float64Array.from([10, 10, 10])],
+    ]);
+    const sourceFrame: RuntimeStateFrame = {
+      request: prepared.request,
+      time: Float64Array.from(prepared.time),
+      constantsUsed: fixture.constants_used,
+      series: sourceSeries,
+    };
+
+    populateCapitalNativeSupportSeries(
+      sourceFrame,
+      sourceSeries,
+      prepared,
+      fixture.constants_used,
+      true,
+    );
+
+    expect(Array.from(sourceSeries.get(CAPITAL_HIDDEN_SERIES.fioac) ?? [])).toEqual([
+      0.43,
+      0.43,
+      0.4,
+    ]);
+    expect(Array.from(sourceSeries.get(CAPITAL_HIDDEN_SERIES.isopc) ?? [])).toEqual([
+      20,
+      20,
+      25,
+    ]);
+    const fioas = Array.from(sourceSeries.get(CAPITAL_HIDDEN_SERIES.fioas) ?? []);
+    expect(fioas[0]).toBeCloseTo(0.4, 8);
+    expect(fioas[1]).toBeCloseTo(0.4, 8);
+    expect(fioas[2]).toBeCloseTo(0.41, 8);
+  });
+
   test("populates io natively when source variables are present", () => {
     const prepared = prepareRuntime(
       ModelData,
@@ -181,7 +314,12 @@ describe("capital sector core", () => {
       fixture,
       [0, 2, 4],
       prepared,
-      { canDeriveIo: true, canDeriveIopc: false },
+      {
+        canDeriveIo: true,
+        canDeriveIopc: false,
+        canDeriveSo: false,
+        canDeriveSopc: false,
+      },
     );
 
     expect(handled).toBe(true);
@@ -212,10 +350,87 @@ describe("capital sector core", () => {
       fixture,
       [0, 2, 4],
       prepared,
-      { canDeriveIo: false, canDeriveIopc: true },
+      {
+        canDeriveIo: false,
+        canDeriveIopc: true,
+        canDeriveSo: false,
+        canDeriveSopc: false,
+      },
     );
 
     expect(handled).toBe(true);
     expect(Array.from(series.get("iopc") ?? [])).toEqual([1, 2, 3]);
+  });
+
+  test("populates so natively when source variables are present", () => {
+    const prepared = prepareRuntime(
+      ModelData,
+      { year_min: 1900, year_max: 1902, dt: 1, output_variables: ["so"] },
+      [],
+    );
+    const sourceFrame: RuntimeStateFrame = {
+      request: prepared.request,
+      time: Float64Array.from(prepared.time),
+      constantsUsed: fixture.constants_used,
+      series: new Map([
+        ["pop", Float64Array.from([10, 14, 18])],
+        ["sopc", Float64Array.from([4, 6, 8])],
+      ]),
+    };
+    const series = new Map<string, Float64Array>();
+
+    const handled = maybePopulateCapitalOutputSeries(
+      "so",
+      sourceFrame,
+      series,
+      fixture,
+      [0, 2, 4],
+      prepared,
+      {
+        canDeriveIo: false,
+        canDeriveIopc: false,
+        canDeriveSo: true,
+        canDeriveSopc: false,
+      },
+    );
+
+    expect(handled).toBe(true);
+    expect(Array.from(series.get("so") ?? [])).toEqual([40, 84, 144]);
+  });
+
+  test("populates sopc natively when source variables are present", () => {
+    const prepared = prepareRuntime(
+      ModelData,
+      { year_min: 1900, year_max: 1902, dt: 1, output_variables: ["sopc"] },
+      [],
+    );
+    const sourceFrame: RuntimeStateFrame = {
+      request: prepared.request,
+      time: Float64Array.from(prepared.time),
+      constantsUsed: fixture.constants_used,
+      series: new Map([
+        ["pop", Float64Array.from([10, 14, 18])],
+        ["so", Float64Array.from([40, 84, 144])],
+      ]),
+    };
+    const series = new Map<string, Float64Array>();
+
+    const handled = maybePopulateCapitalOutputSeries(
+      "sopc",
+      sourceFrame,
+      series,
+      fixture,
+      [0, 2, 4],
+      prepared,
+      {
+        canDeriveIo: false,
+        canDeriveIopc: false,
+        canDeriveSo: false,
+        canDeriveSopc: true,
+      },
+    );
+
+    expect(handled).toBe(true);
+    expect(Array.from(series.get("sopc") ?? [])).toEqual([4, 6, 8]);
   });
 });
