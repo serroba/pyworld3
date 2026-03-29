@@ -1,8 +1,19 @@
-import { Smooth } from "./runtime-primitives.js";
+import { Dlinf3, Smooth } from "./runtime-primitives.js";
 const DEFAULT_HEALTH_POLICY_YEAR = 1940;
 export const POPULATION_HIDDEN_SERIES = {
+    aiopc: "__aiopc",
     cmi: "__cmi",
+    cmple: "__cmple",
+    dcfs: "__dcfs",
+    diopc: "__diopc",
     ehspc: "__ehspc",
+    fcapc: "__fcapc",
+    fce: "__fce",
+    fcfpc: "__fcfpc",
+    fie: "__fie",
+    fm: "__fm",
+    frsn: "__frsn",
+    fsafc: "__fsafc",
     fpu: "__fpu",
     hsapc: "__hsapc",
     lmc: "__lmc",
@@ -11,11 +22,18 @@ export const POPULATION_HIDDEN_SERIES = {
     lmhs1: "__lmhs1",
     lmhs2: "__lmhs2",
     lmp: "__lmp",
+    mtf: "__mtf",
+    nfc: "__nfc",
+    ple: "__ple",
+    sfsn: "__sfsn",
+    tf: "__tf",
+    dtf: "__dtf",
 };
 const POPULATION_MORTALITY_OUTPUTS = ["m1", "m2", "m3", "m4"];
 const POPULATION_COHORT_OUTPUTS = ["mat1", "mat2", "mat3"];
 const POPULATION_DEATH_OUTPUTS = ["d1", "d2", "d3", "d4", "d", "cdr"];
 const POPULATION_STOCK_OUTPUTS = ["p2", "p3", "p4"];
+const POPULATION_BIRTH_OUTPUTS = ["p1", "b", "cbr", "tf"];
 function clipAtPolicyYear(beforeValue, afterValue, time, policyYear) {
     return time > policyYear ? afterValue : beforeValue;
 }
@@ -38,6 +56,22 @@ function deriveSeriesValues(frame, definition) {
             time,
             values: observationValues,
         });
+    }
+    return values;
+}
+function deriveSmoothSeriesValues(input, dt, delay, length = input.length) {
+    const smooth = new Smooth(input, dt, length);
+    const values = new Float64Array(length);
+    for (let index = 0; index < length; index += 1) {
+        values[index] = smooth.step(index, delay);
+    }
+    return values;
+}
+function deriveDlinf3SeriesValues(input, dt, delay, length = input.length) {
+    const delayed = new Dlinf3(input, dt, length);
+    const values = new Float64Array(length);
+    for (let index = 0; index < length; index += 1) {
+        values[index] = delayed.step(index, delay);
     }
     return values;
 }
@@ -213,6 +247,210 @@ export function createMaturationDerivedDefinition(variable, populationVariable, 
         },
     };
 }
+export function createFieDerivedDefinition() {
+    return {
+        variable: POPULATION_HIDDEN_SERIES.fie,
+        derive: (observation) => {
+            const iopc = observation.values.iopc;
+            const aiopc = observation.values[POPULATION_HIDDEN_SERIES.aiopc];
+            if (iopc === undefined || aiopc === undefined || aiopc === 0) {
+                throw new Error("Fixture-backed runtime cannot derive '__fie' because 'iopc' or '__aiopc' is missing or zero.");
+            }
+            return (iopc - aiopc) / aiopc;
+        },
+    };
+}
+export function createSfsnDerivedDefinition(sfsnLookup) {
+    return {
+        variable: POPULATION_HIDDEN_SERIES.sfsn,
+        derive: (observation) => {
+            const diopc = observation.values[POPULATION_HIDDEN_SERIES.diopc];
+            if (diopc === undefined) {
+                throw new Error("Fixture-backed runtime cannot derive '__sfsn' because '__diopc' is missing.");
+            }
+            return sfsnLookup.evaluate(diopc);
+        },
+    };
+}
+export function createFrsnDerivedDefinition(frsnLookup) {
+    return {
+        variable: POPULATION_HIDDEN_SERIES.frsn,
+        derive: (observation) => {
+            const fie = observation.values[POPULATION_HIDDEN_SERIES.fie];
+            if (fie === undefined) {
+                throw new Error("Fixture-backed runtime cannot derive '__frsn' because '__fie' is missing.");
+            }
+            return frsnLookup.evaluate(fie);
+        },
+    };
+}
+export function createDcfsDerivedDefinition(constantsUsed) {
+    return {
+        variable: POPULATION_HIDDEN_SERIES.dcfs,
+        derive: (observation) => {
+            const dcfsn = constantsUsed.dcfsn;
+            const zpgt = constantsUsed.zpgt;
+            const frsn = observation.values[POPULATION_HIDDEN_SERIES.frsn];
+            const sfsn = observation.values[POPULATION_HIDDEN_SERIES.sfsn];
+            if (dcfsn === undefined ||
+                zpgt === undefined ||
+                frsn === undefined ||
+                sfsn === undefined) {
+                throw new Error("Fixture-backed runtime cannot derive '__dcfs' because desired-family-size inputs are missing.");
+            }
+            return clipAtPolicyYear(dcfsn * frsn * sfsn, 2.0, observation.time, zpgt);
+        },
+    };
+}
+export function createCmpleDerivedDefinition(cmpleLookup) {
+    return {
+        variable: POPULATION_HIDDEN_SERIES.cmple,
+        derive: (observation) => {
+            const ple = observation.values[POPULATION_HIDDEN_SERIES.ple];
+            if (ple === undefined) {
+                throw new Error("Fixture-backed runtime cannot derive '__cmple' because '__ple' is missing.");
+            }
+            return cmpleLookup.evaluate(ple);
+        },
+    };
+}
+export function createDtfDerivedDefinition() {
+    return {
+        variable: POPULATION_HIDDEN_SERIES.dtf,
+        derive: (observation) => {
+            const dcfs = observation.values[POPULATION_HIDDEN_SERIES.dcfs];
+            const cmple = observation.values[POPULATION_HIDDEN_SERIES.cmple];
+            if (dcfs === undefined || cmple === undefined) {
+                throw new Error("Fixture-backed runtime cannot derive '__dtf' because fertility inputs are missing.");
+            }
+            return dcfs * cmple;
+        },
+    };
+}
+export function createFmDerivedDefinition(fmLookup) {
+    return {
+        variable: POPULATION_HIDDEN_SERIES.fm,
+        derive: (observation) => {
+            const le = observation.values.le;
+            if (le === undefined) {
+                throw new Error("Fixture-backed runtime cannot derive '__fm' because 'le' is missing.");
+            }
+            return fmLookup.evaluate(le);
+        },
+    };
+}
+export function createMtfDerivedDefinition(constantsUsed) {
+    return {
+        variable: POPULATION_HIDDEN_SERIES.mtf,
+        derive: (observation) => {
+            const mtfn = constantsUsed.mtfn;
+            const fm = observation.values[POPULATION_HIDDEN_SERIES.fm];
+            if (mtfn === undefined || fm === undefined) {
+                throw new Error("Fixture-backed runtime cannot derive '__mtf' because fertility-normal inputs are missing.");
+            }
+            return mtfn * fm;
+        },
+    };
+}
+export function createNfcDerivedDefinition() {
+    return {
+        variable: POPULATION_HIDDEN_SERIES.nfc,
+        derive: (observation) => {
+            const mtf = observation.values[POPULATION_HIDDEN_SERIES.mtf];
+            const dtf = observation.values[POPULATION_HIDDEN_SERIES.dtf];
+            if (mtf === undefined || dtf === undefined || dtf === 0) {
+                throw new Error("Fixture-backed runtime cannot derive '__nfc' because '__mtf' or '__dtf' is missing or zero.");
+            }
+            return mtf / dtf - 1;
+        },
+    };
+}
+export function createFsafcDerivedDefinition(fsafcLookup) {
+    return {
+        variable: POPULATION_HIDDEN_SERIES.fsafc,
+        derive: (observation) => {
+            const nfc = observation.values[POPULATION_HIDDEN_SERIES.nfc];
+            if (nfc === undefined) {
+                throw new Error("Fixture-backed runtime cannot derive '__fsafc' because '__nfc' is missing.");
+            }
+            return fsafcLookup.evaluate(nfc);
+        },
+    };
+}
+export function createFcapcDerivedDefinition() {
+    return {
+        variable: POPULATION_HIDDEN_SERIES.fcapc,
+        derive: (observation) => {
+            const fsafc = observation.values[POPULATION_HIDDEN_SERIES.fsafc];
+            const sopc = observation.values.sopc;
+            if (fsafc === undefined || sopc === undefined) {
+                throw new Error("Fixture-backed runtime cannot derive '__fcapc' because '__fsafc' or 'sopc' is missing.");
+            }
+            return fsafc * sopc;
+        },
+    };
+}
+export function createFceDerivedDefinition(constantsUsed, fceLookup) {
+    return {
+        variable: POPULATION_HIDDEN_SERIES.fce,
+        derive: (observation) => {
+            const fcfpc = observation.values[POPULATION_HIDDEN_SERIES.fcfpc];
+            const fcest = constantsUsed.fcest;
+            if (fcfpc === undefined || fcest === undefined) {
+                throw new Error("Fixture-backed runtime cannot derive '__fce' because fertility-control inputs are missing.");
+            }
+            return clipAtPolicyYear(fceLookup.evaluate(fcfpc), 1.0, observation.time, fcest);
+        },
+    };
+}
+export function createTfDerivedDefinition() {
+    return {
+        variable: "tf",
+        derive: (observation) => {
+            const mtf = observation.values[POPULATION_HIDDEN_SERIES.mtf];
+            const fce = observation.values[POPULATION_HIDDEN_SERIES.fce];
+            const dtf = observation.values[POPULATION_HIDDEN_SERIES.dtf];
+            if (mtf === undefined || fce === undefined || dtf === undefined) {
+                throw new Error("Fixture-backed runtime cannot derive 'tf' because fertility-control inputs are missing.");
+            }
+            return Math.min(mtf, mtf * (1 - fce) + dtf * fce);
+        },
+    };
+}
+export function createBirthsDerivedDefinition(constantsUsed) {
+    return {
+        variable: "b",
+        derive: (observation) => {
+            const d = observation.values.d;
+            const p2 = observation.values.p2;
+            const tf = observation.values.tf;
+            const rlt = constantsUsed.rlt;
+            const pet = constantsUsed.pet;
+            if (d === undefined ||
+                p2 === undefined ||
+                tf === undefined ||
+                rlt === undefined ||
+                pet === undefined ||
+                rlt === 0) {
+                throw new Error("Fixture-backed runtime cannot derive 'b' because birth-path inputs are missing.");
+            }
+            return clipAtPolicyYear((tf * p2 * 0.5) / rlt, d, observation.time, pet);
+        },
+    };
+}
+export function createBirthRateDerivedDefinition() {
+    return {
+        variable: "cbr",
+        derive: (observation) => {
+            const births = observation.values.b;
+            const pop = observation.values.pop;
+            if (births === undefined || pop === undefined || pop === 0) {
+                throw new Error("Fixture-backed runtime cannot derive 'cbr' because 'b' or 'pop' is missing or zero.");
+            }
+            return (1000 * births) / pop;
+        },
+    };
+}
 export function createPopulationSumDerivedDefinition() {
     return {
         variable: "pop",
@@ -262,6 +500,24 @@ export function createPopulationStockStateDefinitions() {
         createPopulationStockStateDefinition("p4", "mat3", ["d4"]),
     ];
 }
+export function createP1StockStateDefinition() {
+    return {
+        variable: "p1",
+        advance: (currentValue, observation, nextObservation) => {
+            const births = observation.values.b;
+            const d1 = observation.values.d1;
+            const mat1 = observation.values.mat1;
+            if (births === undefined || d1 === undefined || mat1 === undefined) {
+                throw new Error("Runtime population state advance is missing 'b', 'd1', or 'mat1' for 'p1'.");
+            }
+            if (!nextObservation) {
+                return currentValue;
+            }
+            const dt = nextObservation.time - observation.time;
+            return currentValue + dt * (births - d1 - mat1);
+        },
+    };
+}
 export function createTotalDeathsDerivedDefinition() {
     return {
         variable: "d",
@@ -298,7 +554,8 @@ export function extendPopulationSourceVariables(sourceVariables, outputVariables
         outputVariables.some((variable) => POPULATION_MORTALITY_OUTPUTS.includes(variable)) ||
         outputVariables.some((variable) => POPULATION_STOCK_OUTPUTS.includes(variable)) ||
         outputVariables.some((variable) => POPULATION_COHORT_OUTPUTS.includes(variable)) ||
-        outputVariables.some((variable) => POPULATION_DEATH_OUTPUTS.includes(variable));
+        outputVariables.some((variable) => POPULATION_DEATH_OUTPUTS.includes(variable)) ||
+        outputVariables.some((variable) => POPULATION_BIRTH_OUTPUTS.includes(variable));
     const canUseNativeLifeExpectancy = needsLifeExpectancy &&
         Boolean(fixture.series.pop) &&
         Boolean(fixture.series.fpc) &&
@@ -324,7 +581,8 @@ export function extendPopulationSourceVariables(sourceVariables, outputVariables
     const canUseNativeMortality = outputVariables.some((variable) => POPULATION_MORTALITY_OUTPUTS.includes(variable) ||
         POPULATION_STOCK_OUTPUTS.includes(variable) ||
         POPULATION_COHORT_OUTPUTS.includes(variable) ||
-        POPULATION_DEATH_OUTPUTS.includes(variable)) &&
+        POPULATION_DEATH_OUTPUTS.includes(variable) ||
+        POPULATION_BIRTH_OUTPUTS.includes(variable)) &&
         canUseNativeLifeExpectancy &&
         Boolean(lookupLibrary?.has("M1")) &&
         Boolean(lookupLibrary?.has("M2")) &&
@@ -332,7 +590,8 @@ export function extendPopulationSourceVariables(sourceVariables, outputVariables
         Boolean(lookupLibrary?.has("M4"));
     const needsNativeCohortSupport = outputVariables.some((variable) => POPULATION_COHORT_OUTPUTS.includes(variable)) ||
         outputVariables.includes("pop") ||
-        outputVariables.some((variable) => POPULATION_DEATH_OUTPUTS.includes(variable));
+        outputVariables.some((variable) => POPULATION_DEATH_OUTPUTS.includes(variable)) ||
+        outputVariables.some((variable) => POPULATION_BIRTH_OUTPUTS.includes(variable));
     const hasCohortInputs = Boolean(fixture.series.p1) &&
         Boolean(fixture.series.p2) &&
         Boolean(fixture.series.p3) &&
@@ -350,15 +609,37 @@ export function extendPopulationSourceVariables(sourceVariables, outputVariables
         sourceVariables.add("p3");
         sourceVariables.add("p4");
     }
-    const canUseNativePopulationStocks = outputVariables.some((variable) => POPULATION_STOCK_OUTPUTS.includes(variable)) &&
+    const canUseNativePopulationStocks = (outputVariables.some((variable) => POPULATION_STOCK_OUTPUTS.includes(variable)) ||
+        outputVariables.some((variable) => POPULATION_BIRTH_OUTPUTS.includes(variable))) &&
         canUseNativeMortality &&
         canUseNativeCohortSupport;
+    const canUseNativeBirthSupport = outputVariables.some((variable) => POPULATION_BIRTH_OUTPUTS.includes(variable)) &&
+        canUseNativePopulationStocks &&
+        Boolean(lookupLibrary?.has("FM")) &&
+        Boolean(lookupLibrary?.has("CMPLE")) &&
+        Boolean(lookupLibrary?.has("SFSN")) &&
+        Boolean(lookupLibrary?.has("FRSN")) &&
+        Boolean(lookupLibrary?.has("FSAFC")) &&
+        Boolean(lookupLibrary?.has("FCE_TOCLIP")) &&
+        fixture.constants_used.dcfsn !== undefined &&
+        fixture.constants_used.fcest !== undefined &&
+        fixture.constants_used.hsid !== undefined &&
+        fixture.constants_used.ieat !== undefined &&
+        fixture.constants_used.lpd !== undefined &&
+        fixture.constants_used.mtfn !== undefined &&
+        fixture.constants_used.pet !== undefined &&
+        fixture.constants_used.rlt !== undefined &&
+        fixture.constants_used.sad !== undefined &&
+        fixture.constants_used.zpgt !== undefined;
+    const canUseNativeP1Stock = canUseNativeBirthSupport && outputVariables.includes("p1");
     return {
         canUseNativeLifeExpectancy,
         canUseNativeMortality,
         canUseNativeCohortSupport,
         canUseNativeDeathPath,
         canUseNativePopulationStocks,
+        canUseNativeBirthSupport,
+        canUseNativeP1Stock,
     };
 }
 export function populatePopulationNativeSupportSeries(sourceFrame, sourceSeries, prepared, constantsUsed, canUseNativeLifeExpectancy, canUseNativeMortality = false, canUseNativeCohortSupport = false, canUseNativeDeathPath = false, canUseNativePopulationStocks = false) {
@@ -460,7 +741,7 @@ export function populatePopulationNativeSupportSeries(sourceFrame, sourceSeries,
     for (const definition of deathDefinitions) {
         sourceSeries.set(definition.variable, deriveSeriesValues(deathSupportFrame, definition));
     }
-    if (canUseNativeDeathPath) {
+    if (canUseNativeDeathPath || canUseNativePopulationStocks) {
         const totalDeathsFrame = {
             request: sourceFrame.request,
             time: sourceFrame.time,
@@ -468,7 +749,93 @@ export function populatePopulationNativeSupportSeries(sourceFrame, sourceSeries,
             series: sourceSeries,
         };
         sourceSeries.set("d", deriveSeriesValues(totalDeathsFrame, createTotalDeathsDerivedDefinition()));
+    }
+    if (canUseNativeDeathPath) {
+        const totalDeathsFrame = {
+            request: sourceFrame.request,
+            time: sourceFrame.time,
+            constantsUsed,
+            series: sourceSeries,
+        };
         sourceSeries.set("cdr", deriveSeriesValues(totalDeathsFrame, createCdrDerivedDefinition()));
+    }
+}
+export function populatePopulationBirthNativeSupportSeries(sourceFrame, sourceSeries, prepared, constantsUsed, canUseNativeBirthSupport = false) {
+    if (!canUseNativeBirthSupport) {
+        return;
+    }
+    const dt = prepared.request.dt ?? 1;
+    const ieat = constantsUsed.ieat;
+    const sad = constantsUsed.sad;
+    const lpd = constantsUsed.lpd;
+    const hsid = constantsUsed.hsid;
+    if (ieat === undefined ||
+        sad === undefined ||
+        lpd === undefined ||
+        hsid === undefined) {
+        return;
+    }
+    const iopcValues = sourceSeries.get("iopc");
+    const leValues = sourceSeries.get("le");
+    if (!iopcValues || !leValues) {
+        return;
+    }
+    sourceSeries.set(POPULATION_HIDDEN_SERIES.aiopc, deriveSmoothSeriesValues(iopcValues, dt, ieat, sourceFrame.time.length));
+    sourceSeries.set(POPULATION_HIDDEN_SERIES.diopc, deriveDlinf3SeriesValues(iopcValues, dt, sad, sourceFrame.time.length));
+    sourceSeries.set(POPULATION_HIDDEN_SERIES.ple, deriveDlinf3SeriesValues(leValues, dt, lpd, sourceFrame.time.length));
+    const sfsnLookup = prepared.lookupLibrary.get("SFSN");
+    const frsnLookup = prepared.lookupLibrary.get("FRSN");
+    const cmpleLookup = prepared.lookupLibrary.get("CMPLE");
+    const fmLookup = prepared.lookupLibrary.get("FM");
+    const fsafcLookup = prepared.lookupLibrary.get("FSAFC");
+    const fceLookup = prepared.lookupLibrary.get("FCE_TOCLIP");
+    if (!sfsnLookup ||
+        !frsnLookup ||
+        !cmpleLookup ||
+        !fmLookup ||
+        !fsafcLookup ||
+        !fceLookup) {
+        return;
+    }
+    let birthSupportFrame = {
+        request: sourceFrame.request,
+        time: sourceFrame.time,
+        constantsUsed,
+        series: sourceSeries,
+    };
+    for (const definition of [
+        createFieDerivedDefinition(),
+        createSfsnDerivedDefinition(sfsnLookup),
+        createFrsnDerivedDefinition(frsnLookup),
+        createDcfsDerivedDefinition(constantsUsed),
+        createCmpleDerivedDefinition(cmpleLookup),
+        createDtfDerivedDefinition(),
+        createFmDerivedDefinition(fmLookup),
+        createMtfDerivedDefinition(constantsUsed),
+        createNfcDerivedDefinition(),
+        createFsafcDerivedDefinition(fsafcLookup),
+        createFcapcDerivedDefinition(),
+    ]) {
+        sourceSeries.set(definition.variable, deriveSeriesValues(birthSupportFrame, definition));
+    }
+    const fcapcValues = sourceSeries.get(POPULATION_HIDDEN_SERIES.fcapc);
+    if (!fcapcValues) {
+        return;
+    }
+    sourceSeries.set(POPULATION_HIDDEN_SERIES.fcfpc, deriveDlinf3SeriesValues(fcapcValues, dt, hsid, sourceFrame.time.length));
+    birthSupportFrame = {
+        request: sourceFrame.request,
+        time: sourceFrame.time,
+        constantsUsed,
+        series: sourceSeries,
+    };
+    for (const definition of [
+        createFceDerivedDefinition(constantsUsed, fceLookup),
+        createTfDerivedDefinition(),
+        createBirthsDerivedDefinition(constantsUsed),
+        createBirthRateDerivedDefinition(),
+    ]) {
+        sourceSeries.set(definition.variable, deriveSeriesValues(birthSupportFrame, definition));
     }
 }
 export function maybePopulatePopulationOutputSeries(variable, sourceFrame, series) {
@@ -476,12 +843,14 @@ export function maybePopulatePopulationOutputSeries(variable, sourceFrame, serie
     const isMortalityOutput = POPULATION_MORTALITY_OUTPUTS.includes(variable);
     const isDeathOutput = POPULATION_DEATH_OUTPUTS.includes(variable);
     const isStockOutput = POPULATION_STOCK_OUTPUTS.includes(variable);
+    const isBirthOutput = POPULATION_BIRTH_OUTPUTS.includes(variable);
     if (variable !== "le" &&
         variable !== "pop" &&
         !isCohortOutput &&
         !isMortalityOutput &&
         !isDeathOutput &&
-        !isStockOutput) {
+        !isStockOutput &&
+        !isBirthOutput) {
         return false;
     }
     const values = sourceFrame.series.get(variable);

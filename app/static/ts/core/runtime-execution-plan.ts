@@ -10,9 +10,12 @@ import {
   populateResourceNativeSupportSeries,
 } from "./resource-sector.js";
 import {
+  createBirthRateDerivedDefinition,
+  createP1StockStateDefinition,
   createPopulationStockStateDefinitions,
   extendPopulationSourceVariables,
   createPopulationSumDerivedDefinition,
+  populatePopulationBirthNativeSupportSeries,
   populatePopulationNativeSupportSeries,
 } from "./population-sector.js";
 import {
@@ -30,6 +33,8 @@ export type RuntimeExecutionPlan = {
   readonly canUseNativeCohortSupport: boolean;
   readonly canUseNativeDeathPath: boolean;
   readonly canUseNativePopulationStocks: boolean;
+  readonly canUseNativeBirthSupport: boolean;
+  readonly canUseNativeP1Stock: boolean;
 };
 
 export function createRuntimeExecutionPlan(
@@ -58,7 +63,11 @@ export function createRuntimeExecutionPlan(
         variable !== "d3" &&
         variable !== "d4" &&
         variable !== "d" &&
-        variable !== "cdr",
+        variable !== "cdr" &&
+        variable !== "b" &&
+        variable !== "cbr" &&
+        variable !== "tf" &&
+        variable !== "p1",
     ),
   );
 
@@ -82,6 +91,8 @@ export function createRuntimeExecutionPlan(
     canUseNativeCohortSupport,
     canUseNativeDeathPath,
     canUseNativePopulationStocks,
+    canUseNativeBirthSupport,
+    canUseNativeP1Stock,
   } = extendPopulationSourceVariables(
     sourceVariables,
     prepared.outputVariables,
@@ -102,6 +113,8 @@ export function createRuntimeExecutionPlan(
     canUseNativeCohortSupport,
     canUseNativeDeathPath,
     canUseNativePopulationStocks,
+    canUseNativeBirthSupport,
+    canUseNativeP1Stock,
   };
 }
 
@@ -162,11 +175,26 @@ export function applyRuntimeExecutionPlan(
     for (const definition of createPopulationStockStateDefinitions()) {
       stepNr(definition);
     }
-    populateDerivedBufferFromDefinition(
-      sourceFrame,
-      sourceSeries,
-      createPopulationSumDerivedDefinition(),
-    );
+  }
+
+  populatePopulationBirthNativeSupportSeries(
+    sourceFrame,
+    sourceSeries,
+    prepared,
+    constantsUsed,
+    plan.canUseNativeBirthSupport,
+  );
+
+  if (plan.canUseNativeP1Stock) {
+    stepNr(createP1StockStateDefinition());
+  }
+
+  if (plan.canUseNativePopulationStocks || plan.canUseNativeP1Stock) {
+    populateDerivedBufferFromDefinition(sourceFrame, sourceSeries, createPopulationSumDerivedDefinition());
+  }
+
+  if (plan.canUseNativeBirthSupport) {
+    populateDerivedBufferFromDefinition(sourceFrame, sourceSeries, createBirthRateDerivedDefinition());
   }
 
   if (sourceSeries.has("nr") && nrStateDefinition) {
