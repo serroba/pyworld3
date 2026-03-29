@@ -21,6 +21,7 @@ export type RuntimeExecutionPlan = {
   readonly canUseNativeNrFlow: boolean;
   readonly canUseCoupledCapitalResource: boolean;
   readonly canUseNativeLifeExpectancy: boolean;
+  readonly canUseNativeMortality: boolean;
 };
 
 export function createRuntimeExecutionPlan(
@@ -35,7 +36,12 @@ export function createRuntimeExecutionPlan(
         variable !== "io" &&
         variable !== "iopc" &&
         variable !== "so" &&
-        variable !== "sopc",
+        variable !== "sopc" &&
+        variable !== "le" &&
+        variable !== "m1" &&
+        variable !== "m2" &&
+        variable !== "m3" &&
+        variable !== "m4",
     ),
   );
 
@@ -53,7 +59,7 @@ export function createRuntimeExecutionPlan(
     prepared.lookupLibrary,
     capitalCapabilities.canUseNativeCapitalOrdering,
   );
-  const { canUseNativeLifeExpectancy } = extendPopulationSourceVariables(
+  const { canUseNativeLifeExpectancy, canUseNativeMortality } = extendPopulationSourceVariables(
     sourceVariables,
     prepared.outputVariables,
     fixture,
@@ -69,6 +75,7 @@ export function createRuntimeExecutionPlan(
       canUseNativeNrFlow &&
       sourceVariables.has("nr"),
     canUseNativeLifeExpectancy,
+    canUseNativeMortality,
   };
 }
 
@@ -119,6 +126,7 @@ export function applyRuntimeExecutionPlan(
     prepared,
     constantsUsed,
     plan.canUseNativeLifeExpectancy,
+    plan.canUseNativeMortality,
   );
 
   if (sourceSeries.has("nr") && nrStateDefinition) {

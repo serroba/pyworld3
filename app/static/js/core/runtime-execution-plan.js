@@ -8,10 +8,15 @@ export function createRuntimeExecutionPlan(prepared, fixture) {
         variable !== "io" &&
         variable !== "iopc" &&
         variable !== "so" &&
-        variable !== "sopc"));
+        variable !== "sopc" &&
+        variable !== "le" &&
+        variable !== "m1" &&
+        variable !== "m2" &&
+        variable !== "m3" &&
+        variable !== "m4"));
     const capitalCapabilities = extendCapitalSourceVariables(sourceVariables, prepared.outputVariables, fixture, prepared.lookupLibrary);
     const { canUseNativeNrFlow } = extendResourceSourceVariables(sourceVariables, prepared.outputVariables, fixture, prepared.lookupLibrary, capitalCapabilities.canUseNativeCapitalOrdering);
-    const { canUseNativeLifeExpectancy } = extendPopulationSourceVariables(sourceVariables, prepared.outputVariables, fixture, prepared.lookupLibrary);
+    const { canUseNativeLifeExpectancy, canUseNativeMortality } = extendPopulationSourceVariables(sourceVariables, prepared.outputVariables, fixture, prepared.lookupLibrary);
     return {
         sourceVariables,
         capitalCapabilities,
@@ -20,6 +25,7 @@ export function createRuntimeExecutionPlan(prepared, fixture) {
             canUseNativeNrFlow &&
             sourceVariables.has("nr"),
         canUseNativeLifeExpectancy,
+        canUseNativeMortality,
     };
 }
 export function applyRuntimeExecutionPlan(sourceFrame, sourceSeries, prepared, constantsUsed, plan, stepNr, nrStateDefinition) {
@@ -32,7 +38,7 @@ export function applyRuntimeExecutionPlan(sourceFrame, sourceSeries, prepared, c
     }
     populateCapitalNativeSupportSeries(sourceFrame, sourceSeries, prepared, constantsUsed, plan.capitalCapabilities.canUseNativeCapitalAllocation, plan.capitalCapabilities.canUseNativeCapitalInvestment, plan.capitalCapabilities.canUseNativeCapitalStocks, plan.capitalCapabilities.canUseNativeCapitalVisibleOutputFormulas, plan.capitalCapabilities.canUseNativeCapitalOrdering);
     populateResourceNativeSupportSeries(sourceFrame, sourceSeries, prepared, constantsUsed, plan.canUseNativeNrFlow);
-    populatePopulationNativeSupportSeries(sourceFrame, sourceSeries, prepared, constantsUsed, plan.canUseNativeLifeExpectancy);
+    populatePopulationNativeSupportSeries(sourceFrame, sourceSeries, prepared, constantsUsed, plan.canUseNativeLifeExpectancy, plan.canUseNativeMortality);
     if (sourceSeries.has("nr") && nrStateDefinition) {
         stepNr(nrStateDefinition);
     }

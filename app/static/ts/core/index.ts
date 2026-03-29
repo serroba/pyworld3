@@ -11,6 +11,7 @@ export {
   createLmfDerivedDefinition,
   createLmhsDerivedDefinitions,
   createLmpDerivedDefinition,
+  createMortalityDerivedDefinition,
   extendPopulationSourceVariables,
   maybePopulatePopulationOutputSeries,
   populatePopulationNativeSupportSeries,

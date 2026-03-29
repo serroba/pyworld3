@@ -626,4 +626,131 @@ describe("browser-native runtime", () => {
       },
     });
   });
+
+  test("derives m1 through the native population mortality seam", async () => {
+    const runtime = createFixtureBackedRuntime(
+      ModelData,
+      async () => [
+        ...tables,
+        {
+          sector: "Population",
+          "x.name": "POP",
+          "x.values": [0, 100, 200],
+          "y.name": "FPU",
+          "y.values": [0, 0.1, 0.2],
+        },
+        {
+          sector: "Population",
+          "x.name": "FPC/SFPC",
+          "x.values": [0, 1, 2],
+          "y.name": "LMF",
+          "y.values": [0.8, 1, 1.2],
+        },
+        {
+          sector: "Population",
+          "x.name": "SOPC",
+          "x.values": [0, 10, 20],
+          "y.name": "HSAPC",
+          "y.values": [0, 10, 20],
+        },
+        {
+          sector: "Population",
+          "x.name": "EHSPC",
+          "x.values": [0, 10, 20],
+          "y.name": "LMHS1",
+          "y.values": [0.5, 1, 1.5],
+        },
+        {
+          sector: "Population",
+          "x.name": "EHSPC",
+          "x.values": [0, 10, 20],
+          "y.name": "LMHS2",
+          "y.values": [0.4, 0.9, 1.4],
+        },
+        {
+          sector: "Population",
+          "x.name": "IOPC",
+          "x.values": [0, 10, 20],
+          "y.name": "CMI",
+          "y.values": [0, 0.1, 0.2],
+        },
+        {
+          sector: "Population",
+          "x.name": "PPOLX",
+          "x.values": [0, 1, 2],
+          "y.name": "LMP",
+          "y.values": [1.2, 1, 0.8],
+        },
+        {
+          sector: "Population",
+          "x.name": "LE",
+          "x.values": [20, 30, 40],
+          "y.name": "M1",
+          "y.values": [0.05, 0.03, 0.01],
+        },
+        {
+          sector: "Population",
+          "x.name": "LE",
+          "x.values": [20, 30, 40],
+          "y.name": "M2",
+          "y.values": [0.03, 0.02, 0.01],
+        },
+        {
+          sector: "Population",
+          "x.name": "LE",
+          "x.values": [20, 30, 40],
+          "y.name": "M3",
+          "y.values": [0.06, 0.04, 0.02],
+        },
+        {
+          sector: "Population",
+          "x.name": "LE",
+          "x.values": [20, 30, 40],
+          "y.name": "M4",
+          "y.values": [0.12, 0.1, 0.08],
+        },
+      ],
+      async () => ({
+        year_min: 1900,
+        year_max: 1902,
+        dt: 0.5,
+        time: [1900, 1900.5, 1901, 1901.5, 1902],
+        constants_used: {
+          len: 28,
+          sfpc: 230,
+          hsid: 20,
+          iphst: 1940,
+        },
+        series: {
+          pop: { name: "pop", values: [10, 12, 14, 16, 18] },
+          fpc: { name: "fpc", values: [230, 253, 276, 299, 322] },
+          iopc: { name: "iopc", values: [10, 10, 10, 10, 10] },
+          sopc: { name: "sopc", values: [10, 10, 10, 10, 10] },
+          ppolx: { name: "ppolx", values: [1, 1, 1, 1, 1] },
+        },
+      }),
+    );
+
+    const result = await runtime.simulateStandardRun({
+      year_min: 1900,
+      year_max: 1902,
+      dt: 1,
+      output_variables: ["m1"],
+    });
+
+    expect(result.year_min).toBe(1900);
+    expect(result.year_max).toBe(1902);
+    expect(result.dt).toBe(1);
+    expect(result.time).toEqual([1900, 1901, 1902]);
+    expect(result.constants_used).toEqual({
+      len: 28,
+      sfpc: 230,
+      hsid: 20,
+      iphst: 1940,
+    });
+    expect(result.series.m1?.name).toBe("m1");
+    expect(result.series.m1?.values[0]).toBeCloseTo(0.034056, 8);
+    expect(result.series.m1?.values[1]).toBeCloseTo(0.031841536, 8);
+    expect(result.series.m1?.values[2]).toBeCloseTo(0.029628864, 8);
+  });
 });

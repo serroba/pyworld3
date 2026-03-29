@@ -23,6 +23,8 @@ export const POPULATION_HIDDEN_SERIES = {
   lmp: "__lmp",
 } as const;
 
+const POPULATION_MORTALITY_OUTPUTS = ["m1", "m2", "m3", "m4"] as const;
+
 function clipAtPolicyYear(
   beforeValue: number,
   afterValue: number,
@@ -251,14 +253,40 @@ export function createLeDerivedDefinition(
   };
 }
 
+export function createMortalityDerivedDefinition(
+  variable: "m1" | "m2" | "m3" | "m4",
+  mortalityLookup: LookupInterpolator,
+): RuntimeDerivedDefinition {
+  return {
+    variable,
+    derive: (observation: RuntimeObservation) => {
+      const le = observation.values.le;
+      if (le === undefined) {
+        throw new Error(
+          `Fixture-backed runtime cannot derive '${variable}' because the source variable 'le' is missing.`,
+        );
+      }
+      return mortalityLookup.evaluate(le);
+    },
+  };
+}
+
 export function extendPopulationSourceVariables(
   sourceVariables: Set<string>,
   outputVariables: string[],
   fixture: SimulationResult,
   lookupLibrary?: Map<string, LookupInterpolator>,
-): { canUseNativeLifeExpectancy: boolean } {
+): {
+  canUseNativeLifeExpectancy: boolean;
+  canUseNativeMortality: boolean;
+} {
+  const needsLifeExpectancy =
+    outputVariables.includes("le") ||
+    outputVariables.some((variable) =>
+      POPULATION_MORTALITY_OUTPUTS.includes(variable as (typeof POPULATION_MORTALITY_OUTPUTS)[number]),
+    );
   const canUseNativeLifeExpectancy =
-    outputVariables.includes("le") &&
+    needsLifeExpectancy &&
     Boolean(fixture.series.pop) &&
     Boolean(fixture.series.fpc) &&
     Boolean(fixture.series.iopc) &&
@@ -282,7 +310,17 @@ export function extendPopulationSourceVariables(
     sourceVariables.add("ppolx");
   }
 
-  return { canUseNativeLifeExpectancy };
+  const canUseNativeMortality =
+    outputVariables.some((variable) =>
+      POPULATION_MORTALITY_OUTPUTS.includes(variable as (typeof POPULATION_MORTALITY_OUTPUTS)[number]),
+    ) &&
+    canUseNativeLifeExpectancy &&
+    Boolean(lookupLibrary?.has("M1")) &&
+    Boolean(lookupLibrary?.has("M2")) &&
+    Boolean(lookupLibrary?.has("M3")) &&
+    Boolean(lookupLibrary?.has("M4"));
+
+  return { canUseNativeLifeExpectancy, canUseNativeMortality };
 }
 
 export function populatePopulationNativeSupportSeries(
@@ -291,6 +329,7 @@ export function populatePopulationNativeSupportSeries(
   prepared: RuntimePreparation,
   constantsUsed: ConstantMap,
   canUseNativeLifeExpectancy: boolean,
+  canUseNativeMortality = false,
 ): void {
   if (!canUseNativeLifeExpectancy) {
     return;
@@ -380,6 +419,24 @@ export function populatePopulationNativeSupportSeries(
     "le",
     deriveSeriesValues(supportFrame, createLeDerivedDefinition(constantsUsed)),
   );
+
+  if (!canUseNativeMortality) {
+    return;
+  }
+
+  for (const variable of POPULATION_MORTALITY_OUTPUTS) {
+    const lookup = prepared.lookupLibrary.get(variable.toUpperCase());
+    if (!lookup) {
+      continue;
+    }
+    sourceSeries.set(
+      variable,
+      deriveSeriesValues(
+        supportFrame,
+        createMortalityDerivedDefinition(variable, lookup),
+      ),
+    );
+  }
 }
 
 export function maybePopulatePopulationOutputSeries(
@@ -387,14 +444,17 @@ export function maybePopulatePopulationOutputSeries(
   sourceFrame: RuntimeStateFrame,
   series: Map<string, Float64Array>,
 ): boolean {
-  if (variable !== "le") {
+  const isMortalityOutput = POPULATION_MORTALITY_OUTPUTS.includes(
+    variable as (typeof POPULATION_MORTALITY_OUTPUTS)[number],
+  );
+  if (variable !== "le" && !isMortalityOutput) {
     return false;
   }
 
-  const values = sourceFrame.series.get("le");
+  const values = sourceFrame.series.get(variable);
   if (!values) {
     return false;
   }
-  series.set("le", values);
+  series.set(variable, values);
   return true;
 }

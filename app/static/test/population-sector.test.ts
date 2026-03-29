@@ -3,6 +3,7 @@ import { describe, expect, test } from "vitest";
 import {
   POPULATION_HIDDEN_SERIES,
   createLeDerivedDefinition,
+  createMortalityDerivedDefinition,
   extendPopulationSourceVariables,
   maybePopulatePopulationOutputSeries,
   populatePopulationNativeSupportSeries,
@@ -62,6 +63,34 @@ const tables: RawLookupTable[] = [
     "y.name": "LMP",
     "y.values": [1.2, 1, 0.8],
   },
+  {
+    sector: "Population",
+    "x.name": "LE",
+    "x.values": [20, 30, 40],
+    "y.name": "M1",
+    "y.values": [0.05, 0.03, 0.01],
+  },
+  {
+    sector: "Population",
+    "x.name": "LE",
+    "x.values": [20, 30, 40],
+    "y.name": "M2",
+    "y.values": [0.03, 0.02, 0.01],
+  },
+  {
+    sector: "Population",
+    "x.name": "LE",
+    "x.values": [20, 30, 40],
+    "y.name": "M3",
+    "y.values": [0.06, 0.04, 0.02],
+  },
+  {
+    sector: "Population",
+    "x.name": "LE",
+    "x.values": [20, 30, 40],
+    "y.name": "M4",
+    "y.values": [0.12, 0.1, 0.08],
+  },
 ];
 
 const fixture: SimulationResult = {
@@ -101,7 +130,10 @@ describe("population sector core", () => {
       prepared.lookupLibrary,
     );
 
-    expect(result).toEqual({ canUseNativeLifeExpectancy: true });
+    expect(result).toEqual({
+      canUseNativeLifeExpectancy: true,
+      canUseNativeMortality: false,
+    });
     expect(Array.from(sourceVariables).sort()).toEqual([
       "fpc",
       "iopc",
@@ -126,6 +158,49 @@ describe("population sector core", () => {
         },
       }),
     ).toBeCloseTo(22.176, 8);
+  });
+
+  test("derives mortality from native life expectancy", () => {
+    const prepared = prepareRuntime(ModelData, { output_variables: ["m1"] }, tables);
+    const m1Lookup = prepared.lookupLibrary.get("M1");
+    expect(m1Lookup).toBeDefined();
+
+    const definition = createMortalityDerivedDefinition("m1", m1Lookup!);
+    expect(
+      definition.derive({
+        index: 0,
+        time: 1900,
+        values: { le: 30 },
+      }),
+    ).toBeCloseTo(0.03, 8);
+  });
+
+  test("extends runtime source requirements for native mortality outputs", () => {
+    const sourceVariables = new Set<string>();
+    const prepared = prepareRuntime(
+      ModelData,
+      { output_variables: ["m1"] },
+      tables,
+    );
+
+    const result = extendPopulationSourceVariables(
+      sourceVariables,
+      prepared.outputVariables,
+      fixture,
+      prepared.lookupLibrary,
+    );
+
+    expect(result).toEqual({
+      canUseNativeLifeExpectancy: true,
+      canUseNativeMortality: true,
+    });
+    expect(Array.from(sourceVariables).sort()).toEqual([
+      "fpc",
+      "iopc",
+      "pop",
+      "ppolx",
+      "sopc",
+    ]);
   });
 
   test("populates life expectancy support and output natively", () => {
@@ -154,6 +229,7 @@ describe("population sector core", () => {
       prepared,
       fixture.constants_used,
       true,
+      true,
     );
 
     expect(Array.from(sourceSeries.get(POPULATION_HIDDEN_SERIES.ehspc) ?? [])).toEqual([
@@ -165,6 +241,10 @@ describe("population sector core", () => {
     expect(leValues[0]).toBeCloseTo(27.972, 6);
     expect(leValues[1]).toBeCloseTo(29.079232, 6);
     expect(leValues[2]).toBeCloseTo(30.185568, 6);
+    const m1Values = Array.from(sourceSeries.get("m1") ?? []);
+    expect(m1Values[0]).toBeCloseTo(0.034056, 6);
+    expect(m1Values[1]).toBeCloseTo(0.031841536, 6);
+    expect(m1Values[2]).toBeCloseTo(0.029628864, 6);
   });
 
   test("publishes native le from the runtime frame", () => {
@@ -185,6 +265,27 @@ describe("population sector core", () => {
       27.972,
       30.699872,
       33.416928,
+    ]);
+  });
+
+  test("publishes native mortality outputs from the runtime frame", () => {
+    const sourceFrame: RuntimeStateFrame = {
+      request: { year_min: 1900, year_max: 1902, dt: 1 },
+      time: Float64Array.from([1900, 1901, 1902]),
+      constantsUsed: fixture.constants_used,
+      series: new Map([
+        ["m1", Float64Array.from([0.034056, 0.031841536, 0.029628864])],
+      ]),
+    };
+    const series = new Map<string, Float64Array>();
+
+    const handled = maybePopulatePopulationOutputSeries("m1", sourceFrame, series);
+
+    expect(handled).toBe(true);
+    expect(Array.from(series.get("m1") ?? [])).toEqual([
+      0.034056,
+      0.031841536,
+      0.029628864,
     ]);
   });
 });

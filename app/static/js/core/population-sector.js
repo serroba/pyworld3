@@ -12,6 +12,7 @@ export const POPULATION_HIDDEN_SERIES = {
     lmhs2: "__lmhs2",
     lmp: "__lmp",
 };
+const POPULATION_MORTALITY_OUTPUTS = ["m1", "m2", "m3", "m4"];
 function clipAtPolicyYear(beforeValue, afterValue, time, policyYear) {
     return time > policyYear ? afterValue : beforeValue;
 }
@@ -171,8 +172,22 @@ export function createLeDerivedDefinition(constantsUsed) {
         },
     };
 }
+export function createMortalityDerivedDefinition(variable, mortalityLookup) {
+    return {
+        variable,
+        derive: (observation) => {
+            const le = observation.values.le;
+            if (le === undefined) {
+                throw new Error(`Fixture-backed runtime cannot derive '${variable}' because the source variable 'le' is missing.`);
+            }
+            return mortalityLookup.evaluate(le);
+        },
+    };
+}
 export function extendPopulationSourceVariables(sourceVariables, outputVariables, fixture, lookupLibrary) {
-    const canUseNativeLifeExpectancy = outputVariables.includes("le") &&
+    const needsLifeExpectancy = outputVariables.includes("le") ||
+        outputVariables.some((variable) => POPULATION_MORTALITY_OUTPUTS.includes(variable));
+    const canUseNativeLifeExpectancy = needsLifeExpectancy &&
         Boolean(fixture.series.pop) &&
         Boolean(fixture.series.fpc) &&
         Boolean(fixture.series.iopc) &&
@@ -194,9 +209,15 @@ export function extendPopulationSourceVariables(sourceVariables, outputVariables
         sourceVariables.add("sopc");
         sourceVariables.add("ppolx");
     }
-    return { canUseNativeLifeExpectancy };
+    const canUseNativeMortality = outputVariables.some((variable) => POPULATION_MORTALITY_OUTPUTS.includes(variable)) &&
+        canUseNativeLifeExpectancy &&
+        Boolean(lookupLibrary?.has("M1")) &&
+        Boolean(lookupLibrary?.has("M2")) &&
+        Boolean(lookupLibrary?.has("M3")) &&
+        Boolean(lookupLibrary?.has("M4"));
+    return { canUseNativeLifeExpectancy, canUseNativeMortality };
 }
-export function populatePopulationNativeSupportSeries(sourceFrame, sourceSeries, prepared, constantsUsed, canUseNativeLifeExpectancy) {
+export function populatePopulationNativeSupportSeries(sourceFrame, sourceSeries, prepared, constantsUsed, canUseNativeLifeExpectancy, canUseNativeMortality = false) {
     if (!canUseNativeLifeExpectancy) {
         return;
     }
@@ -249,15 +270,26 @@ export function populatePopulationNativeSupportSeries(sourceFrame, sourceSeries,
     };
     sourceSeries.set(POPULATION_HIDDEN_SERIES.lmc, deriveSeriesValues(supportFrame, createLmcDerivedDefinition()));
     sourceSeries.set("le", deriveSeriesValues(supportFrame, createLeDerivedDefinition(constantsUsed)));
+    if (!canUseNativeMortality) {
+        return;
+    }
+    for (const variable of POPULATION_MORTALITY_OUTPUTS) {
+        const lookup = prepared.lookupLibrary.get(variable.toUpperCase());
+        if (!lookup) {
+            continue;
+        }
+        sourceSeries.set(variable, deriveSeriesValues(supportFrame, createMortalityDerivedDefinition(variable, lookup)));
+    }
 }
 export function maybePopulatePopulationOutputSeries(variable, sourceFrame, series) {
-    if (variable !== "le") {
+    const isMortalityOutput = POPULATION_MORTALITY_OUTPUTS.includes(variable);
+    if (variable !== "le" && !isMortalityOutput) {
         return false;
     }
-    const values = sourceFrame.series.get("le");
+    const values = sourceFrame.series.get(variable);
     if (!values) {
         return false;
     }
-    series.set("le", values);
+    series.set(variable, values);
     return true;
 }
