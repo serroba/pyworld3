@@ -1,5 +1,5 @@
 export { computeCoupledCapitalResourceSeries, } from "./coupled-capital-resource-runtime.js";
-export { POPULATION_HIDDEN_SERIES, createCmiDerivedDefinition, createFpuDerivedDefinition, createHsapcDerivedDefinition, createLeDerivedDefinition, createLmcDerivedDefinition, createLmfDerivedDefinition, createLmhsDerivedDefinitions, createLmpDerivedDefinition, createMortalityDerivedDefinition, extendPopulationSourceVariables, maybePopulatePopulationOutputSeries, populatePopulationNativeSupportSeries, } from "./population-sector.js";
+export { POPULATION_HIDDEN_SERIES, createCmiDerivedDefinition, createCdrDerivedDefinition, createDeathDerivedDefinition, createFpuDerivedDefinition, createHsapcDerivedDefinition, createLeDerivedDefinition, createLmcDerivedDefinition, createLmfDerivedDefinition, createLmhsDerivedDefinitions, createLmpDerivedDefinition, createMortalityDerivedDefinition, createTotalDeathsDerivedDefinition, extendPopulationSourceVariables, maybePopulatePopulationOutputSeries, populatePopulationNativeSupportSeries, } from "./population-sector.js";
 export { createFixtureBackedRuntime, prepareRuntime, } from "./browser-native-runtime.js";
 export { createWorld3Core } from "./world3-core.js";
 export { LOCAL_PROVIDER_ERROR, createLocalSimulationCore, createRuntimeBackedLocalSimulationCore, hasExplicitOverrides, } from "./local-simulation-core.js";

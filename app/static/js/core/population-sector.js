@@ -13,6 +13,7 @@ export const POPULATION_HIDDEN_SERIES = {
     lmp: "__lmp",
 };
 const POPULATION_MORTALITY_OUTPUTS = ["m1", "m2", "m3", "m4"];
+const POPULATION_DEATH_OUTPUTS = ["d1", "d2", "d3", "d4", "d", "cdr"];
 function clipAtPolicyYear(beforeValue, afterValue, time, policyYear) {
     return time > policyYear ? afterValue : beforeValue;
 }
@@ -184,9 +185,54 @@ export function createMortalityDerivedDefinition(variable, mortalityLookup) {
         },
     };
 }
+export function createDeathDerivedDefinition(variable, populationVariable, mortalityVariable) {
+    return {
+        variable,
+        derive: (observation) => {
+            const population = observation.values[populationVariable];
+            const mortality = observation.values[mortalityVariable];
+            if (population === undefined || mortality === undefined) {
+                throw new Error(`Fixture-backed runtime cannot derive '${variable}' because '${populationVariable}' or '${mortalityVariable}' is missing.`);
+            }
+            return population * mortality;
+        },
+    };
+}
+export function createTotalDeathsDerivedDefinition() {
+    return {
+        variable: "d",
+        derive: (observation) => {
+            const d1 = observation.values.d1;
+            const d2 = observation.values.d2;
+            const d3 = observation.values.d3;
+            const d4 = observation.values.d4;
+            if (d1 === undefined ||
+                d2 === undefined ||
+                d3 === undefined ||
+                d4 === undefined) {
+                throw new Error("Fixture-backed runtime cannot derive 'd' because age-band death inputs are missing.");
+            }
+            return d1 + d2 + d3 + d4;
+        },
+    };
+}
+export function createCdrDerivedDefinition() {
+    return {
+        variable: "cdr",
+        derive: (observation) => {
+            const deaths = observation.values.d;
+            const pop = observation.values.pop;
+            if (deaths === undefined || pop === undefined || pop === 0) {
+                throw new Error("Fixture-backed runtime cannot derive 'cdr' because 'd' or 'pop' is missing or zero.");
+            }
+            return (1000 * deaths) / pop;
+        },
+    };
+}
 export function extendPopulationSourceVariables(sourceVariables, outputVariables, fixture, lookupLibrary) {
     const needsLifeExpectancy = outputVariables.includes("le") ||
-        outputVariables.some((variable) => POPULATION_MORTALITY_OUTPUTS.includes(variable));
+        outputVariables.some((variable) => POPULATION_MORTALITY_OUTPUTS.includes(variable)) ||
+        outputVariables.some((variable) => POPULATION_DEATH_OUTPUTS.includes(variable));
     const canUseNativeLifeExpectancy = needsLifeExpectancy &&
         Boolean(fixture.series.pop) &&
         Boolean(fixture.series.fpc) &&
@@ -209,15 +255,33 @@ export function extendPopulationSourceVariables(sourceVariables, outputVariables
         sourceVariables.add("sopc");
         sourceVariables.add("ppolx");
     }
-    const canUseNativeMortality = outputVariables.some((variable) => POPULATION_MORTALITY_OUTPUTS.includes(variable)) &&
+    const canUseNativeMortality = outputVariables.some((variable) => POPULATION_MORTALITY_OUTPUTS.includes(variable) ||
+        POPULATION_DEATH_OUTPUTS.includes(variable)) &&
         canUseNativeLifeExpectancy &&
         Boolean(lookupLibrary?.has("M1")) &&
         Boolean(lookupLibrary?.has("M2")) &&
         Boolean(lookupLibrary?.has("M3")) &&
         Boolean(lookupLibrary?.has("M4"));
-    return { canUseNativeLifeExpectancy, canUseNativeMortality };
+    const needsNativeDeaths = outputVariables.some((variable) => POPULATION_DEATH_OUTPUTS.includes(variable));
+    const canUseNativeDeathPath = needsNativeDeaths &&
+        canUseNativeMortality &&
+        Boolean(fixture.series.p1) &&
+        Boolean(fixture.series.p2) &&
+        Boolean(fixture.series.p3) &&
+        Boolean(fixture.series.p4);
+    if (canUseNativeDeathPath) {
+        sourceVariables.add("p1");
+        sourceVariables.add("p2");
+        sourceVariables.add("p3");
+        sourceVariables.add("p4");
+    }
+    return {
+        canUseNativeLifeExpectancy,
+        canUseNativeMortality,
+        canUseNativeDeathPath,
+    };
 }
-export function populatePopulationNativeSupportSeries(sourceFrame, sourceSeries, prepared, constantsUsed, canUseNativeLifeExpectancy, canUseNativeMortality = false) {
+export function populatePopulationNativeSupportSeries(sourceFrame, sourceSeries, prepared, constantsUsed, canUseNativeLifeExpectancy, canUseNativeMortality = false, canUseNativeDeathPath = false) {
     if (!canUseNativeLifeExpectancy) {
         return;
     }
@@ -280,10 +344,37 @@ export function populatePopulationNativeSupportSeries(sourceFrame, sourceSeries,
         }
         sourceSeries.set(variable, deriveSeriesValues(supportFrame, createMortalityDerivedDefinition(variable, lookup)));
     }
+    if (!canUseNativeDeathPath) {
+        return;
+    }
+    const deathDefinitions = [
+        createDeathDerivedDefinition("d1", "p1", "m1"),
+        createDeathDerivedDefinition("d2", "p2", "m2"),
+        createDeathDerivedDefinition("d3", "p3", "m3"),
+        createDeathDerivedDefinition("d4", "p4", "m4"),
+    ];
+    const deathSupportFrame = {
+        request: sourceFrame.request,
+        time: sourceFrame.time,
+        constantsUsed,
+        series: sourceSeries,
+    };
+    for (const definition of deathDefinitions) {
+        sourceSeries.set(definition.variable, deriveSeriesValues(deathSupportFrame, definition));
+    }
+    const totalDeathsFrame = {
+        request: sourceFrame.request,
+        time: sourceFrame.time,
+        constantsUsed,
+        series: sourceSeries,
+    };
+    sourceSeries.set("d", deriveSeriesValues(totalDeathsFrame, createTotalDeathsDerivedDefinition()));
+    sourceSeries.set("cdr", deriveSeriesValues(totalDeathsFrame, createCdrDerivedDefinition()));
 }
 export function maybePopulatePopulationOutputSeries(variable, sourceFrame, series) {
     const isMortalityOutput = POPULATION_MORTALITY_OUTPUTS.includes(variable);
-    if (variable !== "le" && !isMortalityOutput) {
+    const isDeathOutput = POPULATION_DEATH_OUTPUTS.includes(variable);
+    if (variable !== "le" && !isMortalityOutput && !isDeathOutput) {
         return false;
     }
     const values = sourceFrame.series.get(variable);

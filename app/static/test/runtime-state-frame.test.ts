@@ -610,6 +610,141 @@ describe("runtime state frame", () => {
     }
   });
 
+  test("can derive the native population death path", () => {
+    const prepared = prepareRuntime(
+      ModelData,
+      {
+        year_min: 1900,
+        year_max: 1902,
+        dt: 1,
+        output_variables: ["d1", "d2", "d3", "d4", "d", "cdr"],
+      },
+      [
+        ...tables,
+        {
+          sector: "Population",
+          "x.name": "POP",
+          "x.values": [0, 100, 200],
+          "y.name": "FPU",
+          "y.values": [0, 0.1, 0.2],
+        },
+        {
+          sector: "Population",
+          "x.name": "FPC/SFPC",
+          "x.values": [0, 1, 2],
+          "y.name": "LMF",
+          "y.values": [0.8, 1, 1.2],
+        },
+        {
+          sector: "Population",
+          "x.name": "SOPC",
+          "x.values": [0, 10, 20],
+          "y.name": "HSAPC",
+          "y.values": [0, 10, 20],
+        },
+        {
+          sector: "Population",
+          "x.name": "EHSPC",
+          "x.values": [0, 10, 20],
+          "y.name": "LMHS1",
+          "y.values": [0.5, 1, 1.5],
+        },
+        {
+          sector: "Population",
+          "x.name": "EHSPC",
+          "x.values": [0, 10, 20],
+          "y.name": "LMHS2",
+          "y.values": [0.4, 0.9, 1.4],
+        },
+        {
+          sector: "Population",
+          "x.name": "IOPC",
+          "x.values": [0, 10, 20],
+          "y.name": "CMI",
+          "y.values": [0, 0.1, 0.2],
+        },
+        {
+          sector: "Population",
+          "x.name": "PPOLX",
+          "x.values": [0, 1, 2],
+          "y.name": "LMP",
+          "y.values": [1.2, 1, 0.8],
+        },
+        {
+          sector: "Population",
+          "x.name": "LE",
+          "x.values": [20, 30, 40],
+          "y.name": "M1",
+          "y.values": [0.05, 0.03, 0.01],
+        },
+        {
+          sector: "Population",
+          "x.name": "LE",
+          "x.values": [20, 30, 40],
+          "y.name": "M2",
+          "y.values": [0.03, 0.02, 0.01],
+        },
+        {
+          sector: "Population",
+          "x.name": "LE",
+          "x.values": [20, 30, 40],
+          "y.name": "M3",
+          "y.values": [0.06, 0.04, 0.02],
+        },
+        {
+          sector: "Population",
+          "x.name": "LE",
+          "x.values": [20, 30, 40],
+          "y.name": "M4",
+          "y.values": [0.12, 0.1, 0.08],
+        },
+      ],
+    );
+    const populationFixture: SimulationResult = {
+      year_min: 1900,
+      year_max: 1902,
+      dt: 0.5,
+      time: [1900, 1900.5, 1901, 1901.5, 1902],
+      constants_used: {
+        len: 28,
+        sfpc: 230,
+        hsid: 20,
+        iphst: 1940,
+      },
+      series: {
+        pop: { name: "pop", values: [10, 12, 14, 16, 18] },
+        p1: { name: "p1", values: [1, 1.5, 2, 2.5, 3] },
+        p2: { name: "p2", values: [2, 2.5, 3, 3.5, 4] },
+        p3: { name: "p3", values: [3, 3.5, 4, 4.5, 5] },
+        p4: { name: "p4", values: [4, 4.5, 5, 5.5, 6] },
+        fpc: { name: "fpc", values: [230, 253, 276, 299, 322] },
+        iopc: { name: "iopc", values: [10, 10, 10, 10, 10] },
+        sopc: { name: "sopc", values: [10, 10, 10, 10, 10] },
+        ppolx: { name: "ppolx", values: [1, 1, 1, 1, 1] },
+      },
+    };
+
+    const frame = createRuntimeStateFrame(prepared, populationFixture);
+
+    const result = runtimeStateFrameToSimulationResult(frame);
+    const deathExpectations = {
+      d1: [0.034056, 0.063683072, 0.088886592],
+      d2: [0.044056, 0.062762304, 0.079257728],
+      d3: [0.132168, 0.167366144, 0.19814432],
+      d4: [0.416224, 0.50920768, 0.597773184],
+      d: [0.626504, 0.8030192, 0.964061824],
+      cdr: [62.6504, 57.35851428571429, 53.55899022222223],
+    } as const;
+
+    for (const [variable, expected] of Object.entries(deathExpectations)) {
+      const series = result.series[variable];
+      expect(series?.name).toBe(variable);
+      expect(series?.values[0]).toBeCloseTo(expected[0], 8);
+      expect(series?.values[1]).toBeCloseTo(expected[1], 8);
+      expect(series?.values[2]).toBeCloseTo(expected[2], 8);
+    }
+  });
+
   test("can assemble the public simulation result by stepping observations", () => {
     const prepared = prepareRuntime(
       ModelData,

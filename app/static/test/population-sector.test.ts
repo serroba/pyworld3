@@ -2,8 +2,11 @@ import { describe, expect, test } from "vitest";
 
 import {
   POPULATION_HIDDEN_SERIES,
+  createCdrDerivedDefinition,
+  createDeathDerivedDefinition,
   createLeDerivedDefinition,
   createMortalityDerivedDefinition,
+  createTotalDeathsDerivedDefinition,
   extendPopulationSourceVariables,
   maybePopulatePopulationOutputSeries,
   populatePopulationNativeSupportSeries,
@@ -114,6 +117,25 @@ const fixture: SimulationResult = {
   },
 };
 
+const deathFixture: SimulationResult = {
+  year_min: 1900,
+  year_max: 1902,
+  dt: 0.5,
+  time: [1900, 1900.5, 1901, 1901.5, 1902],
+  constants_used: fixture.constants_used,
+  series: {
+    pop: { name: "pop", values: [10, 12, 14, 16, 18] },
+    p1: { name: "p1", values: [1, 1.5, 2, 2.5, 3] },
+    p2: { name: "p2", values: [2, 2.5, 3, 3.5, 4] },
+    p3: { name: "p3", values: [3, 3.5, 4, 4.5, 5] },
+    p4: { name: "p4", values: [4, 4.5, 5, 5.5, 6] },
+    fpc: { name: "fpc", values: [230, 253, 276, 299, 322] },
+    iopc: { name: "iopc", values: [10, 10, 10, 10, 10] },
+    sopc: { name: "sopc", values: [10, 10, 10, 10, 10] },
+    ppolx: { name: "ppolx", values: [1, 1, 1, 1, 1] },
+  },
+};
+
 describe("population sector core", () => {
   test("extends runtime source requirements for native life expectancy", () => {
     const sourceVariables = new Set<string>();
@@ -133,6 +155,7 @@ describe("population sector core", () => {
     expect(result).toEqual({
       canUseNativeLifeExpectancy: true,
       canUseNativeMortality: false,
+      canUseNativeDeathPath: false,
     });
     expect(Array.from(sourceVariables).sort()).toEqual([
       "fpc",
@@ -207,6 +230,30 @@ describe("population sector core", () => {
     }
   });
 
+  test("derives age-band deaths, total deaths, and cdr", () => {
+    expect(
+      createDeathDerivedDefinition("d1", "p1", "m1").derive({
+        index: 0,
+        time: 1900,
+        values: { p1: 2, m1: 0.03 },
+      }),
+    ).toBeCloseTo(0.06, 8);
+    expect(
+      createTotalDeathsDerivedDefinition().derive({
+        index: 0,
+        time: 1900,
+        values: { d1: 1, d2: 2, d3: 3, d4: 4 },
+      }),
+    ).toBeCloseTo(10, 8);
+    expect(
+      createCdrDerivedDefinition().derive({
+        index: 0,
+        time: 1900,
+        values: { d: 0.5, pop: 10 },
+      }),
+    ).toBeCloseTo(50, 8);
+  });
+
   test("extends runtime source requirements for native mortality outputs", () => {
     const sourceVariables = new Set<string>();
     const prepared = prepareRuntime(
@@ -225,10 +272,44 @@ describe("population sector core", () => {
     expect(result).toEqual({
       canUseNativeLifeExpectancy: true,
       canUseNativeMortality: true,
+      canUseNativeDeathPath: false,
     });
     expect(Array.from(sourceVariables).sort()).toEqual([
       "fpc",
       "iopc",
+      "pop",
+      "ppolx",
+      "sopc",
+    ]);
+  });
+
+  test("extends runtime source requirements for the native death path", () => {
+    const sourceVariables = new Set<string>();
+    const prepared = prepareRuntime(
+      ModelData,
+      { output_variables: ["cdr"] },
+      tables,
+    );
+
+    const result = extendPopulationSourceVariables(
+      sourceVariables,
+      prepared.outputVariables,
+      deathFixture,
+      prepared.lookupLibrary,
+    );
+
+    expect(result).toEqual({
+      canUseNativeLifeExpectancy: true,
+      canUseNativeMortality: true,
+      canUseNativeDeathPath: true,
+    });
+    expect(Array.from(sourceVariables).sort()).toEqual([
+      "fpc",
+      "iopc",
+      "p1",
+      "p2",
+      "p3",
+      "p4",
       "pop",
       "ppolx",
       "sopc",
@@ -262,6 +343,7 @@ describe("population sector core", () => {
       fixture.constants_used,
       true,
       true,
+      false,
     );
 
     expect(Array.from(sourceSeries.get(POPULATION_HIDDEN_SERIES.ehspc) ?? [])).toEqual([
@@ -281,6 +363,57 @@ describe("population sector core", () => {
     } as const;
 
     for (const [variable, expected] of Object.entries(mortalityExpectations)) {
+      const values = Array.from(sourceSeries.get(variable) ?? []);
+      expect(values[0]).toBeCloseTo(expected[0], 6);
+      expect(values[1]).toBeCloseTo(expected[1], 6);
+      expect(values[2]).toBeCloseTo(expected[2], 6);
+    }
+  });
+
+  test("populates the native death path from cohorts and mortality", () => {
+    const prepared = prepareRuntime(
+      ModelData,
+      { year_min: 1900, year_max: 1902, dt: 1, output_variables: ["cdr"] },
+      tables,
+    );
+    const sourceSeries = new Map<string, Float64Array>([
+      ["pop", Float64Array.from([10, 14, 18])],
+      ["p1", Float64Array.from([1, 2, 3])],
+      ["p2", Float64Array.from([2, 3, 4])],
+      ["p3", Float64Array.from([3, 4, 5])],
+      ["p4", Float64Array.from([4, 5, 6])],
+      ["fpc", Float64Array.from([230, 276, 322])],
+      ["iopc", Float64Array.from([10, 10, 10])],
+      ["sopc", Float64Array.from([10, 10, 10])],
+      ["ppolx", Float64Array.from([1, 1, 1])],
+    ]);
+    const sourceFrame: RuntimeStateFrame = {
+      request: prepared.request,
+      time: Float64Array.from(prepared.time),
+      constantsUsed: deathFixture.constants_used,
+      series: sourceSeries,
+    };
+
+    populatePopulationNativeSupportSeries(
+      sourceFrame,
+      sourceSeries,
+      prepared,
+      deathFixture.constants_used,
+      true,
+      true,
+      true,
+    );
+
+    const deathExpectations = {
+      d1: [0.034056, 0.063683072, 0.088886592],
+      d2: [0.044056, 0.062762304, 0.079257728],
+      d3: [0.132168, 0.167366144, 0.19814432],
+      d4: [0.416224, 0.50920768, 0.597773184],
+      d: [0.626504, 0.8030192, 0.964061824],
+      cdr: [62.6504, 57.35851428571429, 53.55899022222223],
+    } as const;
+
+    for (const [variable, expected] of Object.entries(deathExpectations)) {
       const values = Array.from(sourceSeries.get(variable) ?? []);
       expect(values[0]).toBeCloseTo(expected[0], 6);
       expect(values[1]).toBeCloseTo(expected[1], 6);
@@ -333,6 +466,38 @@ describe("population sector core", () => {
     for (const [variable, expected] of Object.entries(mortalityExpectations)) {
       const handled = maybePopulatePopulationOutputSeries(variable, sourceFrame, series);
 
+      expect(handled).toBe(true);
+      expect(Array.from(series.get(variable) ?? [])).toEqual(expected);
+    }
+  });
+
+  test("publishes native death outputs from the runtime frame", () => {
+    const sourceFrame: RuntimeStateFrame = {
+      request: { year_min: 1900, year_max: 1902, dt: 1 },
+      time: Float64Array.from([1900, 1901, 1902]),
+      constantsUsed: deathFixture.constants_used,
+      series: new Map([
+        ["d1", Float64Array.from([0.034056, 0.063683072, 0.088886592])],
+        ["d2", Float64Array.from([0.044056, 0.062762304, 0.079257728])],
+        ["d3", Float64Array.from([0.132168, 0.167366144, 0.19814432])],
+        ["d4", Float64Array.from([0.416224, 0.50920768, 0.597773184])],
+        ["d", Float64Array.from([0.626504, 0.8030192, 0.964061824])],
+        ["cdr", Float64Array.from([62.6504, 57.35851428571429, 53.55899022222223])],
+      ]),
+    };
+    const series = new Map<string, Float64Array>();
+
+    const deathExpectations = {
+      d1: [0.034056, 0.063683072, 0.088886592],
+      d2: [0.044056, 0.062762304, 0.079257728],
+      d3: [0.132168, 0.167366144, 0.19814432],
+      d4: [0.416224, 0.50920768, 0.597773184],
+      d: [0.626504, 0.8030192, 0.964061824],
+      cdr: [62.6504, 57.35851428571429, 53.55899022222223],
+    } as const;
+
+    for (const [variable, expected] of Object.entries(deathExpectations)) {
+      const handled = maybePopulatePopulationOutputSeries(variable, sourceFrame, series);
       expect(handled).toBe(true);
       expect(Array.from(series.get(variable) ?? [])).toEqual(expected);
     }

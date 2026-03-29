@@ -4,6 +4,8 @@ export {
 export {
   POPULATION_HIDDEN_SERIES,
   createCmiDerivedDefinition,
+  createCdrDerivedDefinition,
+  createDeathDerivedDefinition,
   createFpuDerivedDefinition,
   createHsapcDerivedDefinition,
   createLeDerivedDefinition,
@@ -12,6 +14,7 @@ export {
   createLmhsDerivedDefinitions,
   createLmpDerivedDefinition,
   createMortalityDerivedDefinition,
+  createTotalDeathsDerivedDefinition,
   extendPopulationSourceVariables,
   maybePopulatePopulationOutputSeries,
   populatePopulationNativeSupportSeries,
