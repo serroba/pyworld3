@@ -1,4 +1,5 @@
-import { computeCoupledCapitalResourceSeries, extendCapitalSourceVariables, populateCapitalNativeSupportSeries, } from "./capital-sector.js";
+import { extendCapitalSourceVariables, populateCapitalNativeSupportSeries, } from "./capital-sector.js";
+import { computeCoupledCapitalResourceSeries } from "./coupled-capital-resource-runtime.js";
 import { extendResourceSourceVariables, populateResourceNativeSupportSeries, } from "./resource-sector.js";
 export function createRuntimeExecutionPlan(prepared, fixture) {
     const sourceVariables = new Set(prepared.outputVariables.filter((variable) => variable !== "nrfr" &&

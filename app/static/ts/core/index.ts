@@ -1,4 +1,7 @@
 export {
+  computeCoupledCapitalResourceSeries,
+} from "./coupled-capital-resource-runtime.js";
+export {
   createFixtureBackedRuntime,
   prepareRuntime,
 } from "./browser-native-runtime.js";
@@ -23,7 +26,6 @@ export {
 export { projectSimulationResult } from "./simulation-results.js";
 export {
   CAPITAL_HIDDEN_SERIES,
-  computeCoupledCapitalResourceSeries,
   computeCapitalOrderedSeries,
   createAlicDerivedDefinition,
   createAlscDerivedDefinition,

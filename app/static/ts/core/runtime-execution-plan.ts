@@ -1,10 +1,10 @@
 import type { ConstantMap, SimulationResult } from "../simulation-contracts.js";
 import type { RuntimePreparation } from "./browser-native-runtime.js";
 import {
-  computeCoupledCapitalResourceSeries,
   extendCapitalSourceVariables,
   populateCapitalNativeSupportSeries,
 } from "./capital-sector.js";
+import { computeCoupledCapitalResourceSeries } from "./coupled-capital-resource-runtime.js";
 import {
   extendResourceSourceVariables,
   populateResourceNativeSupportSeries,
