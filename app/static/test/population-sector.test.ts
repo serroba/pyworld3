@@ -5,7 +5,9 @@ import {
   createCdrDerivedDefinition,
   createDeathDerivedDefinition,
   createLeDerivedDefinition,
+  createMaturationDerivedDefinition,
   createMortalityDerivedDefinition,
+  createPopulationSumDerivedDefinition,
   createTotalDeathsDerivedDefinition,
   extendPopulationSourceVariables,
   maybePopulatePopulationOutputSeries,
@@ -155,6 +157,7 @@ describe("population sector core", () => {
     expect(result).toEqual({
       canUseNativeLifeExpectancy: true,
       canUseNativeMortality: false,
+      canUseNativeCohortSupport: false,
       canUseNativeDeathPath: false,
     });
     expect(Array.from(sourceVariables).sort()).toEqual([
@@ -254,6 +257,23 @@ describe("population sector core", () => {
     ).toBeCloseTo(50, 8);
   });
 
+  test("derives cohort maturation and native population sum", () => {
+    expect(
+      createMaturationDerivedDefinition("mat1", "p1", "m1", 15).derive({
+        index: 0,
+        time: 1900,
+        values: { p1: 15, m1: 0.2 },
+      }),
+    ).toBeCloseTo(0.8, 8);
+    expect(
+      createPopulationSumDerivedDefinition().derive({
+        index: 0,
+        time: 1900,
+        values: { p1: 1, p2: 2, p3: 3, p4: 4 },
+      }),
+    ).toBeCloseTo(10, 8);
+  });
+
   test("extends runtime source requirements for native mortality outputs", () => {
     const sourceVariables = new Set<string>();
     const prepared = prepareRuntime(
@@ -272,6 +292,7 @@ describe("population sector core", () => {
     expect(result).toEqual({
       canUseNativeLifeExpectancy: true,
       canUseNativeMortality: true,
+      canUseNativeCohortSupport: false,
       canUseNativeDeathPath: false,
     });
     expect(Array.from(sourceVariables).sort()).toEqual([
@@ -301,7 +322,42 @@ describe("population sector core", () => {
     expect(result).toEqual({
       canUseNativeLifeExpectancy: true,
       canUseNativeMortality: true,
+      canUseNativeCohortSupport: true,
       canUseNativeDeathPath: true,
+    });
+    expect(Array.from(sourceVariables).sort()).toEqual([
+      "fpc",
+      "iopc",
+      "p1",
+      "p2",
+      "p3",
+      "p4",
+      "pop",
+      "ppolx",
+      "sopc",
+    ]);
+  });
+
+  test("extends runtime source requirements for native cohort support", () => {
+    const sourceVariables = new Set<string>();
+    const prepared = prepareRuntime(
+      ModelData,
+      { output_variables: ["mat1", "mat2", "mat3", "pop"] },
+      tables,
+    );
+
+    const result = extendPopulationSourceVariables(
+      sourceVariables,
+      prepared.outputVariables,
+      deathFixture,
+      prepared.lookupLibrary,
+    );
+
+    expect(result).toEqual({
+      canUseNativeLifeExpectancy: true,
+      canUseNativeMortality: true,
+      canUseNativeCohortSupport: true,
+      canUseNativeDeathPath: false,
     });
     expect(Array.from(sourceVariables).sort()).toEqual([
       "fpc",
@@ -343,6 +399,7 @@ describe("population sector core", () => {
       fixture.constants_used,
       true,
       true,
+      false,
       false,
     );
 
@@ -402,6 +459,7 @@ describe("population sector core", () => {
       true,
       true,
       true,
+      true,
     );
 
     const deathExpectations = {
@@ -414,6 +472,56 @@ describe("population sector core", () => {
     } as const;
 
     for (const [variable, expected] of Object.entries(deathExpectations)) {
+      const values = Array.from(sourceSeries.get(variable) ?? []);
+      expect(values[0]).toBeCloseTo(expected[0], 6);
+      expect(values[1]).toBeCloseTo(expected[1], 6);
+      expect(values[2]).toBeCloseTo(expected[2], 6);
+    }
+  });
+
+  test("populates native cohort support from mortality and cohorts", () => {
+    const prepared = prepareRuntime(
+      ModelData,
+      { year_min: 1900, year_max: 1902, dt: 1, output_variables: ["mat1", "mat2", "mat3", "pop"] },
+      tables,
+    );
+    const sourceSeries = new Map<string, Float64Array>([
+      ["pop", Float64Array.from([999, 999, 999])],
+      ["p1", Float64Array.from([1, 2, 3])],
+      ["p2", Float64Array.from([2, 3, 4])],
+      ["p3", Float64Array.from([3, 4, 5])],
+      ["p4", Float64Array.from([4, 5, 6])],
+      ["fpc", Float64Array.from([230, 276, 322])],
+      ["iopc", Float64Array.from([10, 10, 10])],
+      ["sopc", Float64Array.from([10, 10, 10])],
+      ["ppolx", Float64Array.from([1, 1, 1])],
+    ]);
+    const sourceFrame: RuntimeStateFrame = {
+      request: prepared.request,
+      time: Float64Array.from(prepared.time),
+      constantsUsed: deathFixture.constants_used,
+      series: sourceSeries,
+    };
+
+    populatePopulationNativeSupportSeries(
+      sourceFrame,
+      sourceSeries,
+      prepared,
+      deathFixture.constants_used,
+      true,
+      true,
+      true,
+      false,
+    );
+
+    expect(Array.from(sourceSeries.get("pop") ?? [])).toEqual([10, 14, 18]);
+    const cohortExpectations = {
+      mat1: [0.06439626666666667, 0.1290877952, 0.1940746816],
+      mat2: [0.06519813333333333, 0.0979079232, 0.13069140906666667],
+      mat3: [0.1433916, 0.1916316928, 0.240092736],
+    } as const;
+
+    for (const [variable, expected] of Object.entries(cohortExpectations)) {
       const values = Array.from(sourceSeries.get(variable) ?? []);
       expect(values[0]).toBeCloseTo(expected[0], 6);
       expect(values[1]).toBeCloseTo(expected[1], 6);
@@ -500,6 +608,36 @@ describe("population sector core", () => {
       const handled = maybePopulatePopulationOutputSeries(variable, sourceFrame, series);
       expect(handled).toBe(true);
       expect(Array.from(series.get(variable) ?? [])).toEqual(expected);
+    }
+  });
+
+  test("publishes native cohort outputs and pop from the runtime frame", () => {
+    const sourceFrame: RuntimeStateFrame = {
+      request: { year_min: 1900, year_max: 1902, dt: 1 },
+      time: Float64Array.from([1900, 1901, 1902]),
+      constantsUsed: deathFixture.constants_used,
+      series: new Map([
+        ["pop", Float64Array.from([10, 14, 18])],
+        ["mat1", Float64Array.from([0.06439626666666667, 0.1290877952, 0.1940746816])],
+        ["mat2", Float64Array.from([0.06519813333333333, 0.0979079232, 0.13069140906666667])],
+        ["mat3", Float64Array.from([0.1433916, 0.1916316928, 0.240092736])],
+      ]),
+    };
+    const series = new Map<string, Float64Array>();
+    const expectations = {
+      pop: [10, 14, 18],
+      mat1: [0.06439626666666667, 0.1290877952, 0.1940746816],
+      mat2: [0.06519813333333333, 0.0979079232, 0.13069140906666667],
+      mat3: [0.1433916, 0.1916316928, 0.240092736],
+    } as const;
+
+    for (const [variable, expected] of Object.entries(expectations)) {
+      const handled = maybePopulatePopulationOutputSeries(variable, sourceFrame, series);
+      expect(handled).toBe(true);
+      const values = Array.from(series.get(variable) ?? []);
+      expect(values[0]).toBeCloseTo(expected[0], 6);
+      expect(values[1]).toBeCloseTo(expected[1], 6);
+      expect(values[2]).toBeCloseTo(expected[2], 6);
     }
   });
 });

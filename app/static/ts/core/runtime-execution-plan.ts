@@ -22,6 +22,7 @@ export type RuntimeExecutionPlan = {
   readonly canUseCoupledCapitalResource: boolean;
   readonly canUseNativeLifeExpectancy: boolean;
   readonly canUseNativeMortality: boolean;
+  readonly canUseNativeCohortSupport: boolean;
   readonly canUseNativeDeathPath: boolean;
 };
 
@@ -43,6 +44,9 @@ export function createRuntimeExecutionPlan(
         variable !== "m2" &&
         variable !== "m3" &&
         variable !== "m4" &&
+        variable !== "mat1" &&
+        variable !== "mat2" &&
+        variable !== "mat3" &&
         variable !== "d1" &&
         variable !== "d2" &&
         variable !== "d3" &&
@@ -69,6 +73,7 @@ export function createRuntimeExecutionPlan(
   const {
     canUseNativeLifeExpectancy,
     canUseNativeMortality,
+    canUseNativeCohortSupport,
     canUseNativeDeathPath,
   } = extendPopulationSourceVariables(
     sourceVariables,
@@ -87,6 +92,7 @@ export function createRuntimeExecutionPlan(
       sourceVariables.has("nr"),
     canUseNativeLifeExpectancy,
     canUseNativeMortality,
+    canUseNativeCohortSupport,
     canUseNativeDeathPath,
   };
 }
@@ -139,6 +145,7 @@ export function applyRuntimeExecutionPlan(
     constantsUsed,
     plan.canUseNativeLifeExpectancy,
     plan.canUseNativeMortality,
+    plan.canUseNativeCohortSupport,
     plan.canUseNativeDeathPath,
   );
 
