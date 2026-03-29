@@ -1,7 +1,8 @@
 import { extendCapitalSourceVariables, populateCapitalNativeSupportSeries, } from "./capital-sector.js";
 import { computeCoupledCapitalResourceSeries } from "./coupled-capital-resource-runtime.js";
 import { extendResourceSourceVariables, populateResourceNativeSupportSeries, } from "./resource-sector.js";
-import { createBirthRateDerivedDefinition, createP1StockStateDefinition, createPopulationStockStateDefinitions, extendPopulationSourceVariables, createPopulationSumDerivedDefinition, populatePopulationBirthNativeSupportSeries, populatePopulationNativeSupportSeries, } from "./population-sector.js";
+import { createBirthRateDerivedDefinition, createP1StockStateDefinition, createPopulationStockStateDefinitions, extendPopulationSourceVariables, createPopulationSumDerivedDefinition, } from "./population-sector.js";
+import { populatePopulationBirthNativeSupportSeries, populatePopulationNativeSupportSeries, } from "./population-runtime.js";
 import { populateDerivedBufferFromDefinition, } from "./runtime-state-frame.js";
 export function createRuntimeExecutionPlan(prepared, fixture) {
     const sourceVariables = new Set(prepared.outputVariables.filter((variable) => variable !== "nrfr" &&

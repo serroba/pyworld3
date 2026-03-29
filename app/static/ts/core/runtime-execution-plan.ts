@@ -15,9 +15,11 @@ import {
   createPopulationStockStateDefinitions,
   extendPopulationSourceVariables,
   createPopulationSumDerivedDefinition,
+} from "./population-sector.js";
+import {
   populatePopulationBirthNativeSupportSeries,
   populatePopulationNativeSupportSeries,
-} from "./population-sector.js";
+} from "./population-runtime.js";
 import {
   populateDerivedBufferFromDefinition,
 } from "./runtime-state-frame.js";

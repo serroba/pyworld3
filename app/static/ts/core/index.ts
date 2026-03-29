@@ -37,9 +37,11 @@ export {
   createTotalDeathsDerivedDefinition,
   extendPopulationSourceVariables,
   maybePopulatePopulationOutputSeries,
+} from "./population-sector.js";
+export {
   populatePopulationBirthNativeSupportSeries,
   populatePopulationNativeSupportSeries,
-} from "./population-sector.js";
+} from "./population-runtime.js";
 export {
   createFixtureBackedRuntime,
   prepareRuntime,
