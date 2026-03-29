@@ -20,6 +20,9 @@ export {
   createCalibrationCore,
 } from "./calibration-core.js";
 export {
+  createOwidDataProvider,
+} from "./owid-data.js";
+export {
   computeCoupledCapitalResourceSeries,
 } from "./coupled-capital-resource-runtime.js";
 export {
@@ -136,6 +139,10 @@ export {
   createRuntimeExecutionPlan,
 } from "./runtime-execution-plan.js";
 export {
+  createValidationCore,
+  validateSimulationResult,
+} from "./validation-core.js";
+export {
   applyRuntimeExecutionGraph,
   createRuntimeExecutionGraph,
 } from "./runtime-execution-graph.js";
@@ -164,9 +171,14 @@ export {
 export type { AgricultureOrderedSeries } from "./agriculture-sector.js";
 export type {
   CalibratedConstantOutput,
-  CalibrationDataResponse,
   CalibrationResponse,
 } from "./calibration-core.js";
+export type {
+  CalibrationDataResponse,
+  OwidDataProvider,
+  OwidDataset,
+  ValidationDataResponse,
+} from "./owid-data.js";
 export type {
   BrowserNativeRuntime,
   RuntimeFixtureLoader,
@@ -206,3 +218,7 @@ export type {
   LookupTable,
   RawLookupTable,
 } from "./world3-tables.js";
+export type {
+  ValidationMetricOutput,
+  ValidationResponse,
+} from "./validation-core.js";

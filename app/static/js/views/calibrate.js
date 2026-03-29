@@ -72,7 +72,10 @@ const CalibrateView = (() => {
     if (applyBtn) applyBtn.style.display = "none";
 
     try {
-      const rawData = await API.calibrateData({ reference_year: year, entity });
+      const rawData = await LocalOwidData.getCalibrationData({
+        referenceYear: year,
+        entity,
+      });
       const data = CalibrationCore.calibrate(rawData);
       lastCalibration = data;
       if (statusEl) statusEl.innerHTML = "";
@@ -186,7 +189,7 @@ const CalibrateView = (() => {
 
     try {
       const simResult = await SimulationProvider.simulate({});
-      const data = await API.validateResult(simResult, { entity });
+      const data = await ValidationCore.validate(simResult, { entity });
       if (statusEl) statusEl.innerHTML = "";
       if (resultsEl) renderValidationTable(resultsEl, data);
 

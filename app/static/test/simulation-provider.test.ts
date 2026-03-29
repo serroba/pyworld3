@@ -91,7 +91,19 @@ describe("simulation provider", () => {
     globalThis.fetch = vi.fn();
   });
 
-  test("defaults to the HTTP provider and delegates API calls", async () => {
+  test("defaults to the local provider and loads browser assets", async () => {
+    mockLocalFetch();
+    const { ModelData, createSimulationProvider } = await loadProviderSuite();
+    const simulationProvider = createSimulationProvider(ModelData);
+
+    const result = await simulationProvider.simulatePreset("standard-run");
+
+    expect(simulationProvider.mode).toBe("local");
+    expect(result).toEqual(fixture);
+  });
+
+  test("delegates API calls in explicit HTTP mode", async () => {
+    window.__PYWORLD3_PROVIDER_MODE__ = "http";
     const api = (window as TestWindow).API!;
     api.simulatePreset.mockResolvedValue(fixture);
     const { ModelData, createSimulationProvider } = await loadProviderSuite();
@@ -107,7 +119,8 @@ describe("simulation provider", () => {
     expect(result).toEqual(fixture);
   });
 
-  test("delegates generic simulate and compare calls in HTTP mode", async () => {
+  test("delegates generic simulate and compare calls in explicit HTTP mode", async () => {
+    window.__PYWORLD3_PROVIDER_MODE__ = "http";
     const api = (window as TestWindow).API!;
     api.simulate.mockResolvedValue(fixture);
     api.compare.mockResolvedValue({

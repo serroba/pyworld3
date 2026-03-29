@@ -290,6 +290,13 @@ def test_static_world3_lookup_tables_served():
     assert '"sector": "Population"' in resp.text
 
 
+def test_static_owid_world_data_served():
+    resp = client.get("/data/owid-world-data.json")
+    assert resp.status_code == 200
+    assert '"World"' in resp.text
+    assert '"life_expectancy"' in resp.text
+
+
 def test_static_css_served():
     resp = client.get("/css/variables.css")
     assert resp.status_code == 200
