@@ -310,6 +310,47 @@ describe("runtime state frame", () => {
     });
   });
 
+  test("can derive iopc through native nr-to-fcaor capital feedback", () => {
+    const prepared = prepareRuntime(
+      ModelData,
+      {
+        year_min: 1900,
+        year_max: 1902,
+        dt: 1,
+        output_variables: ["iopc"],
+      },
+      tables,
+    );
+    const capitalFeedbackFixture: SimulationResult = {
+      ...capitalFixture,
+      constants_used: {
+        ...capitalFixture.constants_used,
+        nri: 100,
+      },
+      series: {
+        ...capitalFixture.series,
+        nr: { name: "nr", values: [100, 90, 80, 59, 38] },
+      },
+    };
+    delete capitalFeedbackFixture.series.fcaor;
+
+    const frame = createRuntimeStateFrame(prepared, capitalFeedbackFixture);
+
+    expect(runtimeStateFrameToSimulationResult(frame)).toEqual({
+      year_min: 1900,
+      year_max: 1902,
+      dt: 1,
+      time: [1900, 1901, 1902],
+      constants_used: capitalFeedbackFixture.constants_used,
+      series: {
+        iopc: {
+          name: "iopc",
+          values: [7, 3.8948464619492653, 1.3974843410350508],
+        },
+      },
+    });
+  });
+
   test("can derive fcaor natively from stepped nr", () => {
     const prepared = prepareRuntime(
       ModelData,

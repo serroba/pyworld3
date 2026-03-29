@@ -412,4 +412,93 @@ describe("browser-native runtime", () => {
       },
     });
   });
+
+  test("derives iopc through native resource feedback into the capital seam", async () => {
+    const runtime = createFixtureBackedRuntime(
+      ModelData,
+      async () => [
+        ...tables,
+        {
+          sector: "Resources",
+          "x.name": "NRFR",
+          "x.values": [0, 1],
+          "y.name": "FCAOR1",
+          "y.values": [1, 0],
+        },
+        {
+          sector: "Resources",
+          "x.name": "NRFR",
+          "x.values": [0, 1],
+          "y.name": "FCAOR2",
+          "y.values": [0.5, 0.2],
+        },
+      ],
+      async () => ({
+        year_min: 1900,
+        year_max: 1902,
+        dt: 0.5,
+        time: [1900, 1900.5, 1901, 1901.5, 1902],
+        constants_used: {
+          nri: 100,
+          fioac1: 0.43,
+          fioac2: 0.5,
+          iopcd: 100,
+          iet: 1950,
+          ici: 210,
+          sci: 144,
+          alic1: 14,
+          alic2: 14,
+          alsc1: 20,
+          alsc2: 20,
+          icor1: 3,
+          icor2: 3,
+          scor1: 1,
+          scor2: 1,
+        },
+        series: {
+          fioaa: { name: "fioaa", values: [0.1, 0.1, 0.1, 0.1, 0.1] },
+          luf: { name: "luf", values: [2, 2, 2, 2, 2] },
+          nr: { name: "nr", values: [100, 90, 80, 59, 38] },
+          pop: { name: "pop", values: [10, 12, 14, 16, 18] },
+        },
+      }),
+    );
+
+    await expect(
+      runtime.simulateStandardRun({
+        year_min: 1900,
+        year_max: 1902,
+        dt: 1,
+        output_variables: ["iopc"],
+      }),
+    ).resolves.toEqual({
+      year_min: 1900,
+      year_max: 1902,
+      dt: 1,
+      time: [1900, 1901, 1902],
+      constants_used: {
+        nri: 100,
+        fioac1: 0.43,
+        fioac2: 0.5,
+        iopcd: 100,
+        iet: 1950,
+        ici: 210,
+        sci: 144,
+        alic1: 14,
+        alic2: 14,
+        alsc1: 20,
+        alsc2: 20,
+        icor1: 3,
+        icor2: 3,
+        scor1: 1,
+        scor2: 1,
+      },
+      series: {
+        iopc: {
+          name: "iopc",
+          values: [7, 3.8948464619492653, 1.3974843410350508],
+        },
+      },
+    });
+  });
 });

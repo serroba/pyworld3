@@ -72,6 +72,20 @@ const tables: RawLookupTable[] = [
     "y.name": "CUF",
     "y.values": [0, 0.5, 1],
   },
+  {
+    sector: "Resources",
+    "x.name": "NRFR",
+    "x.values": [0, 1],
+    "y.name": "FCAOR1",
+    "y.values": [1, 0],
+  },
+  {
+    sector: "Resources",
+    "x.name": "NRFR",
+    "x.values": [0, 1],
+    "y.name": "FCAOR2",
+    "y.values": [0.5, 0.2],
+  },
 ];
 
 const fixture: SimulationResult = {
@@ -160,37 +174,35 @@ describe("capital sector core", () => {
     ]);
   });
 
-  test("extends runtime source requirements for resource flow support through ordered capital output", () => {
-    const sourceVariables = new Set<string>(["nr"]);
+  test("extends capital ordering support to native resource feedback when fcaor is absent", () => {
+    const sourceVariables = new Set<string>();
     const prepared = prepareRuntime(
       ModelData,
-      { output_variables: ["nrfr"] },
+      { output_variables: ["iopc"] },
       tables,
     );
-    const resourceFixture: SimulationResult = {
+    const resourceFeedbackFixture: SimulationResult = {
       ...fixture,
       constants_used: {
         ...fixture.constants_used,
         nri: 100,
-        nruf1: 0.1,
-        nruf2: 0.1,
       },
       series: {
         ...fixture.series,
-        nr: { name: "nr", values: [100, 100, 100, 100, 100] },
+        nr: { name: "nr", values: [100, 95, 90, 85, 80] },
       },
     };
+    delete resourceFeedbackFixture.series.fcaor;
 
     const result = extendCapitalSourceVariables(
       sourceVariables,
       prepared.outputVariables,
-      resourceFixture,
+      resourceFeedbackFixture,
       prepared.lookupLibrary,
     );
 
     expect(result.canUseNativeCapitalOrdering).toBe(true);
     expect(Array.from(sourceVariables).sort()).toEqual([
-      "fcaor",
       "fioaa",
       "luf",
       "nr",
@@ -819,4 +831,32 @@ describe("capital sector core", () => {
       155.63636363636363,
       164.43339055151938,
     ]);
+  });
+
+  test("computes capital series from native nr feedback when fcaor is not provided", () => {
+    const prepared = prepareRuntime(
+      ModelData,
+      { year_min: 1900, year_max: 1902, dt: 1, output_variables: ["iopc"] },
+      tables,
+    );
+    const sourceFrame: RuntimeStateFrame = {
+      request: prepared.request,
+      time: Float64Array.from(prepared.time),
+      constantsUsed: { ...fixture.constants_used, nri: 100 },
+      series: new Map([
+        ["fioaa", Float64Array.from([0.1, 0.1, 0.1])],
+        ["luf", Float64Array.from([2, 2, 2])],
+        ["nr", Float64Array.from([100, 80, 38])],
+        ["pop", Float64Array.from([10, 14, 18])],
+      ]),
+    };
+
+    const result = computeCapitalOrderedSeries(
+      sourceFrame,
+      prepared,
+      sourceFrame.constantsUsed,
+    );
+
+    expect(Array.from(result.io)).toEqual([70, 54.52785046728972, 25.154718138630916]);
+    expect(Array.from(result.iopc)).toEqual([7, 3.8948464619492653, 1.3974843410350508]);
   });

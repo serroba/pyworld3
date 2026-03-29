@@ -1,3 +1,4 @@
+import { createFcaorDerivedDefinition } from "./resource-sector.js";
 const DEFAULT_CAPITAL_POLICY_YEAR = 1975;
 export const CAPITAL_HIDDEN_SERIES = {
     alic: "__alic",
@@ -352,6 +353,10 @@ export function createScorDerivedDefinition(constantsUsed, policyYear = DEFAULT_
 export function extendCapitalSourceVariables(sourceVariables, outputVariables, fixture, lookupLibrary) {
     const needsVisibleCapitalOutput = outputVariables.some((variable) => ["io", "iopc", "so", "sopc"].includes(variable));
     const needsCapitalResourceSupport = outputVariables.some((variable) => ["nr", "nrfr", "fcaor"].includes(variable));
+    const canUseNativeResourceFeedbackInCapital = Boolean(fixture.series.nr) &&
+        fixture.constants_used.nri !== undefined &&
+        Boolean(lookupLibrary?.has("FCAOR1")) &&
+        Boolean(lookupLibrary?.has("FCAOR2"));
     const canDeriveIo = outputVariables.includes("io") &&
         Boolean(fixture.series.pop) &&
         Boolean(fixture.series.iopc);
@@ -382,7 +387,6 @@ export function extendCapitalSourceVariables(sourceVariables, outputVariables, f
     const canUseNativeCapitalOrdering = (needsVisibleCapitalOutput || needsCapitalResourceSupport) &&
         Boolean(fixture.series.pop) &&
         Boolean(fixture.series.fioaa) &&
-        Boolean(fixture.series.fcaor) &&
         Boolean(fixture.series.luf) &&
         constantsUsedHasCapitalStockSeeds(fixture.constants_used) &&
         Boolean(lookupLibrary?.has("FIOACV")) &&
@@ -390,7 +394,8 @@ export function extendCapitalSourceVariables(sourceVariables, outputVariables, f
         Boolean(lookupLibrary?.has("ISOPC2")) &&
         Boolean(lookupLibrary?.has("FIOAS1")) &&
         Boolean(lookupLibrary?.has("FIOAS2")) &&
-        Boolean(lookupLibrary?.has("CUF"));
+        Boolean(lookupLibrary?.has("CUF")) &&
+        (Boolean(fixture.series.fcaor) || canUseNativeResourceFeedbackInCapital);
     if (canUseNativeCapitalOrdering) {
         sourceVariables.delete("io");
         sourceVariables.delete("iopc");
@@ -398,8 +403,13 @@ export function extendCapitalSourceVariables(sourceVariables, outputVariables, f
         sourceVariables.delete("sopc");
         sourceVariables.add("pop");
         sourceVariables.add("fioaa");
-        sourceVariables.add("fcaor");
         sourceVariables.add("luf");
+        if (fixture.series.fcaor) {
+            sourceVariables.add("fcaor");
+        }
+        else if (canUseNativeResourceFeedbackInCapital) {
+            sourceVariables.add("nr");
+        }
     }
     const canUseNativeCapitalAllocation = canUseNativeCapitalOrdering ||
         (sourceVariables.has("iopc") &&
@@ -433,7 +443,12 @@ export function extendCapitalSourceVariables(sourceVariables, outputVariables, f
             Boolean(fixture.series.luf) &&
             Boolean(lookupLibrary?.has("CUF")));
     if (canUseNativeCapitalVisibleOutputFormulas) {
-        sourceVariables.add("fcaor");
+        if (fixture.series.fcaor) {
+            sourceVariables.add("fcaor");
+        }
+        else if (canUseNativeResourceFeedbackInCapital) {
+            sourceVariables.add("nr");
+        }
         sourceVariables.add("luf");
     }
     return {
@@ -622,6 +637,8 @@ export function computeCapitalOrderedSeries(sourceFrame, prepared, constantsUsed
     const fioas1Lookup = prepared.lookupLibrary.get("FIOAS1");
     const fioas2Lookup = prepared.lookupLibrary.get("FIOAS2");
     const cufLookup = prepared.lookupLibrary.get("CUF");
+    const fcaor1Lookup = prepared.lookupLibrary.get("FCAOR1");
+    const fcaor2Lookup = prepared.lookupLibrary.get("FCAOR2");
     if (!fioacvLookup ||
         !isopc1Lookup ||
         !isopc2Lookup ||
@@ -632,8 +649,17 @@ export function computeCapitalOrderedSeries(sourceFrame, prepared, constantsUsed
     }
     const pop = requireSeries(sourceFrame, "pop");
     const fioaa = requireSeries(sourceFrame, "fioaa");
-    const fcaor = requireSeries(sourceFrame, "fcaor");
     const luf = requireSeries(sourceFrame, "luf");
+    const fcaorSeries = sourceFrame.series.get("fcaor");
+    const nrSeries = sourceFrame.series.get("nr");
+    const canDeriveNativeFcaor = !fcaorSeries &&
+        Boolean(nrSeries) &&
+        Boolean(fcaor1Lookup) &&
+        Boolean(fcaor2Lookup) &&
+        constantsUsed.nri !== undefined;
+    if (!fcaorSeries && !canDeriveNativeFcaor) {
+        throw new Error("Fixture-backed runtime cannot derive ordered capital values because 'fcaor' or native resource feedback inputs are missing.");
+    }
     const alicDefinition = createAlicDerivedDefinition(constantsUsed);
     const alscDefinition = createAlscDerivedDefinition(constantsUsed);
     const cufDefinition = createCufDerivedDefinition(cufLookup);
@@ -641,6 +667,9 @@ export function computeCapitalOrderedSeries(sourceFrame, prepared, constantsUsed
     const scorDefinition = createScorDerivedDefinition(constantsUsed);
     const ioDefinition = createCapitalIoDerivedDefinition();
     const iopcDefinition = createIopcDerivedDefinition();
+    const fcaorDefinition = canDeriveNativeFcaor && fcaor1Lookup && fcaor2Lookup
+        ? createFcaorDerivedDefinition(constantsUsed, fcaor1Lookup, fcaor2Lookup)
+        : null;
     const fioacDefinition = createFioacDerivedDefinition(constantsUsed, fioacvLookup);
     const isopcDefinition = createIsopcDerivedDefinition(isopc1Lookup, isopc2Lookup);
     const soDefinition = createCapitalSoDerivedDefinition();
@@ -676,23 +705,32 @@ export function computeCapitalOrderedSeries(sourceFrame, prepared, constantsUsed
         const time = sourceFrame.time[index];
         const popValue = pop[index];
         const fioaaValue = fioaa[index];
-        const fcaorValue = fcaor[index];
+        const observedFcaorValue = fcaorSeries?.[index];
+        const nrValue = nrSeries?.[index];
         const lufValue = luf[index];
         if (time === undefined ||
             popValue === undefined ||
             fioaaValue === undefined ||
-            fcaorValue === undefined ||
             lufValue === undefined) {
             throw new Error("Fixture-backed runtime is missing a source value for ordered capital execution.");
         }
         const values = {
             pop: popValue,
             fioaa: fioaaValue,
-            fcaor: fcaorValue,
             luf: lufValue,
             [CAPITAL_HIDDEN_SERIES.ic]: currentIc,
             [CAPITAL_HIDDEN_SERIES.sc]: currentSc,
         };
+        if (observedFcaorValue !== undefined) {
+            values.fcaor = observedFcaorValue;
+        }
+        else if (fcaorDefinition && nrValue !== undefined) {
+            values.nr = nrValue;
+            values.fcaor = fcaorDefinition.derive(createCapitalObservation(index, time, values));
+        }
+        else {
+            throw new Error("Fixture-backed runtime is missing 'fcaor' and cannot derive it from native resource state.");
+        }
         const observation = createCapitalObservation(index, time, values);
         alic[index] = alicDefinition.derive(observation);
         values[CAPITAL_HIDDEN_SERIES.alic] = alic[index] ?? 0;
