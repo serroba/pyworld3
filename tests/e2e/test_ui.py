@@ -160,3 +160,14 @@ def test_calibrate_runs(page: Page, base_url: str):
         "#calibrate-results table, #calibrate-status .card",
         timeout=30_000,
     )
+
+
+def test_validate_runs(page: Page, base_url: str):
+    """Click Validate → results table or error card appears (no JS crash)."""
+    page.goto(f"{base_url}/#calibrate")
+    page.wait_for_selector("#validate-run", timeout=10_000)
+    page.click("#validate-run")
+    page.wait_for_selector(
+        "#validate-results table, #validate-status .card",
+        timeout=30_000,
+    )

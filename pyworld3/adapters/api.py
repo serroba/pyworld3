@@ -31,6 +31,7 @@ from .schemas import (
     ScenarioSpec,
     SimulationRequest,
     SimulationResponse,
+    ValidationFromResultRequest,
     ValidationRequest,
     ValidationResponse,
     list_presets,
@@ -288,6 +289,40 @@ def validate_simulation(
         return JSONResponse(status_code=422, content={"detail": exc.safe_message})
     except Exception:
         logger.exception("Unexpected error during validation")
+        return JSONResponse(
+            status_code=500,
+            content={"detail": "Internal server error"},
+        )
+
+
+@app.post("/validate/result", response_model=ValidationResponse)
+def validate_result(body: ValidationFromResultRequest):
+    """Validate a provided simulation result against OWID data."""
+    validation_request = body.validation_request or ValidationRequest()
+    try:
+        sim_response = body.simulation_result
+        sim_result = SimulationResult(
+            year_min=sim_response.year_min,
+            year_max=sim_response.year_max,
+            dt=sim_response.dt,
+            time=sim_response.time,
+            constants_used=sim_response.constants_used,
+            series={
+                name: TimeSeriesResult(name=ts.name, values=ts.values)
+                for name, ts in sim_response.series.items()
+            },
+        )
+        service = ValidationService()
+        result = service.validate(
+            sim_result,
+            ValidationParams(
+                entity=validation_request.entity,
+                variables=validation_request.variables,
+            ),
+        )
+        return ValidationResponse.from_result(result)
+    except Exception:
+        logger.exception("Unexpected error during result validation")
         return JSONResponse(
             status_code=500,
             content={"detail": "Internal server error"},

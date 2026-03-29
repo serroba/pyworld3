@@ -448,6 +448,49 @@ def test_validate_metrics_structure():
         assert "confidence" in metric
 
 
+def test_validate_result_uses_provided_simulation_result():
+    with patch(
+        "pyworld3.application.validate.ValidationService.__init__",
+        _mock_validate_service_init,
+    ):
+        resp = client.post(
+            "/validate/result",
+            json={
+                "simulation_result": {
+                    "year_min": 1960,
+                    "year_max": 2020,
+                    "dt": 10,
+                    "time": [1960, 1970, 1980, 1990, 2000, 2010, 2020],
+                    "constants_used": {},
+                    "series": {
+                        "pop": {
+                            "name": "pop",
+                            "values": [3.0e9, 3.7e9, 4.4e9, 5.3e9, 6.1e9, 6.9e9, 7.8e9],
+                        },
+                        "le": {
+                            "name": "le",
+                            "values": [52.6, 58.8, 63.0, 65.4, 67.7, 70.6, 72.7],
+                        },
+                        "cbr": {
+                            "name": "cbr",
+                            "values": [34.9, 32.5, 28.3, 26.0, 21.5, 19.4, 17.9],
+                        },
+                        "cdr": {
+                            "name": "cdr",
+                            "values": [17.7, 12.4, 10.7, 9.4, 8.7, 7.9, 7.6],
+                        },
+                    },
+                },
+                "validation_request": {"variables": ["pop"]},
+            },
+        )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["entity"] == "World"
+    assert "metrics" in data
+    assert "pop" in data["metrics"]
+
+
 def test_year_max_less_than_year_min_returns_422():
     resp = client.post("/simulate", json={"year_min": 2000, "year_max": 1950})
     assert resp.status_code == 422

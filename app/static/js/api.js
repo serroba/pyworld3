@@ -87,14 +87,26 @@ const API = (() => {
 
     /** POST /validate */
     async validate(simRequest, { entity, variables } = {}) {
-      // The backend accepts query params for validation fields alongside a sim body.
-      // We call simulate first, then validate with the sim result context.
       return _json(
         await fetch("/validate", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             simulation_request: simRequest || {},
+            validation_request: { entity, variables },
+          }),
+        })
+      );
+    },
+
+    /** POST /validate/result */
+    async validateResult(simulationResult, { entity, variables } = {}) {
+      return _json(
+        await fetch("/validate/result", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            simulation_result: simulationResult,
             validation_request: { entity, variables },
           }),
         })

@@ -299,6 +299,13 @@ class ValidationRequest(BaseModel):
     )
 
 
+class ValidationFromResultRequest(BaseModel):
+    """Request to validate a provided simulation result against OWID data."""
+
+    simulation_result: SimulationResponse
+    validation_request: ValidationRequest | None = None
+
+
 class ValidationMetricOutput(BaseModel):
     variable: str
     owid_indicator: str
