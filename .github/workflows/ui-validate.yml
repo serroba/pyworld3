@@ -89,6 +89,7 @@ jobs:
           npm run build
           git diff --exit-code js/cli/browser-native-cli.js
           git diff --exit-code js/browser-native.js
+          git diff --exit-code js/core/calibration-core.js
           git diff --exit-code js/core/capital-sector.js
           git diff --exit-code js/core/coupled-capital-resource-runtime.js
           git diff --exit-code js/core/index.js

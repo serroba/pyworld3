@@ -85,6 +85,17 @@ const API = (() => {
       );
     },
 
+    /** POST /calibrate/data */
+    async calibrateData({ reference_year, entity, parameters } = {}) {
+      return _json(
+        await fetch("/calibrate/data", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ reference_year, entity, parameters }),
+        })
+      );
+    },
+
     /** POST /validate */
     async validate(simRequest, { entity, variables } = {}) {
       return _json(

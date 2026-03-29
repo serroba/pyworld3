@@ -72,7 +72,8 @@ const CalibrateView = (() => {
     if (applyBtn) applyBtn.style.display = "none";
 
     try {
-      const data = await API.calibrate({ reference_year: year, entity });
+      const rawData = await API.calibrateData({ reference_year: year, entity });
+      const data = CalibrationCore.calibrate(rawData);
       lastCalibration = data;
       if (statusEl) statusEl.innerHTML = "";
       if (resultsEl) renderCalibrationTable(resultsEl, data);

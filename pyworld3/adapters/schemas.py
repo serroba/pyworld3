@@ -286,6 +286,13 @@ class CalibrationResponse(BaseModel):
         )
 
 
+class CalibrationDataResponse(BaseModel):
+    reference_year: int
+    entity: str
+    indicators: dict[str, float]
+    warnings: list[str]
+
+
 class ValidationRequest(BaseModel):
     """Request to validate simulation output against OWID data."""
 

@@ -22,6 +22,7 @@ from pyworld3.domain.constants import (
 from pyworld3.domain.exceptions import SimulationValidationError
 
 from .schemas import (
+    CalibrationDataResponse,
     CalibrationRequest,
     CalibrationResponse,
     CompareMetric,
@@ -289,6 +290,28 @@ def validate_simulation(
         return JSONResponse(status_code=422, content={"detail": exc.safe_message})
     except Exception:
         logger.exception("Unexpected error during validation")
+        return JSONResponse(
+            status_code=500,
+            content={"detail": "Internal server error"},
+        )
+
+
+@app.post("/calibrate/data", response_model=CalibrationDataResponse)
+def calibrate_data(request: CalibrationRequest | None = None):
+    """Fetch raw OWID indicator values needed for calibration."""
+    if request is None:
+        request = CalibrationRequest()
+    try:
+        service = CalibrationService()
+        indicators, warnings = service.fetch_indicator_values(request.to_params())
+        return CalibrationDataResponse(
+            reference_year=request.reference_year,
+            entity=request.entity,
+            indicators=indicators,
+            warnings=warnings,
+        )
+    except Exception:
+        logger.exception("Unexpected error during calibration data fetch")
         return JSONResponse(
             status_code=500,
             content={"detail": "Internal server error"},

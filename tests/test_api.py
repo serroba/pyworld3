@@ -401,6 +401,31 @@ def test_calibrate_no_body():
     assert "constants" in data
 
 
+def test_calibrate_data_default():
+    with patch(
+        "pyworld3.application.calibrate.CalibrationService.__init__",
+        _mock_calibrate_service_init,
+    ):
+        resp = client.post("/calibrate/data", json={})
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["reference_year"] == 1970
+    assert data["entity"] == "World"
+    assert "indicators" in data
+    assert data["indicators"]["pop_total"] == 3.7e9
+
+
+def test_calibrate_data_with_parameters_fetches_needed_context():
+    with patch(
+        "pyworld3.application.calibrate.CalibrationService.__init__",
+        _mock_calibrate_service_init,
+    ):
+        resp = client.post("/calibrate/data", json={"parameters": ["p1i"]})
+    assert resp.status_code == 200
+    data = resp.json()
+    assert set(data["indicators"].keys()) == {"pop_0_14", "pop_total"}
+
+
 # --- Validate endpoint ---
 
 

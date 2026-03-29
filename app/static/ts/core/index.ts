@@ -16,6 +16,10 @@ export {
   populateAgricultureNativeSupportSeries,
 } from "./agriculture-sector.js";
 export {
+  calibrateFromIndicatorData,
+  createCalibrationCore,
+} from "./calibration-core.js";
+export {
   computeCoupledCapitalResourceSeries,
 } from "./coupled-capital-resource-runtime.js";
 export {
@@ -158,6 +162,11 @@ export {
 } from "./world3-tables.js";
 
 export type { AgricultureOrderedSeries } from "./agriculture-sector.js";
+export type {
+  CalibratedConstantOutput,
+  CalibrationDataResponse,
+  CalibrationResponse,
+} from "./calibration-core.js";
 export type {
   BrowserNativeRuntime,
   RuntimeFixtureLoader,

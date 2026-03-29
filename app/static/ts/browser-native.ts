@@ -8,6 +8,9 @@ import {
 import {
   createSimulationProvider,
 } from "./simulation-provider.js";
+import {
+  createCalibrationCore,
+} from "./core/index.js";
 
 declare global {
   interface Window {
@@ -19,6 +22,7 @@ declare global {
     resolveScenarioRequest: (
       spec: Parameters<typeof resolveScenarioRequest>[1],
     ) => ReturnType<typeof resolveScenarioRequest>;
+    CalibrationCore: ReturnType<typeof createCalibrationCore>;
   }
 }
 
@@ -26,4 +30,5 @@ window.ModelData = ModelData;
 window.buildSimulationRequestFromPreset = (name, overrides) =>
   buildSimulationRequestFromPreset(ModelData, name, overrides);
 window.resolveScenarioRequest = (spec) => resolveScenarioRequest(ModelData, spec);
+window.CalibrationCore = createCalibrationCore(ModelData);
 window.SimulationProvider = createSimulationProvider(ModelData);

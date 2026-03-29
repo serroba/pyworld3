@@ -6,6 +6,7 @@
  */
 
 export type ConstantMap = Record<string, number>;
+export type ConstantConstraintMap = Record<string, [number | null, number | null]>;
 
 export type SimulationRequest = {
   year_min?: number;
@@ -66,6 +67,7 @@ export type PresetInfo = {
 
 export type ModelDataPayload = {
   constantDefaults: ConstantMap;
+  constantConstraints: ConstantConstraintMap;
   constantMeta: Record<
     string,
     {

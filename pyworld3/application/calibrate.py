@@ -39,30 +39,28 @@ class CalibrationService:
     def __init__(self, client: OWIDClient | None = None) -> None:
         self._client = client or OWIDClient()
 
-    def calibrate(self, params: CalibrationParams) -> CalibrationResult:
-        """Calibrate World3 constants for a reference year.
-
-        Returns a CalibrationResult with calibrated values, confidence
-        levels, and any warnings encountered.
-        """
+    @staticmethod
+    def _resolve_mappings(params: CalibrationParams):
         mappings = get_calibration_mappings()
-
-        # Filter to requested parameters if specified
         if params.parameters:
             requested = set(params.parameters)
             mappings = [m for m in mappings if m.world3_param in requested]
+        return mappings
 
-        # Prefetch all needed indicator values
+    def fetch_indicator_values(
+        self, params: CalibrationParams
+    ) -> tuple[dict[str, float], list[str]]:
+        """Fetch the raw OWID indicator values needed for calibration."""
+        mappings = self._resolve_mappings(params)
+
         indicator_values: dict[str, float] = {}
         fetch_errors: list[str] = []
 
-        # Collect all indicators we need
         needed_indicators: set[str] = set()
         for mapping in mappings:
             needed_indicators.add(mapping.owid_indicator)
             needed_indicators.update(mapping.requires_indicators)
 
-        # Fetch all needed indicators
         for indicator_key in needed_indicators:
             indicator = OWID_INDICATORS.get(indicator_key)
             if indicator is None:
@@ -83,6 +81,17 @@ class CalibrationService:
                 fetch_errors.append(
                     f"No data for {indicator_key} at year={params.reference_year}"
                 )
+
+        return indicator_values, fetch_errors
+
+    def calibrate(self, params: CalibrationParams) -> CalibrationResult:
+        """Calibrate World3 constants for a reference year.
+
+        Returns a CalibrationResult with calibrated values, confidence
+        levels, and any warnings encountered.
+        """
+        mappings = self._resolve_mappings(params)
+        indicator_values, fetch_errors = self.fetch_indicator_values(params)
 
         # Apply mappings to produce calibrated constants
         constants: dict[str, CalibratedConstant] = {}
