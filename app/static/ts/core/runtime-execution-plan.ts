@@ -1,6 +1,10 @@
 import type { ConstantMap, SimulationResult } from "../simulation-contracts.js";
 import type { RuntimePreparation } from "./browser-native-runtime.js";
 import {
+  extendAgricultureSourceVariables,
+  populateAgricultureNativeSupportSeries,
+} from "./agriculture-sector.js";
+import {
   extendCapitalSourceVariables,
   populateCapitalNativeSupportSeries,
 } from "./capital-sector.js";
@@ -25,6 +29,7 @@ import type { RuntimeStateDefinition, RuntimeStateFrame } from "./runtime-state-
 
 export type RuntimeExecutionPlan = {
   readonly sourceVariables: Set<string>;
+  readonly agricultureCapabilities: ReturnType<typeof extendAgricultureSourceVariables>;
   readonly capitalCapabilities: ReturnType<typeof extendCapitalSourceVariables>;
   readonly canUseNativeNrFlow: boolean;
   readonly canUseCoupledCapitalResource: boolean;
@@ -36,6 +41,30 @@ export type RuntimeExecutionPlan = {
   readonly canUseNativeBirthSupport: boolean;
   readonly canUseNativeP1Stock: boolean;
 };
+
+const POPULATION_OUTPUTS_REQUIRING_FOOD = new Set([
+  "le",
+  "m1",
+  "m2",
+  "m3",
+  "m4",
+  "mat1",
+  "mat2",
+  "mat3",
+  "d1",
+  "d2",
+  "d3",
+  "d4",
+  "d",
+  "cdr",
+  "p1",
+  "p2",
+  "p3",
+  "p4",
+  "b",
+  "cbr",
+  "tf",
+]);
 
 export function createRuntimeExecutionPlan(
   prepared: RuntimePreparation,
@@ -67,8 +96,24 @@ export function createRuntimeExecutionPlan(
         variable !== "b" &&
         variable !== "cbr" &&
         variable !== "tf" &&
-        variable !== "p1",
+        variable !== "p1" &&
+        variable !== "f" &&
+        variable !== "fpc" &&
+        variable !== "fioaa" &&
+        variable !== "tai",
     ),
+  );
+
+  const needsNativeFoodPath = prepared.outputVariables.some((variable) =>
+    POPULATION_OUTPUTS_REQUIRING_FOOD.has(variable),
+  );
+
+  const agricultureCapabilities = extendAgricultureSourceVariables(
+    sourceVariables,
+    prepared.outputVariables,
+    fixture,
+    prepared.lookupLibrary,
+    needsNativeFoodPath,
   );
 
   const capitalCapabilities = extendCapitalSourceVariables(
@@ -98,10 +143,12 @@ export function createRuntimeExecutionPlan(
     prepared.outputVariables,
     fixture,
     prepared.lookupLibrary,
+    agricultureCapabilities.canUseNativeFoodPath,
   );
 
   return {
     sourceVariables,
+    agricultureCapabilities,
     capitalCapabilities,
     canUseNativeNrFlow,
     canUseCoupledCapitalResource:
@@ -136,27 +183,35 @@ export function applyRuntimeExecutionPlan(
     for (const [name, values] of Object.entries(coupledSeries)) {
       sourceSeries.set(name, values);
     }
-    return;
+  } else {
+    populateCapitalNativeSupportSeries(
+      sourceFrame,
+      sourceSeries,
+      prepared,
+      constantsUsed,
+      plan.capitalCapabilities.canUseNativeCapitalAllocation,
+      plan.capitalCapabilities.canUseNativeCapitalInvestment,
+      plan.capitalCapabilities.canUseNativeCapitalStocks,
+      plan.capitalCapabilities.canUseNativeCapitalVisibleOutputFormulas,
+      plan.capitalCapabilities.canUseNativeCapitalOrdering,
+    );
+
+    populateResourceNativeSupportSeries(
+      sourceFrame,
+      sourceSeries,
+      prepared,
+      constantsUsed,
+      plan.canUseNativeNrFlow,
+    );
   }
 
-  populateCapitalNativeSupportSeries(
+  populateAgricultureNativeSupportSeries(
     sourceFrame,
     sourceSeries,
     prepared,
     constantsUsed,
-    plan.capitalCapabilities.canUseNativeCapitalAllocation,
-    plan.capitalCapabilities.canUseNativeCapitalInvestment,
-    plan.capitalCapabilities.canUseNativeCapitalStocks,
-    plan.capitalCapabilities.canUseNativeCapitalVisibleOutputFormulas,
-    plan.capitalCapabilities.canUseNativeCapitalOrdering,
-  );
-
-  populateResourceNativeSupportSeries(
-    sourceFrame,
-    sourceSeries,
-    prepared,
-    constantsUsed,
-    plan.canUseNativeNrFlow,
+    plan.agricultureCapabilities.canUseNativeFoodPath,
+    plan.agricultureCapabilities.canUseNativeAgriculturalAllocation,
   );
 
   populatePopulationNativeSupportSeries(
@@ -197,7 +252,7 @@ export function applyRuntimeExecutionPlan(
     populateDerivedBufferFromDefinition(sourceFrame, sourceSeries, createBirthRateDerivedDefinition());
   }
 
-  if (sourceSeries.has("nr") && nrStateDefinition) {
+  if (!plan.canUseCoupledCapitalResource && sourceSeries.has("nr") && nrStateDefinition) {
     stepNr(nrStateDefinition);
   }
 }

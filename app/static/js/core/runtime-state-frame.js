@@ -1,4 +1,5 @@
 import { applyRuntimeExecutionPlan, createRuntimeExecutionPlan, } from "./runtime-execution-plan.js";
+import { maybePopulateAgricultureOutputSeries, } from "./agriculture-sector.js";
 import { maybePopulateCapitalOutputSeries, } from "./capital-sector.js";
 import { maybePopulatePopulationOutputSeries, } from "./population-sector.js";
 import { RESOURCE_HIDDEN_SERIES, maybePopulateResourceOutputSeries, } from "./resource-sector.js";
@@ -137,6 +138,9 @@ export function createRuntimeStateFrame(prepared, fixture) {
     }, STEPPED_SOURCE_STATE_DEFINITIONS.get("nr"));
     const series = new Map();
     for (const variable of prepared.outputVariables) {
+        if (maybePopulateAgricultureOutputSeries(variable, sourceFrame, series, fixture, projectedIndices)) {
+            continue;
+        }
         if (maybePopulateCapitalOutputSeries(variable, sourceFrame, series, fixture, projectedIndices, prepared, capitalCapabilities)) {
             continue;
         }

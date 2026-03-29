@@ -549,7 +549,7 @@ export function createCdrDerivedDefinition() {
         },
     };
 }
-export function extendPopulationSourceVariables(sourceVariables, outputVariables, fixture, lookupLibrary) {
+export function extendPopulationSourceVariables(sourceVariables, outputVariables, fixture, lookupLibrary, canUseNativeFoodPath = false) {
     const needsLifeExpectancy = outputVariables.includes("le") ||
         outputVariables.some((variable) => POPULATION_MORTALITY_OUTPUTS.includes(variable)) ||
         outputVariables.some((variable) => POPULATION_STOCK_OUTPUTS.includes(variable)) ||
@@ -558,7 +558,7 @@ export function extendPopulationSourceVariables(sourceVariables, outputVariables
         outputVariables.some((variable) => POPULATION_BIRTH_OUTPUTS.includes(variable));
     const canUseNativeLifeExpectancy = needsLifeExpectancy &&
         Boolean(fixture.series.pop) &&
-        Boolean(fixture.series.fpc) &&
+        (Boolean(fixture.series.fpc) || canUseNativeFoodPath) &&
         Boolean(fixture.series.iopc) &&
         Boolean(fixture.series.sopc) &&
         Boolean(fixture.series.ppolx) &&
@@ -573,7 +573,9 @@ export function extendPopulationSourceVariables(sourceVariables, outputVariables
         Boolean(lookupLibrary?.has("LMP"));
     if (canUseNativeLifeExpectancy) {
         sourceVariables.add("pop");
-        sourceVariables.add("fpc");
+        if (!canUseNativeFoodPath) {
+            sourceVariables.add("fpc");
+        }
         sourceVariables.add("iopc");
         sourceVariables.add("sopc");
         sourceVariables.add("ppolx");

@@ -773,6 +773,7 @@ export function extendPopulationSourceVariables(
   outputVariables: string[],
   fixture: SimulationResult,
   lookupLibrary?: Map<string, LookupInterpolator>,
+  canUseNativeFoodPath = false,
 ): {
   canUseNativeLifeExpectancy: boolean;
   canUseNativeMortality: boolean;
@@ -812,7 +813,7 @@ export function extendPopulationSourceVariables(
   const canUseNativeLifeExpectancy =
     needsLifeExpectancy &&
     Boolean(fixture.series.pop) &&
-    Boolean(fixture.series.fpc) &&
+    (Boolean(fixture.series.fpc) || canUseNativeFoodPath) &&
     Boolean(fixture.series.iopc) &&
     Boolean(fixture.series.sopc) &&
     Boolean(fixture.series.ppolx) &&
@@ -828,7 +829,9 @@ export function extendPopulationSourceVariables(
 
   if (canUseNativeLifeExpectancy) {
     sourceVariables.add("pop");
-    sourceVariables.add("fpc");
+    if (!canUseNativeFoodPath) {
+      sourceVariables.add("fpc");
+    }
     sourceVariables.add("iopc");
     sourceVariables.add("sopc");
     sourceVariables.add("ppolx");

@@ -5,6 +5,9 @@ import {
   createRuntimeExecutionPlan,
 } from "./runtime-execution-plan.js";
 import {
+  maybePopulateAgricultureOutputSeries,
+} from "./agriculture-sector.js";
+import {
   maybePopulateCapitalOutputSeries,
 } from "./capital-sector.js";
 import {
@@ -277,6 +280,17 @@ export function createRuntimeStateFrame(
 
   const series = new Map<string, Float64Array>();
   for (const variable of prepared.outputVariables) {
+    if (
+      maybePopulateAgricultureOutputSeries(
+        variable,
+        sourceFrame,
+        series,
+        fixture,
+        projectedIndices,
+      )
+    ) {
+      continue;
+    }
     if (
       maybePopulateCapitalOutputSeries(
         variable,

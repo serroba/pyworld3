@@ -69,6 +69,83 @@ const tables: RawLookupTable[] = [
     "y.name": "CUF",
     "y.values": [0, 0.5, 1],
   },
+  {
+    sector: "Agriculture",
+    "x.name": "IOPC",
+    "x.values": [0, 100, 200],
+    "y.name": "IFPC1",
+    "y.values": [100, 200, 300],
+  },
+  {
+    sector: "Agriculture",
+    "x.name": "IOPC",
+    "x.values": [0, 100, 200],
+    "y.name": "IFPC2",
+    "y.values": [100, 200, 300],
+  },
+  {
+    sector: "Agriculture",
+    "x.name": "FPCR",
+    "x.values": [0, 1, 2],
+    "y.name": "FIOAA1",
+    "y.values": [0.1, 0.2, 0.3],
+  },
+  {
+    sector: "Agriculture",
+    "x.name": "FPCR",
+    "x.values": [0, 1, 2],
+    "y.name": "FIOAA2",
+    "y.values": [0.1, 0.2, 0.3],
+  },
+  {
+    sector: "Population",
+    "x.name": "POP",
+    "x.values": [0, 20],
+    "y.name": "FPU",
+    "y.values": [0.1, 0.1],
+  },
+  {
+    sector: "Population",
+    "x.name": "FPCR",
+    "x.values": [0, 2],
+    "y.name": "LMF",
+    "y.values": [1, 2],
+  },
+  {
+    sector: "Population",
+    "x.name": "SOPC",
+    "x.values": [0, 10],
+    "y.name": "HSAPC",
+    "y.values": [1, 1],
+  },
+  {
+    sector: "Population",
+    "x.name": "EHSPC",
+    "x.values": [0, 10],
+    "y.name": "LMHS1",
+    "y.values": [1, 1],
+  },
+  {
+    sector: "Population",
+    "x.name": "EHSPC",
+    "x.values": [0, 10],
+    "y.name": "LMHS2",
+    "y.values": [1, 1],
+  },
+  {
+    sector: "Population",
+    "x.name": "IOPC",
+    "x.values": [0, 100],
+    "y.name": "CMI",
+    "y.values": [0, 0],
+  },
+  {
+    sector: "Population",
+    "x.name": "PPOLX",
+    "x.values": [0, 1],
+    "y.name": "LMP",
+    "y.values": [1, 1],
+  },
 ];
 
 describe("browser-native runtime", () => {
@@ -177,6 +254,67 @@ describe("browser-native runtime", () => {
         nrfr: { name: "nrfr", values: [1, 0.9, 0.8] },
       },
     });
+  });
+
+  test("derives life expectancy through agriculture-backed fpc when fixture fpc is missing", async () => {
+    const runtime = createFixtureBackedRuntime(
+      ModelData,
+      async () => tables,
+      async () => ({
+        year_min: 1900,
+        year_max: 1901,
+        dt: 1,
+        time: [1900, 1901],
+        constants_used: {
+          len: 20,
+          sfpc: 100,
+          lfh: 0.7,
+          pl: 0.1,
+        },
+        series: {
+          pop: { name: "pop", values: [10, 10] },
+          al: { name: "al", values: [10, 10] },
+          ly: { name: "ly", values: [200, 200] },
+          iopc: { name: "iopc", values: [100, 100] },
+          sopc: { name: "sopc", values: [5, 5] },
+          ppolx: { name: "ppolx", values: [0.5, 0.5] },
+        },
+      }),
+    );
+
+    await expect(
+      runtime.simulateStandardRun({
+        year_min: 1900,
+        year_max: 1901,
+        dt: 1,
+        output_variables: ["le"],
+      }),
+    ).resolves.toMatchObject({
+      year_min: 1900,
+      year_max: 1901,
+      dt: 1,
+      time: [1900, 1901],
+      constants_used: {
+        len: 20,
+        sfpc: 100,
+        lfh: 0.7,
+        pl: 0.1,
+      },
+      series: {
+        le: { name: "le" },
+      },
+    });
+
+    const result = await runtime.simulateStandardRun({
+      year_min: 1900,
+      year_max: 1901,
+      dt: 1,
+      output_variables: ["le"],
+    });
+    expect(result.series.le?.values).toEqual([
+      expect.closeTo(32.6, 10),
+      expect.closeTo(32.6, 10),
+    ]);
   });
 
   test("derives iopc natively through the runtime projection seam", async () => {

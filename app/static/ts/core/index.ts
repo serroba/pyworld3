@@ -1,4 +1,15 @@
 export {
+  AGRICULTURE_HIDDEN_SERIES,
+  createFioaaDerivedDefinition,
+  createFoodDerivedDefinition,
+  createFoodPerCapitaDerivedDefinition,
+  createIfpcDerivedDefinition,
+  createTaiDerivedDefinition,
+  extendAgricultureSourceVariables,
+  maybePopulateAgricultureOutputSeries,
+  populateAgricultureNativeSupportSeries,
+} from "./agriculture-sector.js";
+export {
   computeCoupledCapitalResourceSeries,
 } from "./coupled-capital-resource-runtime.js";
 export {
