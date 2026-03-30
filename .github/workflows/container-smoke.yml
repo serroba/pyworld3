@@ -43,7 +43,7 @@ jobs:
         run: |
           curl -sf http://localhost:8000/js/browser-native.js > /dev/null
           curl -sf http://localhost:8000/css/variables.css > /dev/null
-          curl -sf http://localhost:8000/data/standard-run-explore.json > /dev/null
+          curl -sf http://localhost:8000/data/functions-table-world3.json > /dev/null
 
       - name: Container logs on failure
         if: failure()

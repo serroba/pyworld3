@@ -92,21 +92,15 @@ jobs:
           git diff --exit-code js/browser-native.js
           git diff --exit-code js/i18n.js
           git diff --exit-code js/core/calibration-core.js
-          git diff --exit-code js/core/capital-sector.js
-          git diff --exit-code js/core/coupled-capital-resource-runtime.js
           git diff --exit-code js/core/index.js
           git diff --exit-code js/core/browser-native-runtime.js
           git diff --exit-code js/core/local-simulation-core.js
           git diff --exit-code js/core/owid-data.js
-          git diff --exit-code js/core/population-sector.js
-          git diff --exit-code js/core/resource-sector.js
-          git diff --exit-code js/core/runtime-execution-plan.js
-          git diff --exit-code js/core/runtime-state-frame.js
           git diff --exit-code js/core/runtime-primitives.js
           git diff --exit-code js/core/simulation-artifacts.js
-          git diff --exit-code js/core/simulation-results.js
           git diff --exit-code js/core/validation-core.js
           git diff --exit-code js/core/world3-core.js
+          git diff --exit-code js/core/world3-simulation.js
           git diff --exit-code js/core/world3-tables.js
           git diff --exit-code js/model-data.js
           git diff --exit-code js/simulation-contracts.js
