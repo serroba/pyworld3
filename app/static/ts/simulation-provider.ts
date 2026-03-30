@@ -1,8 +1,5 @@
 /**
- * Simulation provider seam.
- *
- * Local/browser-native execution is the default implementation. HTTP remains
- * available as an explicit compatibility override.
+ * Simulation provider seam for browser-native execution.
  */
 
 import {
@@ -17,7 +14,7 @@ import {
 } from "./core/index.js";
 import type { LocalSimulationLoader, RawLookupTable } from "./core/index.js";
 
-export type ProviderMode = "http" | "local";
+export type ProviderMode = "local";
 
 export type SimulationProviderApi = {
   mode: ProviderMode;
@@ -35,56 +32,16 @@ export type SimulationProviderApi = {
   ) => Promise<CompareResult>;
 };
 
-type HttpApi = {
-  simulatePreset: (
-    name: string,
-    overrides?: SimulationRequest,
-  ) => Promise<SimulationResult>;
-  simulate: (
-    request?: SimulationRequest,
-    options?: { signal?: AbortSignal },
-  ) => Promise<SimulationResult>;
-  compare: (
-    scenarioA: ScenarioSpec,
-    scenarioB?: ScenarioSpec,
-  ) => Promise<CompareResult>;
-};
-
 declare global {
   interface Window {
     SimulationProvider: SimulationProviderApi;
-    __PYWORLD3_PROVIDER_MODE__?: ProviderMode;
-    API?: HttpApi;
   }
 }
-
-const HttpSimulationProvider: SimulationProviderApi = {
-  mode: "http",
-
-  async simulatePreset(name, overrides) {
-    return getApi().simulatePreset(name, overrides);
-  },
-
-  async simulate(request, options) {
-    return getApi().simulate(request, options);
-  },
-
-  async compare(scenarioA, scenarioB) {
-    return getApi().compare(scenarioA, scenarioB);
-  },
-};
 
 const LOCAL_STANDARD_RUN_FIXTURE_URL = "/data/standard-run-explore.json";
 const WORLD3_TABLES_URL = "/data/functions-table-world3.json";
 let localStandardRunFixturePromise: Promise<SimulationResult> | null = null;
 let world3TablesPromise: Promise<RawLookupTable[]> | null = null;
-
-function getApi(): HttpApi {
-  if (!window.API) {
-    throw new Error("HTTP API client is not available on window.");
-  }
-  return window.API;
-}
 
 async function loadLocalStandardRunFixture(
   signal?: AbortSignal,
@@ -161,19 +118,10 @@ function createLocalSimulationProvider(
   };
 }
 
-function resolveProviderMode(): ProviderMode {
-  return window.__PYWORLD3_PROVIDER_MODE__ === "http" ? "http" : "local";
-}
-
 export function createSimulationProvider(
   modelData: ModelDataPayload,
 ): SimulationProviderApi {
-  return resolveProviderMode() === "local"
-    ? createLocalSimulationProvider(modelData)
-    : HttpSimulationProvider;
+  return createLocalSimulationProvider(modelData);
 }
 
-export const SimulationProvider =
-  resolveProviderMode() === "local"
-    ? null
-    : HttpSimulationProvider;
+export const SimulationProvider = null;

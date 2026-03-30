@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
+
 import type { SimulationProviderApi } from "../ts/simulation-provider.ts";
 
 type MockSimulationResult = {
@@ -9,22 +10,6 @@ type MockSimulationResult = {
   constants_used: Record<string, number>;
   series: Record<string, { name: string; values: number[] }>;
 };
-
-function createApiMock() {
-  return {
-    simulatePreset: vi.fn<SimulationProviderApi["simulatePreset"]>(),
-    simulate: vi.fn<SimulationProviderApi["simulate"]>(),
-    compare: vi.fn<SimulationProviderApi["compare"]>(),
-  };
-}
-
-type ApiMock = ReturnType<typeof createApiMock>;
-
-type TestWindow = Window &
-  typeof globalThis & {
-    API?: ApiMock;
-    SimulationProvider?: SimulationProviderApi;
-  };
 
 const world3TablesFixture = [
   {
@@ -53,6 +38,11 @@ const fixture: MockSimulationResult = {
   },
 };
 
+type TestWindow = Window &
+  typeof globalThis & {
+    SimulationProvider?: SimulationProviderApi;
+  };
+
 function mockLocalFetch() {
   vi.mocked(globalThis.fetch).mockImplementation(async (input) => {
     if (input === "/data/functions-table-world3.json") {
@@ -66,6 +56,24 @@ function mockLocalFetch() {
       return {
         ok: true,
         json: async () => fixture,
+      } as Response;
+    }
+
+    if (input === "/data/owid-world-data.json") {
+      return {
+        ok: true,
+        json: async () => ({
+          entities: {
+            World: {
+              indicators: {
+                pop_total: {
+                  years: [1970],
+                  values: [3.7e9],
+                },
+              },
+            },
+          },
+        }),
       } as Response;
     }
 
@@ -84,14 +92,12 @@ async function loadProviderSuite() {
 
 describe("simulation provider", () => {
   beforeEach(() => {
-    Reflect.deleteProperty(window, "__PYWORLD3_PROVIDER_MODE__");
     Reflect.deleteProperty(window, "SimulationProvider");
     Reflect.deleteProperty(window, "resolveScenarioRequest");
-    (window as TestWindow).API = createApiMock();
     globalThis.fetch = vi.fn();
   });
 
-  test("defaults to the local provider and loads browser assets", async () => {
+  test("always creates the local provider", async () => {
     mockLocalFetch();
     const { ModelData, createSimulationProvider } = await loadProviderSuite();
     const simulationProvider = createSimulationProvider(ModelData);
@@ -102,91 +108,20 @@ describe("simulation provider", () => {
     expect(result).toEqual(fixture);
   });
 
-  test("delegates API calls in explicit HTTP mode", async () => {
-    window.__PYWORLD3_PROVIDER_MODE__ = "http";
-    const api = (window as TestWindow).API!;
-    api.simulatePreset.mockResolvedValue(fixture);
-    const { ModelData, createSimulationProvider } = await loadProviderSuite();
-    const simulationProvider = createSimulationProvider(ModelData);
-
-    const result = await simulationProvider.simulatePreset("standard-run");
-
-    expect(simulationProvider.mode).toBe("http");
-    expect(api.simulatePreset).toHaveBeenCalledWith(
-      "standard-run",
-      undefined,
-    );
-    expect(result).toEqual(fixture);
-  });
-
-  test("delegates generic simulate and compare calls in explicit HTTP mode", async () => {
-    window.__PYWORLD3_PROVIDER_MODE__ = "http";
-    const api = (window as TestWindow).API!;
-    api.simulate.mockResolvedValue(fixture);
-    api.compare.mockResolvedValue({
-      scenario_a: "standard-run",
-      scenario_b: "custom",
-      results_a: fixture,
-      results_b: fixture,
-      metrics: [],
-    });
-    const signal = new AbortController().signal;
-
-    const { ModelData, createSimulationProvider } = await loadProviderSuite();
-    const simulationProvider = createSimulationProvider(ModelData);
-
-    await expect(
-      simulationProvider.simulate({ output_variables: ["pop"] }, { signal }),
-    ).resolves.toEqual(fixture);
-    await expect(
-      simulationProvider.compare(
-        { preset: "standard-run" },
-        { request: { year_max: 2050 } },
-      ),
-    ).resolves.toEqual({
-      scenario_a: "standard-run",
-      scenario_b: "custom",
-      results_a: fixture,
-      results_b: fixture,
-      metrics: [],
-    });
-
-    expect(api.simulate).toHaveBeenCalledWith(
-      { output_variables: ["pop"] },
-      { signal },
-    );
-    expect(api.compare).toHaveBeenCalledWith(
-      { preset: "standard-run" },
-      { request: { year_max: 2050 } },
-    );
-  });
-
   test("serves the local standard-run fixture and caches the fetch", async () => {
-    window.__PYWORLD3_PROVIDER_MODE__ = "local";
-    vi.mocked(globalThis.fetch)
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => world3TablesFixture,
-      } as Response)
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => fixture,
-      } as Response);
-
+    mockLocalFetch();
     const { ModelData, createSimulationProvider } = await loadProviderSuite();
     const simulationProvider = createSimulationProvider(ModelData);
 
     const first = await simulationProvider.simulatePreset("standard-run");
     const second = await simulationProvider.simulate();
 
-    expect(simulationProvider.mode).toBe("local");
     expect(globalThis.fetch).toHaveBeenCalledTimes(2);
     expect(first).toEqual(fixture);
     expect(second).toEqual(fixture);
   });
 
   test("passes through an abort signal for the local fixture fetch", async () => {
-    window.__PYWORLD3_PROVIDER_MODE__ = "local";
     vi.mocked(globalThis.fetch)
       .mockResolvedValueOnce({
         ok: true,
@@ -217,7 +152,6 @@ describe("simulation provider", () => {
   });
 
   test("supports local preset execution beyond the standard run", async () => {
-    window.__PYWORLD3_PROVIDER_MODE__ = "local";
     mockLocalFetch();
     const { ModelData, createSimulationProvider } = await loadProviderSuite();
     const simulationProvider = createSimulationProvider(ModelData);
@@ -237,7 +171,6 @@ describe("simulation provider", () => {
   });
 
   test("supports local simulate requests with explicit overrides", async () => {
-    window.__PYWORLD3_PROVIDER_MODE__ = "local";
     mockLocalFetch();
     const { ModelData, createSimulationProvider } = await loadProviderSuite();
     const simulationProvider = createSimulationProvider(ModelData);
@@ -257,7 +190,6 @@ describe("simulation provider", () => {
   });
 
   test("supports local preset constant overrides", async () => {
-    window.__PYWORLD3_PROVIDER_MODE__ = "local";
     mockLocalFetch();
     const { ModelData, createSimulationProvider } = await loadProviderSuite();
     const simulationProvider = createSimulationProvider(ModelData);
@@ -278,7 +210,6 @@ describe("simulation provider", () => {
   });
 
   test("supports local compare requests after resolving their shapes", async () => {
-    window.__PYWORLD3_PROVIDER_MODE__ = "local";
     mockLocalFetch();
     const { ModelData, createSimulationProvider, resolveScenarioRequest } =
       await loadProviderSuite();
@@ -324,7 +255,6 @@ describe("simulation provider", () => {
   });
 
   test("retries the local fixture fetch after a failed response", async () => {
-    window.__PYWORLD3_PROVIDER_MODE__ = "local";
     vi.mocked(globalThis.fetch)
       .mockResolvedValueOnce({
         ok: true,
@@ -352,23 +282,14 @@ describe("simulation provider", () => {
   });
 
   test("browser-native bridge populates window globals", async () => {
-    window.__PYWORLD3_PROVIDER_MODE__ = "local";
-    vi.mocked(globalThis.fetch)
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => world3TablesFixture,
-      } as Response)
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => fixture,
-      } as Response);
-
+    mockLocalFetch();
     const { ModelData } = await loadProviderSuite();
 
     expect(window.ModelData).toBe(ModelData);
     expect(window.buildSimulationRequestFromPreset("standard-run")).toEqual({});
     await expect(
-      window.SimulationProvider.simulatePreset("standard-run"),
+      (window as TestWindow).SimulationProvider?.simulatePreset("standard-run") ??
+        Promise.reject(new Error("SimulationProvider unavailable")),
     ).resolves.toEqual(fixture);
   });
 });

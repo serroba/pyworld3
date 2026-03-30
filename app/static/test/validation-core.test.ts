@@ -99,4 +99,31 @@ describe("validation core", () => {
     expect(result.overlap_start).toBe(simulationResult.year_min);
     expect(result.overlap_end).toBe(simulationResult.year_max);
   });
+
+  test("aligns observed points to the actual overlapping simulation range", () => {
+    const narrowSimulation: SimulationResult = {
+      ...simulationResult,
+      year_min: 1980,
+      year_max: 2000,
+      time: [1980, 1990, 2000],
+      series: {
+        pop: {
+          name: "pop",
+          values: [4.4e9, 5.3e9, 6.1e9],
+        },
+      },
+    };
+
+    const result = validateSimulationResult(narrowSimulation, validationData, {
+      entity: "World",
+      variables: ["pop"],
+    });
+
+    expect(result.metrics.pop).toBeDefined();
+    expect(result.metrics.pop?.n_points).toBe(3);
+    expect(result.metrics.pop?.overlap_years).toEqual([1980, 2000]);
+    expect(result.overlap_start).toBe(1980);
+    expect(result.overlap_end).toBe(2000);
+    expect(result.metrics.pop?.rmse).toBe(0);
+  });
 });

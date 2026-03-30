@@ -1,32 +1,11 @@
 /**
- * Simulation provider seam.
- *
- * Local/browser-native execution is the default implementation. HTTP remains
- * available as an explicit compatibility override.
+ * Simulation provider seam for browser-native execution.
  */
 import { createWorld3Core, } from "./core/index.js";
-const HttpSimulationProvider = {
-    mode: "http",
-    async simulatePreset(name, overrides) {
-        return getApi().simulatePreset(name, overrides);
-    },
-    async simulate(request, options) {
-        return getApi().simulate(request, options);
-    },
-    async compare(scenarioA, scenarioB) {
-        return getApi().compare(scenarioA, scenarioB);
-    },
-};
 const LOCAL_STANDARD_RUN_FIXTURE_URL = "/data/standard-run-explore.json";
 const WORLD3_TABLES_URL = "/data/functions-table-world3.json";
 let localStandardRunFixturePromise = null;
 let world3TablesPromise = null;
-function getApi() {
-    if (!window.API) {
-        throw new Error("HTTP API client is not available on window.");
-    }
-    return window.API;
-}
 async function loadLocalStandardRunFixture(signal) {
     if (!localStandardRunFixturePromise) {
         const init = {};
@@ -83,14 +62,7 @@ function createLocalSimulationProvider(modelData) {
         compare: localCore.compare,
     };
 }
-function resolveProviderMode() {
-    return window.__PYWORLD3_PROVIDER_MODE__ === "http" ? "http" : "local";
-}
 export function createSimulationProvider(modelData) {
-    return resolveProviderMode() === "local"
-        ? createLocalSimulationProvider(modelData)
-        : HttpSimulationProvider;
+    return createLocalSimulationProvider(modelData);
 }
-export const SimulationProvider = resolveProviderMode() === "local"
-    ? null
-    : HttpSimulationProvider;
+export const SimulationProvider = null;

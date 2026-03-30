@@ -28,7 +28,6 @@ const owidDataset = {
 describe("browser native bridge", () => {
   beforeEach(() => {
     vi.resetModules();
-    Reflect.deleteProperty(window, "__PYWORLD3_PROVIDER_MODE__");
     Reflect.deleteProperty(window, "ModelData");
     Reflect.deleteProperty(window, "CalibrationCore");
     Reflect.deleteProperty(window, "ValidationCore");

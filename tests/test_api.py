@@ -258,7 +258,7 @@ def test_static_model_data_served():
 def test_static_simulation_provider_served():
     resp = client.get("/js/simulation-provider.js")
     assert resp.status_code == 200
-    assert "const HttpSimulationProvider" in resp.text
+    assert 'mode: "local"' in resp.text
     assert "createSimulationProvider" in resp.text
 
 

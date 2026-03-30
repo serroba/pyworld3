@@ -2,7 +2,6 @@ export default [
   {
     files: [
       "js/app.js",
-      "js/api.js",
       "js/charts.js",
       "js/math-explainers.js",
       "js/model-sections.js",
@@ -34,7 +33,7 @@ export default [
     },
     rules: {
       "no-unused-vars": ["warn", {
-        varsIgnorePattern: "^(API|State|Router|UI|Charts|ModelData|SimulationProvider|buildSimulationRequestFromPreset|resolveScenarioRequest|IntroView|ExploreView|CompareView|AdvancedView|_)",
+        varsIgnorePattern: "^(State|Router|UI|Charts|ModelData|SimulationProvider|buildSimulationRequestFromPreset|resolveScenarioRequest|IntroView|ExploreView|CompareView|AdvancedView|_)",
         caughtErrorsIgnorePattern: "^_",
       }],
       eqeqeq: "warn",
@@ -61,7 +60,7 @@ export default [
     },
     rules: {
       "no-unused-vars": ["warn", {
-        varsIgnorePattern: "^(ModelData|SimulationProvider|HttpSimulationProvider|LOCAL_STANDARD_RUN_FIXTURE_URL|LOCAL_PROVIDER_ERROR|_)",
+        varsIgnorePattern: "^(ModelData|SimulationProvider|LOCAL_STANDARD_RUN_FIXTURE_URL|LOCAL_PROVIDER_ERROR|_)",
         caughtErrorsIgnorePattern: "^_",
       }],
       eqeqeq: "warn",
