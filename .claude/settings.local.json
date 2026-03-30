@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls -1 /Users/sebastian/projects/world3/pyworld3/domain/*.py)",
+      "Bash(xargs -I {} basename {})",
+      "Bash(ls -1 /Users/sebastian/projects/world3/pyworld3/application/*.py)",
+      "Bash(wc -l /Users/sebastian/projects/world3/app/static/ts/core/*.ts)",
+      "Bash(npm run:*)",
+      "Bash(npm test:*)",
+      "Bash(npm install:*)",
+      "Bash(./node_modules/.bin/tsc -p tsconfig.build.json)",
+      "Bash(node -e \":*)",
+      "Bash(git commit:*)",
+      "Bash(git stash:*)",
+      "Bash(git pull:*)",
+      "Bash(ls:*)"
+    ]
+  }
+}

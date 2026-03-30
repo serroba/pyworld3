@@ -759,6 +759,7 @@ export function extendPopulationSourceVariables(
   lookupLibrary?: Map<string, LookupInterpolator>,
   canUseNativeFoodPath = false,
   canUseNativePollutionPath = false,
+  canUseNativeCapitalOrdering = false,
 ): {
   canUseNativeLifeExpectancy: boolean;
   canUseNativeMortality: boolean;
@@ -800,7 +801,7 @@ export function extendPopulationSourceVariables(
     Boolean(fixture.series.pop) &&
     (Boolean(fixture.series.fpc) || canUseNativeFoodPath) &&
     Boolean(fixture.series.iopc) &&
-    Boolean(fixture.series.sopc) &&
+    (Boolean(fixture.series.sopc) || canUseNativeCapitalOrdering) &&
     (Boolean(fixture.series.ppolx) || canUseNativePollutionPath) &&
     fixture.constants_used.len !== undefined &&
     fixture.constants_used.sfpc !== undefined &&

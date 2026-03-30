@@ -875,6 +875,190 @@ describe("population sector core", () => {
     }
   });
 
+  test("enables native life expectancy when sopc is absent but capital ordering is available", () => {
+    const sourceVariables = new Set<string>();
+    const prepared = prepareRuntime(
+      ModelData,
+      { output_variables: ["le"] },
+      tables,
+    );
+    const fixtureWithoutSopc: SimulationResult = {
+      ...fixture,
+      series: {
+        pop: fixture.series.pop!,
+        fpc: fixture.series.fpc!,
+        iopc: fixture.series.iopc!,
+        ppolx: fixture.series.ppolx!,
+        le: fixture.series.le!,
+      },
+    };
+
+    const result = extendPopulationSourceVariables(
+      sourceVariables,
+      prepared.outputVariables,
+      fixtureWithoutSopc,
+      prepared.lookupLibrary,
+      false,
+      false,
+      true,
+    );
+
+    expect(result.canUseNativeLifeExpectancy).toBe(true);
+    expect(sourceVariables.has("sopc")).toBe(true);
+  });
+
+  test("changing len constant affects native le output", () => {
+    const prepared = prepareRuntime(
+      ModelData,
+      { year_min: 1900, year_max: 1902, dt: 1, output_variables: ["le"] },
+      tables,
+    );
+    const sourceSeries = new Map<string, Float64Array>([
+      ["pop", Float64Array.from([10, 14, 18])],
+      ["fpc", Float64Array.from([230, 276, 322])],
+      ["iopc", Float64Array.from([10, 10, 10])],
+      ["sopc", Float64Array.from([10, 10, 10])],
+      ["ppolx", Float64Array.from([1, 1, 1])],
+    ]);
+    const baseConstants = { ...fixture.constants_used };
+    const sourceFrame: RuntimeStateFrame = {
+      request: prepared.request,
+      time: Float64Array.from(prepared.time),
+      constantsUsed: baseConstants,
+      series: sourceSeries,
+    };
+
+    populatePopulationNativeSupportSeries(
+      sourceFrame,
+      sourceSeries,
+      prepared,
+      baseConstants,
+      true,
+      true,
+      false,
+      false,
+    );
+    const baseLeValues = Array.from(sourceSeries.get("le") ?? []);
+
+    const altSeries = new Map<string, Float64Array>([
+      ["pop", Float64Array.from([10, 14, 18])],
+      ["fpc", Float64Array.from([230, 276, 322])],
+      ["iopc", Float64Array.from([10, 10, 10])],
+      ["sopc", Float64Array.from([10, 10, 10])],
+      ["ppolx", Float64Array.from([1, 1, 1])],
+    ]);
+    const altConstants = { ...fixture.constants_used, len: 40 };
+    const altFrame: RuntimeStateFrame = {
+      request: prepared.request,
+      time: Float64Array.from(prepared.time),
+      constantsUsed: altConstants,
+      series: altSeries,
+    };
+
+    populatePopulationNativeSupportSeries(
+      altFrame,
+      altSeries,
+      prepared,
+      altConstants,
+      true,
+      true,
+      false,
+      false,
+    );
+    const altLeValues = Array.from(altSeries.get("le") ?? []);
+
+    expect(altLeValues[0]!).not.toBeCloseTo(baseLeValues[0]!, 2);
+    expect(altLeValues[0]!).toBeGreaterThan(baseLeValues[0]!);
+  });
+
+  test("changing p1i constant affects native pop output via cohort stocks", () => {
+    const prepared = prepareRuntime(
+      ModelData,
+      { year_min: 1900, year_max: 1902, dt: 1, output_variables: ["p1", "b", "cbr", "tf", "pop"] },
+      tables,
+    );
+    const baseSourceSeries = new Map<string, Float64Array>([
+      ["pop", Float64Array.from([10, 14, 18])],
+      ["p1", Float64Array.from([1, 2, 3])],
+      ["p2", Float64Array.from([2, 3, 4])],
+      ["p3", Float64Array.from([3, 4, 5])],
+      ["p4", Float64Array.from([4, 5, 6])],
+      ["fpc", Float64Array.from([230, 276, 322])],
+      ["iopc", Float64Array.from([10, 10, 10])],
+      ["sopc", Float64Array.from([10, 10, 10])],
+      ["ppolx", Float64Array.from([1, 1, 1])],
+    ]);
+    const baseFrame: RuntimeStateFrame = {
+      request: prepared.request,
+      time: Float64Array.from(prepared.time),
+      constantsUsed: deathFixture.constants_used,
+      series: baseSourceSeries,
+    };
+
+    populatePopulationNativeSupportSeries(
+      baseFrame,
+      baseSourceSeries,
+      prepared,
+      deathFixture.constants_used,
+      true,
+      true,
+      true,
+      true,
+    );
+
+    populatePopulationBirthNativeSupportSeries(
+      baseFrame,
+      baseSourceSeries,
+      prepared,
+      deathFixture.constants_used,
+      true,
+    );
+
+    const basePop = Array.from(baseFrame.series.get("pop") ?? []);
+
+    const altSourceSeries = new Map<string, Float64Array>([
+      ["pop", Float64Array.from([10, 14, 18])],
+      ["p1", Float64Array.from([5, 6, 7])],
+      ["p2", Float64Array.from([2, 3, 4])],
+      ["p3", Float64Array.from([3, 4, 5])],
+      ["p4", Float64Array.from([4, 5, 6])],
+      ["fpc", Float64Array.from([230, 276, 322])],
+      ["iopc", Float64Array.from([10, 10, 10])],
+      ["sopc", Float64Array.from([10, 10, 10])],
+      ["ppolx", Float64Array.from([1, 1, 1])],
+    ]);
+    const altFrame: RuntimeStateFrame = {
+      request: prepared.request,
+      time: Float64Array.from(prepared.time),
+      constantsUsed: deathFixture.constants_used,
+      series: altSourceSeries,
+    };
+
+    populatePopulationNativeSupportSeries(
+      altFrame,
+      altSourceSeries,
+      prepared,
+      deathFixture.constants_used,
+      true,
+      true,
+      true,
+      true,
+    );
+
+    populatePopulationBirthNativeSupportSeries(
+      altFrame,
+      altSourceSeries,
+      prepared,
+      deathFixture.constants_used,
+      true,
+    );
+
+    const altPop = Array.from(altFrame.series.get("pop") ?? []);
+
+    expect(altPop[1]!).not.toBeCloseTo(basePop[1]!, 2);
+    expect(altPop[1]!).toBeGreaterThan(basePop[1]!);
+  });
+
   test("publishes native cohort outputs and pop from the runtime frame", () => {
     const sourceFrame: RuntimeStateFrame = {
       request: { year_min: 1900, year_max: 1902, dt: 1 },
