@@ -96,4 +96,31 @@ describe("World3 coupled simulation", () => {
   test("nrfr starts at 1.0", () => {
     expect(result.series.nrfr!.values[0]).toBeCloseTo(1.0, 5);
   });
+
+  test("throws when a required constant is missing", () => {
+    const incompleteConstants = { ...ModelData.constantDefaults };
+    delete (incompleteConstants as Record<string, unknown>).nri;
+    expect(() =>
+      simulateWorld3({
+        yearMin: 1900,
+        yearMax: 1901,
+        dt: 1,
+        constants: incompleteConstants,
+        rawTables: tables,
+      }),
+    ).toThrow("Missing constant");
+  });
+
+  test("overriding constants produces different results", () => {
+    const modified = simulateWorld3({
+      yearMin: 1900,
+      yearMax: 2100,
+      dt: 0.5,
+      constants: { ...ModelData.constantDefaults, len: 40 },
+      rawTables: tables,
+    });
+    const baseLE = result.series.le!.values;
+    const modLE = modified.series.le!.values;
+    expect(modLE[200]).not.toBeCloseTo(baseLE[200]!, 1);
+  });
 });
