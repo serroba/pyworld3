@@ -36,18 +36,24 @@ jobs:
       - name: Run BAU simulation with summary and SVG plot
         run: |
           cd app/static
-          npm run browser-native:cli -- --summary > ../../sim_summary.txt
-          npm run browser-native:cli -- --plot-svg ../../world3_bau.svg
+          npm run -s browser-native:cli -- --summary > ../../sim_summary.txt
+          npm run -s browser-native:cli -- --plot-svg ../../world3_bau.svg
 
       - name: Commit plot to branch
+        id: publish_plot
         run: |
           mkdir -p .github/assets
           cp world3_bau.svg .github/assets/simulation-bau.svg
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add .github/assets/simulation-bau.svg
-          git diff --cached --quiet && echo "No changes to commit" || \
-            git commit -m "Update BAU simulation plot [skip ci]" && git push
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Update BAU simulation plot [skip ci]"
+            git push
+          fi
+          echo "asset_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Post PR comment with inline image
         uses: actions/github-script@v7
@@ -57,9 +63,9 @@ jobs:
             const { owner, repo } = context.repo;
             const prNumber = context.payload.pull_request.number;
             const sha = context.sha.substring(0, 7);
-            const branch = context.payload.pull_request.head.ref;
+            const assetSha = '${{ steps.publish_plot.outputs.asset_sha }}';
 
-            const imgUrl = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/.github/assets/simulation-bau.svg`;
+            const imgUrl = `https://raw.githubusercontent.com/${owner}/${repo}/${assetSha}/.github/assets/simulation-bau.svg`;
             const summary = fs.readFileSync('sim_summary.txt', 'utf8');
 
             const body = [
