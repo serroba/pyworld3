@@ -228,6 +228,8 @@ export function createI18n(options: I18nOptions = {}): I18nApi {
       const translated = t(key, undefined, node.textContent ?? "");
       if (attr) {
         node.setAttribute(attr, translated);
+      } else if (node.dataset.i18nHtml === "true") {
+        node.innerHTML = translated;
       } else {
         node.textContent = translated;
       }

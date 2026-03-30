@@ -14,6 +14,52 @@ const ModelView = (() => {
   // Helpers
   // -------------------------------------------------------------------------
 
+  function localizeSection(section) {
+    const baseKey = `model.section.${section.id}`;
+    return {
+      ...section,
+      question: I18n.t(`${baseKey}.question`, undefined, section.question),
+      shortLabel: I18n.t(`${baseKey}.shortLabel`, undefined, section.shortLabel),
+      summary: I18n.t(`${baseKey}.summary`, undefined, section.summary),
+      concepts: (section.concepts || []).map((concept, index) => ({
+        ...concept,
+        term: I18n.t(`${baseKey}.concepts.${index}.term`, undefined, concept.term),
+        definition: I18n.t(
+          `${baseKey}.concepts.${index}.definition`,
+          undefined,
+          concept.definition,
+        ),
+      })),
+      equations: section.equations
+        ? {
+            ...section.equations,
+            preamble: I18n.t(
+              `${baseKey}.equations.preamble`,
+              undefined,
+              section.equations.preamble,
+            ),
+            feedback: I18n.t(
+              `${baseKey}.equations.feedback`,
+              undefined,
+              section.equations.feedback,
+            ),
+            items: section.equations.items.map((item, index) => ({
+              ...item,
+              label: I18n.t(
+                `${baseKey}.equations.items.${index}.label`,
+                undefined,
+                item.label,
+              ),
+            })),
+          }
+        : undefined,
+      sources: (section.sources || []).map((source, index) => ({
+        ...source,
+        text: I18n.t(`${baseKey}.sources.${index}.text`, undefined, source.text),
+      })),
+    };
+  }
+
   function buildConceptsBlock(concepts) {
     const wrap = UI.el("div", "model-concepts");
     concepts.forEach((c) => {
@@ -168,46 +214,47 @@ const ModelView = (() => {
   // -------------------------------------------------------------------------
 
   function buildSectionDOM(section) {
+    const localizedSection = localizeSection(section);
     const card = UI.el("div", "model-section card");
-    card.id = "section-" + section.id;
+    card.id = "section-" + localizedSection.id;
 
     // Question title
-    const h3 = UI.el("h3", "model-section__question", section.question);
+    const h3 = UI.el("h3", "model-section__question", localizedSection.question);
     card.appendChild(h3);
 
     // Plain English summary
-    const summary = UI.el("p", "model-section__summary", section.summary);
+    const summary = UI.el("p", "model-section__summary", localizedSection.summary);
     card.appendChild(summary);
 
     // Concept definitions
-    if (section.concepts && section.concepts.length > 0) {
-      card.appendChild(buildConceptsBlock(section.concepts));
+    if (localizedSection.concepts && localizedSection.concepts.length > 0) {
+      card.appendChild(buildConceptsBlock(localizedSection.concepts));
     }
 
     // Mini chart placeholder (lazy-loaded)
     const chartPlaceholder = UI.el("div", "model-chart-placeholder");
-    chartPlaceholder.setAttribute("data-section-id", section.id);
+    chartPlaceholder.setAttribute("data-section-id", localizedSection.id);
     const chartWrap = UI.el("div", "chart-container chart-container--mini");
     const canvas = document.createElement("canvas");
-    canvas.id = "model-chart-" + section.id;
+    canvas.id = "model-chart-" + localizedSection.id;
     chartWrap.appendChild(canvas);
     chartPlaceholder.appendChild(chartWrap);
     card.appendChild(chartPlaceholder);
 
     // Level 2: Equations
-    if (section.equations) {
-      const eqBlock = buildEquationsBlock(section.equations);
+    if (localizedSection.equations) {
+      const eqBlock = buildEquationsBlock(localizedSection.equations);
 
       // Level 3 (nested): Starting values
-      const constBlock = buildConstantsBlock(section);
+      const constBlock = buildConstantsBlock(localizedSection);
       if (constBlock) eqBlock.appendChild(constBlock);
 
       card.appendChild(eqBlock);
     }
 
     // Sources
-    if (section.sources && section.sources.length > 0) {
-      card.appendChild(buildSourcesBlock(section.sources));
+    if (localizedSection.sources && localizedSection.sources.length > 0) {
+      card.appendChild(buildSourcesBlock(localizedSection.sources));
     }
 
     return card;
@@ -290,13 +337,13 @@ const ModelView = (() => {
     list.className = "ack__list";
 
     const refs = [
-      { text: "Meadows, D.\u00a0H., Meadows, D.\u00a0L., Randers, J. & Behrens, W.\u00a0W. \u2014 The Limits to Growth (1972)", url: null },
-      { text: "Meadows, D.\u00a0L., Behrens, W.\u00a0W., Meadows, D.\u00a0H., Naill, R.\u00a0F., Randers, J. & Zahn, E. \u2014 Dynamics of Growth in a Finite World (1974)", url: null },
-      { text: "Meadows, D.\u00a0H., Randers, J. & Meadows, D.\u00a0L. \u2014 Limits to Growth: The 30-Year Update (2005)", url: null },
-      { text: "Vanwynsberghe, C. \u2014 PyWorld3 (2021)", url: "https://github.com/cvanwynsberghe/pyworld3" },
-      { text: "Nebel, A., Kling, A., Willamowski, R. & Schell, T. \u2014 PyWorld3-03 recalibration (2024)", url: "https://doi.org/10.1111/jiec.13442" },
-      { text: "Our World in Data \u2014 validation proxies", url: "https://ourworldindata.org" },
-      { text: "serroba/world3 \u2014 this project", url: "https://github.com/serroba/world3" },
+      { text: I18n.t("model.references.items.0", undefined, "Meadows, D.\u00a0H., Meadows, D.\u00a0L., Randers, J. & Behrens, W.\u00a0W. \u2014 The Limits to Growth (1972)"), url: null },
+      { text: I18n.t("model.references.items.1", undefined, "Meadows, D.\u00a0L., Behrens, W.\u00a0W., Meadows, D.\u00a0H., Naill, R.\u00a0F., Randers, J. & Zahn, E. \u2014 Dynamics of Growth in a Finite World (1974)"), url: null },
+      { text: I18n.t("model.references.items.2", undefined, "Meadows, D.\u00a0H., Randers, J. & Meadows, D.\u00a0L. \u2014 Limits to Growth: The 30-Year Update (2005)"), url: null },
+      { text: I18n.t("model.references.items.3", undefined, "Vanwynsberghe, C. \u2014 PyWorld3 (2021)"), url: "https://github.com/cvanwynsberghe/pyworld3" },
+      { text: I18n.t("model.references.items.4", undefined, "Nebel, A., Kling, A., Willamowski, R. & Schell, T. \u2014 PyWorld3-03 recalibration (2024)"), url: "https://doi.org/10.1111/jiec.13442" },
+      { text: I18n.t("model.references.items.5", undefined, "Our World in Data \u2014 validation proxies"), url: "https://ourworldindata.org" },
+      { text: I18n.t("model.references.items.6", undefined, "serroba/world3 \u2014 this project"), url: "https://github.com/serroba/world3" },
     ];
 
     refs.forEach((ref) => {
@@ -350,9 +397,14 @@ const ModelView = (() => {
   function renderNavPills(container) {
     container.innerHTML = "";
     MODEL_SECTIONS.forEach((section) => {
-      const pill = UI.el("button", "pill", section.shortLabel || section.question);
+      const localizedSection = localizeSection(section);
+      const pill = UI.el(
+        "button",
+        "pill",
+        localizedSection.shortLabel || localizedSection.question,
+      );
       pill.addEventListener("click", () => {
-        document.getElementById("section-" + section.id)
+        document.getElementById("section-" + localizedSection.id)
           ?.scrollIntoView({ behavior: "smooth" });
       });
       container.appendChild(pill);

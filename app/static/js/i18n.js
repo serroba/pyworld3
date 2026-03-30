@@ -158,6 +158,9 @@ export function createI18n(options = {}) {
             if (attr) {
                 node.setAttribute(attr, translated);
             }
+            else if (node.dataset.i18nHtml === "true") {
+                node.innerHTML = translated;
+            }
             else {
                 node.textContent = translated;
             }

@@ -67,6 +67,14 @@ test.describe("spanish localization", () => {
     await expect(page.locator(".chart-view-toggle")).toContainText("Gráfico clásico único");
     await expect(page.locator(".chart-panel__title")).toContainText("Vista clásica de World3");
   });
+
+  test("uses spanish browser locale for content as well as chrome", async ({ page }) => {
+    await page.goto("/#intro");
+    await expect(page).toHaveTitle("World3 — Explorador de Simulación de Sistemas");
+    await expect(page.locator("nav.site-nav")).toContainText("Explorar");
+    await expect(page.locator("#view-intro .hero")).toContainText("En 1972, un equipo de investigadores del MIT");
+    await expect(page.locator("#view-intro .ack")).toContainText("Los límites del crecimiento");
+  });
 });
 
 test("persists a manual language choice across reloads", async ({ page }) => {
