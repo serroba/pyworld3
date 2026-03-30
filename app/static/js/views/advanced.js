@@ -2,8 +2,7 @@
  * Advanced view — constant editor with accordion sections + auto-simulation.
  *
  * Moving any slider (or changing a number input) automatically triggers a
- * debounced simulation.  The "Run simulation" button bypasses the debounce
- * for an immediate run.
+ * debounced simulation (400 ms).
  */
 
 const AdvancedView = (() => {
@@ -378,14 +377,6 @@ const AdvancedView = (() => {
     const chartsEl = document.getElementById("advanced-charts");
     if (chartsEl) renderChartGrid(chartsEl);
     renderViewToggle(document.getElementById("advanced-view-controls"));
-
-    const runBtn = document.getElementById("advanced-run");
-    if (runBtn) {
-      runBtn.onclick = () => {
-        clearTimeout(debounceTimer);
-        runSimulation();
-      };
-    }
 
     const compareBtn = document.getElementById("advanced-compare");
     if (compareBtn) {

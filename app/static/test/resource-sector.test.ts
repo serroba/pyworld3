@@ -52,6 +52,36 @@ const fixture: SimulationResult = {
 };
 
 describe("resource sector core", () => {
+  test("canUseNativeNrFlow is true when fixture has nrfr+nri but not nr", () => {
+    const sourceVariables = new Set<string>();
+    const prepared = prepareRuntime(
+      ModelData,
+      { output_variables: ["nrfr"] },
+      tables,
+    );
+
+    const nrfrOnlyFixture: SimulationResult = {
+      ...fixture,
+      series: {
+        pop: { name: "pop", values: [10, 12, 14, 16, 18] },
+        iopc: { name: "iopc", values: [1, 1.5, 2, 2.5, 3] },
+        nrfr: { name: "nrfr", values: [1, 0.95, 0.9, 0.85, 0.8] },
+      },
+    };
+
+    const result = extendResourceSourceVariables(
+      sourceVariables,
+      prepared.outputVariables,
+      nrfrOnlyFixture,
+      prepared.lookupLibrary,
+      false,
+    );
+
+    expect(result.canUseNativeNrFlow).toBe(true);
+    expect(sourceVariables.has("nr")).toBe(true);
+    expect(sourceVariables.has("pop")).toBe(true);
+  });
+
   test("extends runtime source requirements for resource outputs", () => {
     const sourceVariables = new Set<string>();
     const prepared = prepareRuntime(

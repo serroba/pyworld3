@@ -1852,4 +1852,45 @@ describe("runtime state frame", () => {
 
     expect(Array.from(derivedSeries.get("nrfr") ?? [])).toEqual([1, 0.9, 0.8]);
   });
+
+  test("synthesizes nr from nrfr * nri when fixture lacks nr", () => {
+    const nrfrOnlyFixture: SimulationResult = {
+      year_min: 1900,
+      year_max: 1902,
+      dt: 1,
+      time: [1900, 1901, 1902],
+      constants_used: { nri: 100, nruf1: 1, nruf2: 0.5 },
+      series: {
+        pop: { name: "pop", values: [10, 14, 18] },
+        iopc: { name: "iopc", values: [1, 2, 3] },
+        nrfr: { name: "nrfr", values: [1, 0.9, 0.8] },
+      },
+    };
+
+    const prepared = prepareRuntime(
+      ModelData,
+      {
+        year_min: 1900,
+        year_max: 1902,
+        dt: 1,
+        output_variables: ["nrfr"],
+        constants: { nri: 50 },
+      },
+      tables,
+    );
+
+    const frame = createRuntimeStateFrame(prepared, nrfrOnlyFixture);
+    const result = runtimeStateFrameToSimulationResult(frame);
+
+    // With halved nri, nrfr values should differ from the fixture
+    expect(result.series.nrfr).toBeDefined();
+    const nrfrValues = result.series.nrfr!.values;
+    expect(nrfrValues.length).toBe(3);
+    // First value: nr_initial was nrfr[0] * nri_fixture = 1 * 100 = 100
+    // With new nri = 50, nrfr[0] = 100 / 50 = 2.0 (double the original)
+    expect(nrfrValues[0]).toBeCloseTo(2.0, 4);
+    // Subsequent values should also differ from the original 0.9, 0.8
+    expect(nrfrValues[1]).not.toBeCloseTo(0.9, 2);
+    expect(nrfrValues[2]).not.toBeCloseTo(0.8, 2);
+  });
 });

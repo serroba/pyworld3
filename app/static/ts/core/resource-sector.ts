@@ -243,9 +243,13 @@ export function extendResourceSourceVariables(
     sourceVariables.add("nr");
   }
 
+  const hasNrSource =
+    Boolean(fixture.series.nr) ||
+    (Boolean(fixture.series.nrfr) && Boolean(fixture.constants_used?.nri));
+
   const canUseNativeNrFlow =
     sourceVariables.has("nr") &&
-    Boolean(fixture.series.nr) &&
+    hasNrSource &&
     Boolean(fixture.series.pop) &&
     (Boolean(fixture.series.iopc) || canUseNativeCapitalOrdering) &&
     lookupLibrary.has("PCRUM");

@@ -108,10 +108,19 @@ export function createRuntimeStateFrame(prepared, fixture) {
     const sourceSeries = new Map();
     for (const variable of sourceVariables) {
         if (variable === "nr" && !fixture.series.nr) {
-            if (fixture.series.nrfr &&
-                !prepared.outputVariables.includes("nr") &&
-                !prepared.outputVariables.includes("fcaor")) {
-                continue;
+            if (fixture.series.nrfr) {
+                const fixtureNri = fixture.constants_used?.nri;
+                if (fixtureNri && fixtureNri !== 0) {
+                    // Synthesize nr from nrfr * nri so the re-derivation pipeline works
+                    const nrfrValues = fixture.series.nrfr.values;
+                    const syntheticNrValues = nrfrValues.map((v) => v * fixtureNri);
+                    sourceSeries.set("nr", projectSeriesValues(syntheticNrValues, projectedIndices, "nr"));
+                    continue;
+                }
+                if (!prepared.outputVariables.includes("nr") &&
+                    !prepared.outputVariables.includes("fcaor")) {
+                    continue;
+                }
             }
             throw new Error("Fixture-backed runtime cannot derive 'nrfr' because the source variable 'nr' is missing.");
         }

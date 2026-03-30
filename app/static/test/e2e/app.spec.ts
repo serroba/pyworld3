@@ -34,7 +34,6 @@ test("compare view renders metrics without a backend", async ({ page }) => {
 
 test("advanced, calibrate, and validate flows render locally", async ({ page }) => {
   await page.goto("/#advanced");
-  await page.click("#advanced-run");
   await page.waitForSelector("#advanced-charts canvas");
 
   await page.goto("/#calibrate");
