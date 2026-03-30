@@ -130,6 +130,75 @@ function interpolateAt(
   return result;
 }
 
+type AlignedSeries = {
+  years: number[];
+  observedValues: number[];
+  simulatedValues: number[];
+};
+
+function alignObservedAndSimulatedSeries(
+  simulationYears: number[],
+  simulationValues: number[],
+  observedYears: number[],
+  observedValues: number[],
+): AlignedSeries {
+  if (
+    simulationYears.length === 0 ||
+    simulationValues.length === 0 ||
+    observedYears.length === 0 ||
+    observedValues.length === 0
+  ) {
+    return { years: [], observedValues: [], simulatedValues: [] };
+  }
+
+  const simulationStart = simulationYears[0]!;
+  const simulationEnd = simulationYears.at(-1) ?? simulationStart;
+  const overlappingYears: number[] = [];
+  const overlappingObservedValues: number[] = [];
+
+  for (let index = 0; index < observedYears.length; index += 1) {
+    const observedYear = observedYears[index];
+    const observedValue = observedValues[index];
+    if (observedYear === undefined || observedValue === undefined) {
+      continue;
+    }
+    if (observedYear < simulationStart || observedYear > simulationEnd) {
+      continue;
+    }
+    overlappingYears.push(observedYear);
+    overlappingObservedValues.push(observedValue);
+  }
+
+  if (overlappingYears.length === 0) {
+    return { years: [], observedValues: [], simulatedValues: [] };
+  }
+
+  const simulatedValuesAtOverlap = interpolateAt(
+    simulationYears,
+    simulationValues,
+    overlappingYears,
+  );
+
+  if (simulatedValuesAtOverlap.length !== overlappingYears.length) {
+    const alignedLength = Math.min(
+      overlappingYears.length,
+      overlappingObservedValues.length,
+      simulatedValuesAtOverlap.length,
+    );
+    return {
+      years: overlappingYears.slice(0, alignedLength),
+      observedValues: overlappingObservedValues.slice(0, alignedLength),
+      simulatedValues: simulatedValuesAtOverlap.slice(0, alignedLength),
+    };
+  }
+
+  return {
+    years: overlappingYears,
+    observedValues: overlappingObservedValues,
+    simulatedValues: simulatedValuesAtOverlap,
+  };
+}
+
 function computeRmse(predicted: number[], observed: number[]): number {
   const n = Math.min(predicted.length, observed.length);
   if (n === 0) {
@@ -226,21 +295,22 @@ export function validateSimulationResult(
       continue;
     }
 
-    const observedValues = observedSeries.values.map((value) =>
+    const transformedObservedValues = observedSeries.values.map((value) =>
       mapping.transform ? mapping.transform(value) : value,
     );
-    const simulatedValues = interpolateAt(result.time, series.values, observedSeries.years);
-    if (simulatedValues.length === 0) {
+    const alignedSeries = alignObservedAndSimulatedSeries(
+      result.time,
+      series.values,
+      observedSeries.years,
+      transformedObservedValues,
+    );
+    if (alignedSeries.years.length === 0) {
       warnings.push(`Skipping ${mapping.world3Param}: no overlapping data points`);
       continue;
     }
 
-    const start = observedSeries.years[0];
-    if (start === undefined) {
-      warnings.push(`Skipping ${mapping.world3Param}: no local validation years available`);
-      continue;
-    }
-    const end = observedSeries.years.at(-1) ?? start;
+    const start = alignedSeries.years[0]!;
+    const end = alignedSeries.years.at(-1) ?? start;
     overlapStart = Math.min(overlapStart, start);
     overlapEnd = Math.max(overlapEnd, end);
 
@@ -250,10 +320,13 @@ export function validateSimulationResult(
       confidence: mapping.confidence,
       description: mapping.description,
       overlap_years: [start, end],
-      n_points: Math.min(simulatedValues.length, observedValues.length),
-      rmse: computeRmse(simulatedValues, observedValues),
-      mape: computeMape(simulatedValues, observedValues) / 100,
-      correlation: computeCorrelation(simulatedValues, observedValues),
+      n_points: alignedSeries.years.length,
+      rmse: computeRmse(alignedSeries.simulatedValues, alignedSeries.observedValues),
+      mape: computeMape(alignedSeries.simulatedValues, alignedSeries.observedValues) / 100,
+      correlation: computeCorrelation(
+        alignedSeries.simulatedValues,
+        alignedSeries.observedValues,
+      ),
     };
   }
 
