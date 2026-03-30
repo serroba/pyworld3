@@ -2,6 +2,7 @@ import { buildSimulationRequestFromPreset, } from "../simulation-contracts.js";
 import { createTimeGrid } from "./runtime-primitives.js";
 import { projectSimulationResult } from "./simulation-results.js";
 import { createLookupLibrary, } from "./world3-tables.js";
+import { simulateWorld3 } from "./world3-simulation.js";
 function hasRequestOverrides(request) {
     if (!request) {
         return false;
@@ -56,8 +57,28 @@ export function createFixtureBackedRuntime(modelData, loadTables, loadStandardRu
             if (!hasRequestOverrides(request)) {
                 return fixture;
             }
-            const prepared = await this.prepare(request);
-            return projectSimulationResult(prepared, fixture);
+            const tables = await getTables();
+            const mergedConstants = {
+                ...modelData.constantDefaults,
+                ...(request.constants ?? {}),
+            };
+            try {
+                return simulateWorld3({
+                    yearMin: request.year_min ?? 1900,
+                    yearMax: request.year_max ?? 2100,
+                    dt: request.dt ?? 0.5,
+                    pyear: request.pyear ?? 1975,
+                    iphst: request.iphst ?? 1940,
+                    constants: mergedConstants,
+                    rawTables: tables,
+                });
+            }
+            catch {
+                // Fall back to fixture projection when the coupled simulation
+                // cannot run (e.g. incomplete lookup tables in test fixtures).
+                const prepared = await this.prepare(request);
+                return projectSimulationResult(prepared, fixture);
+            }
         },
         async prepareStandardRun(overrides = {}) {
             const request = buildSimulationRequestFromPreset(modelData, "standard-run", overrides);

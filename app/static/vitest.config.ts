@@ -16,6 +16,7 @@ export default defineConfig({
         "ts/core/runtime-primitives.ts",
         "ts/core/simulation-artifacts.ts",
         "ts/core/world3-core.ts",
+        "ts/core/world3-simulation.ts",
         "ts/core/world3-tables.ts",
         "ts/simulation-contracts.ts",
         "ts/simulation-provider.ts",
