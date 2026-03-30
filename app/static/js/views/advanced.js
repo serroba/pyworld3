@@ -32,6 +32,7 @@ const AdvancedView = (() => {
   let latestResult = null;
   let currentViewMode = VIEW_MODES.combined;
   let runSequence = 0;
+  let isChartsLoading = false;
 
   /** Compute a sensible slider range from a default value. */
   function sliderRange(defaultVal) {
@@ -51,6 +52,7 @@ const AdvancedView = (() => {
   // ---------------------------------------------------------------------------
 
   function setChartsLoading(loading) {
+    isChartsLoading = loading;
     document.querySelectorAll("#advanced-charts .chart-loading-overlay")
       .forEach((el) => el.classList.toggle("active", loading));
   }
@@ -61,7 +63,10 @@ const AdvancedView = (() => {
 
   function ensureBaselineResult() {
     if (!baselineResultPromise) {
-      baselineResultPromise = SimulationProvider.simulatePreset("standard-run");
+      baselineResultPromise = SimulationProvider.simulatePreset("standard-run").catch((err) => {
+        baselineResultPromise = null;
+        throw err;
+      });
     }
     return baselineResultPromise;
   }
@@ -199,6 +204,7 @@ const AdvancedView = (() => {
   // ---------------------------------------------------------------------------
 
   function renderChartGrid(container) {
+    container.querySelectorAll("canvas").forEach((canvas) => Charts.destroy(canvas));
     container.innerHTML = "";
     activeChartGroups().forEach((group) => {
       const panel = UI.el(
@@ -245,15 +251,21 @@ const AdvancedView = (() => {
     ].forEach(([mode, text]) => {
       const button = UI.el("button", "chart-view-toggle__button", text);
       if (mode === currentViewMode) button.classList.add("active");
-      button.addEventListener("click", () => {
+      button.addEventListener("click", async () => {
         if (mode === currentViewMode) return;
         currentViewMode = mode;
         const chartsEl = document.getElementById("advanced-charts");
+        const statusEl = document.getElementById("advanced-status");
         renderViewToggle(container);
         if (chartsEl) {
           renderChartGrid(chartsEl);
+          setChartsLoading(isChartsLoading);
           if (latestResult) {
-            renderChartResults(latestResult);
+            try {
+              await renderChartResults(latestResult);
+            } catch (err) {
+              if (statusEl) UI.showError(statusEl, err.message);
+            }
           }
         }
       });
@@ -264,21 +276,31 @@ const AdvancedView = (() => {
   }
 
   async function renderChartResults(result) {
-    const baseline = await ensureBaselineResult();
-    const baselineLabel = I18n.labelForPreset("standard-run", "Standard run");
+    let baseline = null;
+    try {
+      baseline = await ensureBaselineResult();
+    } catch (_err) {
+      baseline = null;
+    }
+
     const editedLabel = I18n.t("nav.advanced");
 
     activeChartGroups().forEach((group) => {
       const canvas = document.getElementById(group.id);
       if (!canvas) return;
-      Charts.renderCompare(
-        canvas,
-        baseline,
-        result,
-        group.vars,
-        baselineLabel,
-        editedLabel
-      );
+      if (baseline) {
+        const baselineLabel = I18n.labelForPreset("standard-run", "Standard run");
+        Charts.renderCompare(
+          canvas,
+          baseline,
+          result,
+          group.vars,
+          baselineLabel,
+          editedLabel
+        );
+        return;
+      }
+      Charts.renderSingle(canvas, result.time, result.series, group.vars);
     });
   }
 
