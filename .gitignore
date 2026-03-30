@@ -21,6 +21,7 @@ node_modules/
 .coverage
 htmlcov/
 app/static/coverage/
+app/static/test-results/
 
 # pdf files
 *.pdf
