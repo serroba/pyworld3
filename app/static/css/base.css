@@ -102,6 +102,7 @@ img {
 
   .advanced-workbench__preview {
     order: 2;
+    align-self: stretch;
   }
 
   .advanced-workbench__editor {
