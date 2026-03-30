@@ -182,6 +182,93 @@ function getStoredLocale(storage: StorageLike | null): string {
   }
 }
 
+const ALLOWED_TRANSLATION_TAGS = new Set(["A", "EM", "STRONG", "CODE", "BR"]);
+const ALLOWED_TRANSLATION_ATTRS = new Map<string, ReadonlySet<string>>([
+  ["A", new Set(["href", "target", "rel"])],
+]);
+const LOCALIZED_TAG_PATTERN = /<(\/?)(a|em|strong|code|br)([^>]*)>/gi;
+const LOCALIZED_ATTR_PATTERN = /(\w+)="([^"]*)"/g;
+
+function appendLocalizedHtml(
+  doc: Document,
+  node: HTMLElement,
+  translated: string,
+) {
+  node.replaceChildren();
+  const stack: HTMLElement[] = [];
+  let currentParent: Node = node;
+  let cursor = 0;
+
+  const appendText = (value: string) => {
+    if (!value) {
+      return;
+    }
+    currentParent.appendChild(doc.createTextNode(value));
+  };
+
+  for (const match of translated.matchAll(LOCALIZED_TAG_PATTERN)) {
+    const rawTag = match[0] ?? "";
+    const slash = match[1] ?? "";
+    const rawTagName = match[2] ?? "";
+    const rawAttrs = match[3] ?? "";
+    const matchIndex = match.index ?? 0;
+    appendText(translated.slice(cursor, matchIndex));
+    cursor = matchIndex + rawTag.length;
+
+    const tagName = rawTagName.toUpperCase();
+    if (!ALLOWED_TRANSLATION_TAGS.has(tagName)) {
+      appendText(rawTag);
+      continue;
+    }
+
+    if (tagName === "BR" && !slash) {
+      currentParent.appendChild(doc.createElement("br"));
+      continue;
+    }
+
+    if (slash) {
+      while (stack.length > 0) {
+        const last = stack.pop()!;
+        currentParent = stack.at(-1) ?? node;
+        if (last.tagName.toUpperCase() === tagName) {
+          break;
+        }
+      }
+      continue;
+    }
+
+    const safeElement = doc.createElement(tagName.toLowerCase());
+    const allowedAttrs = ALLOWED_TRANSLATION_ATTRS.get(tagName) ?? new Set<string>();
+    let attrMatch: RegExpExecArray | null;
+    LOCALIZED_ATTR_PATTERN.lastIndex = 0;
+    while ((attrMatch = LOCALIZED_ATTR_PATTERN.exec(rawAttrs)) !== null) {
+      const rawAttrName = attrMatch[1] ?? "";
+      const rawAttrValue = attrMatch[2] ?? "";
+      const attrName = rawAttrName.toLowerCase();
+      if (!allowedAttrs.has(attrName)) {
+        continue;
+      }
+
+      const attrValue = rawAttrValue.trim();
+      if (tagName === "A" && attrName === "href") {
+        if (!/^https?:\/\//i.test(attrValue)) {
+          continue;
+        }
+        safeElement.setAttribute(attrName, attrValue);
+        continue;
+      }
+
+      safeElement.setAttribute(attrName, attrValue);
+    }
+
+    currentParent.appendChild(safeElement);
+    stack.push(safeElement);
+    currentParent = safeElement;
+  }
+
+  appendText(translated.slice(cursor));
+}
+
 export function createI18n(options: I18nOptions = {}): I18nApi {
   const doc = options.document ?? document;
   const storage = options.storage ?? localStorage;
@@ -228,6 +315,8 @@ export function createI18n(options: I18nOptions = {}): I18nApi {
       const translated = t(key, undefined, node.textContent ?? "");
       if (attr) {
         node.setAttribute(attr, translated);
+      } else if (node.dataset.i18nHtml === "true") {
+        appendLocalizedHtml(doc, node, translated);
       } else {
         node.textContent = translated;
       }

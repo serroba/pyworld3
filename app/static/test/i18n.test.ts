@@ -133,6 +133,7 @@ describe("i18n", () => {
     document.body.innerHTML = [
       '<button data-i18n="nav.home">Home</button>',
       '<a data-i18n="brand.home_aria" data-i18n-attr="aria-label"></a>',
+      '<p data-i18n="intro.body_1_html" data-i18n-html="true"></p>',
     ].join("");
     const i18n = createI18n({
       storage: makeStorage(),
@@ -141,6 +142,7 @@ describe("i18n", () => {
         "meta.title": "World3",
         "nav.home": "Accueil",
         "brand.home_aria": "Accueil World3",
+        "intro.body_1_html": "Bonjour <strong>monde</strong>",
         "preset.standard-run.name": "Exécution standard",
         "preset.standard-run.description": "Description locale",
         "variable.pop": "Population totale",
@@ -155,6 +157,7 @@ describe("i18n", () => {
 
     expect(document.querySelector("[data-i18n='nav.home']")?.textContent).toBe("Accueil");
     expect(document.querySelector("[data-i18n='brand.home_aria']")?.getAttribute("aria-label")).toBe("Accueil World3");
+    expect(document.querySelector("[data-i18n='intro.body_1_html']")?.innerHTML).toBe("Bonjour <strong>monde</strong>");
     expect(i18n.labelForPreset("standard-run", "Standard run")).toBe("Exécution standard");
     expect(i18n.descriptionForPreset("standard-run", "")).toBe("Description locale");
     expect(i18n.labelForVariable("pop", "Population")).toBe("Population totale");
@@ -162,6 +165,25 @@ describe("i18n", () => {
     expect(i18n.labelForSector("Population", "Population")).toBe("Population");
     expect(i18n.labelForConfidence("high", "High")).toBe("Élevée");
     expect(i18n.getSupportedLocales().some((locale) => locale.code === "ar")).toBe(true);
+  });
+
+  test("sanitizes localized html content before rendering", async () => {
+    document.body.innerHTML = '<p data-i18n="intro.body_1_html" data-i18n-html="true"></p>';
+    const i18n = createI18n({
+      storage: makeStorage(),
+      getNavigatorLanguages: () => ["en"],
+      catalogLoader: async () => ({
+        "meta.title": "World3",
+        "intro.body_1_html": 'Safe <strong>copy</strong> <a href="javascript:alert(1)" onclick="alert(2)">bad</a> <a href="https://example.com" target="_blank" rel="noopener">good</a>',
+      }),
+    });
+
+    await i18n.init();
+
+    const paragraph = document.querySelector("[data-i18n='intro.body_1_html']") as HTMLParagraphElement;
+    expect(paragraph.innerHTML).toBe(
+      'Safe <strong>copy</strong> <a>bad</a> <a href="https://example.com" target="_blank" rel="noopener">good</a>',
+    );
   });
 
   test("returns fallback keys for missing message helpers", async () => {

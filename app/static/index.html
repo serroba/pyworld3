@@ -45,14 +45,14 @@
     <div id="view-intro" class="view">
       <div class="hero">
         <h1 data-i18n="intro.hero_title">What happens to civilization by 2100?</h1>
-        <p>
+        <p data-i18n="intro.body_1_html" data-i18n-html="true">
           In 1972, a team of researchers at MIT built <strong>World3</strong> — a computer
           model that simulates how population, industrial output, food production, pollution,
           and natural resources interact over time. Their findings, published in
           <em>The Limits to Growth</em>, showed that business-as-usual leads to overshoot
           and decline.
         </p>
-        <p>
+        <p data-i18n="intro.body_2_html" data-i18n-html="true">
           This tool lets you explore those scenarios yourself. Pick a preset to see what
           happens under different assumptions about technology, policy, and resources — or
           tweak individual parameters in the Advanced editor.
@@ -67,13 +67,13 @@
       <footer class="ack">
         <h2 class="section-title" data-i18n="intro.acknowledgments">Acknowledgments</h2>
         <ul class="ack__list">
-          <li>Meadows, D.&nbsp;L., Behrens, W.&nbsp;W., Meadows, D.&nbsp;H., Naill, R.&nbsp;F., Randers, J. &amp; Zahn, E. — <em>Dynamics of Growth in a Finite World</em> (1974)</li>
-          <li>Meadows, D.&nbsp;H., Meadows, D.&nbsp;L., Randers, J. &amp; Behrens, W.&nbsp;W. — <em>The Limits to Growth</em> (1972)</li>
-          <li>Meadows, D.&nbsp;H., Randers, J. &amp; Meadows, D.&nbsp;L. — <em>Limits to Growth: The 30-Year Update</em> (2005)</li>
-          <li>Vanwynsberghe, C. — original open-source World3 implementation lineage referenced by this project: <a href="https://hal.archives-ouvertes.fr/hal-03414394" target="_blank" rel="noopener">hal-03414394</a> (2021)</li>
-          <li>Nebel, A., Kling, A., Willamowski, R. &amp; Schell, T. — <a href="https://github.com/TimSchell98/PyWorld3-03" target="_blank" rel="noopener">World3-03 recalibration implementation</a> (2024)</li>
+          <li data-i18n="intro.ack.item_1_html" data-i18n-html="true">Meadows, D.&nbsp;L., Behrens, W.&nbsp;W., Meadows, D.&nbsp;H., Naill, R.&nbsp;F., Randers, J. &amp; Zahn, E. — <em>Dynamics of Growth in a Finite World</em> (1974)</li>
+          <li data-i18n="intro.ack.item_2_html" data-i18n-html="true">Meadows, D.&nbsp;H., Meadows, D.&nbsp;L., Randers, J. &amp; Behrens, W.&nbsp;W. — <em>The Limits to Growth</em> (1972)</li>
+          <li data-i18n="intro.ack.item_3_html" data-i18n-html="true">Meadows, D.&nbsp;H., Randers, J. &amp; Meadows, D.&nbsp;L. — <em>Limits to Growth: The 30-Year Update</em> (2005)</li>
+          <li data-i18n="intro.ack.item_4_html" data-i18n-html="true">Vanwynsberghe, C. — original open-source World3 implementation lineage referenced by this project: <a href="https://hal.archives-ouvertes.fr/hal-03414394" target="_blank" rel="noopener">hal-03414394</a> (2021)</li>
+          <li data-i18n="intro.ack.item_5_html" data-i18n-html="true">Nebel, A., Kling, A., Willamowski, R. &amp; Schell, T. — <a href="https://github.com/TimSchell98/PyWorld3-03" target="_blank" rel="noopener">World3-03 recalibration implementation</a> (2024)</li>
         </ul>
-        <p class="ack__licence">
+        <p class="ack__licence" data-i18n="intro.license_html" data-i18n-html="true">
           Licensed under <a href="https://opensource.org/licenses/CECILL-2.1" target="_blank" rel="noopener">CeCILL 2.1</a> (GPL-compatible).
         </p>
       </footer>
@@ -83,7 +83,7 @@
     <div id="view-model" class="view">
       <div class="hero">
         <h1 data-i18n="model.title">How does the World3 model work?</h1>
-        <p>
+        <p data-i18n="model.hero_body_html" data-i18n-html="true">
           In 1972, researchers built a computer model of civilization's trajectory.
           It tracks five things: people, industrial output, food, pollution, and
           natural resources. Below, we walk through the big questions it answers —
@@ -168,7 +168,7 @@
     <!-- CALIBRATE VIEW -->
     <div id="view-calibrate" class="view">
       <h2 class="section-title" data-i18n="calibrate.title">Calibrate &amp; Validate</h2>
-      <p class="text-muted mb-lg">
+      <p class="text-muted mb-lg" data-i18n="calibrate.intro_html" data-i18n-html="true">
         Calibrate model constants and validate simulation output against real-world
         observations from <a href="https://ourworldindata.org" target="_blank" rel="noopener">Our World in Data</a> (OWID).
       </p>
@@ -176,7 +176,7 @@
       <!-- Calibrate section -->
       <div class="card mb-lg">
         <h3 class="card__title" data-i18n="calibrate.section_title">Calibrate constants from OWID</h3>
-        <p class="card__desc mb-lg">
+        <p class="card__desc mb-lg" data-i18n="calibrate.section_desc_html" data-i18n-html="true">
           Fetches observed data from Our World in Data for the chosen entity and reference year,
           then fits World3 model constants to match the real-world observations. The table below
           shows which OWID indicator was used for each constant and how confident the mapping is.
@@ -202,7 +202,7 @@
       <!-- Validate section -->
       <div class="card mb-lg">
         <h3 class="card__title" data-i18n="validate.section_title">Validate against OWID observations</h3>
-        <p class="card__desc mb-lg">
+        <p class="card__desc mb-lg" data-i18n="validate.section_desc_html" data-i18n-html="true">
           Runs a default World3 simulation and compares each output variable against the
           corresponding OWID time series. The metrics table shows how well the simulation
           tracks observed data (RMSE, MAPE, correlation) and which OWID indicator each
