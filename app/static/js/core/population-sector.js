@@ -1,33 +1,62 @@
 const DEFAULT_HEALTH_POLICY_YEAR = 1940;
-export const POPULATION_HIDDEN_SERIES = {
+export const POPULATION_INTERNAL_SERIES = {
+    averageIndustrialOutputPerCapita: "__aiopc",
     aiopc: "__aiopc",
+    crowdingMultiplierFromIndustry: "__cmi",
     cmi: "__cmi",
+    completedMultiplierFromPerceivedLifeExpectancy: "__cmple",
     cmple: "__cmple",
+    desiredCompletedFamilySize: "__dcfs",
     dcfs: "__dcfs",
+    delayedIndustrialOutputPerCapita: "__diopc",
     diopc: "__diopc",
+    effectiveHealthServicesPerCapita: "__ehspc",
     ehspc: "__ehspc",
+    fertilityControlAllocationPerCapita: "__fcapc",
     fcapc: "__fcapc",
+    fertilityControlEffectiveness: "__fce",
     fce: "__fce",
+    fertilityControlFractionOfNeed: "__fcfpc",
     fcfpc: "__fcfpc",
+    familyIncomeExpectation: "__fie",
     fie: "__fie",
+    familyResponseMultiplier: "__fm",
     fm: "__fm",
+    familyResponseToSocialNorm: "__frsn",
     frsn: "__frsn",
+    familySizeAdjustmentFromFertilityControl: "__fsafc",
     fsafc: "__fsafc",
+    populationUrbanFraction: "__fpu",
     fpu: "__fpu",
+    healthServicesAllocationPerCapita: "__hsapc",
     hsapc: "__hsapc",
+    lifeMultiplierFromCrowding: "__lmc",
     lmc: "__lmc",
+    lifeMultiplierFromFood: "__lmf",
     lmf: "__lmf",
+    lifeMultiplierFromHealthServices: "__lmhs",
     lmhs: "__lmhs",
+    lifeMultiplierFromHealthServicesBeforePolicy: "__lmhs1",
     lmhs1: "__lmhs1",
+    lifeMultiplierFromHealthServicesAfterPolicy: "__lmhs2",
     lmhs2: "__lmhs2",
+    lifeMultiplierFromPollution: "__lmp",
     lmp: "__lmp",
+    maximumTotalFertility: "__mtf",
     mtf: "__mtf",
+    needForFertilityControl: "__nfc",
     nfc: "__nfc",
+    perceivedLifeExpectancy: "__ple",
     ple: "__ple",
+    socialFamilySizeNorm: "__sfsn",
     sfsn: "__sfsn",
+    totalFertility: "__tf",
     tf: "__tf",
+    desiredTotalFertility: "__dtf",
     dtf: "__dtf",
 };
+/** @deprecated Prefer POPULATION_INTERNAL_SERIES for TypeScript-facing code. */
+export const POPULATION_HIDDEN_SERIES = POPULATION_INTERNAL_SERIES;
 const POPULATION_MORTALITY_OUTPUTS = ["m1", "m2", "m3", "m4"];
 const POPULATION_COHORT_OUTPUTS = ["mat1", "mat2", "mat3"];
 const POPULATION_DEATH_OUTPUTS = ["d1", "d2", "d3", "d4", "d", "cdr"];
@@ -510,6 +539,21 @@ export function createCdrDerivedDefinition() {
         },
     };
 }
+export const createPopulationUrbanFractionDefinition = createFpuDerivedDefinition;
+export const createLifeMultiplierFromPollutionDefinition = createLmpDerivedDefinition;
+export const createLifeMultiplierFromFoodDefinition = createLmfDerivedDefinition;
+export const createCrowdingMultiplierFromIndustryDefinition = createCmiDerivedDefinition;
+export const createHealthServicesAllocationPerCapitaDefinition = createHsapcDerivedDefinition;
+export const createHealthServicesLifeMultiplierDefinitions = createLmhsDerivedDefinitions;
+export const createLifeMultiplierFromCrowdingDefinition = createLmcDerivedDefinition;
+export const createLifeExpectancyDefinition = createLeDerivedDefinition;
+export const createAgeBandMortalityDefinition = createMortalityDerivedDefinition;
+export const createCohortMaturationDefinition = createMaturationDerivedDefinition;
+export const createAgeBandDeathsDefinition = createDeathDerivedDefinition;
+export const createTotalFertilityDefinition = createTfDerivedDefinition;
+export const createCrudeBirthRateDefinition = createBirthRateDerivedDefinition;
+export const createCrudeDeathRateDefinition = createCdrDerivedDefinition;
+export const createPopulationTotalDefinition = createPopulationSumDerivedDefinition;
 export function extendPopulationSourceVariables(sourceVariables, outputVariables, fixture, lookupLibrary, canUseNativeFoodPath = false, canUseNativePollutionPath = false) {
     const needsLifeExpectancy = outputVariables.includes("le") ||
         outputVariables.some((variable) => POPULATION_MORTALITY_OUTPUTS.includes(variable)) ||

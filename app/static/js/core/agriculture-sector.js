@@ -1,36 +1,67 @@
 import { Smooth } from "./runtime-primitives.js";
 const DEFAULT_AGRICULTURE_POLICY_YEAR = 1975;
-export const AGRICULTURE_HIDDEN_SERIES = {
+export const AGRICULTURE_INTERNAL_SERIES = {
+    agriculturalInputsPerHectare: "__aiph",
     aiph: "__aiph",
+    arableLandLife: "all",
     all: "all",
+    agriculturalLandAllocatedToInputs: "alai",
     alai: "alai",
+    currentAgriculturalInputs: "cai",
     cai: "cai",
+    developmentCostPerHectare: "dcph",
     dcph: "dcph",
+    fractionAllocatedToLandMaintenance: "falm",
     falm: "falm",
+    fractionInputsAllocatedToLandDevelopment: "fiald",
     fiald: "fiald",
+    foodRatio: "fr",
     fr: "fr",
+    indicatedFoodPerCapita: "__ifpc",
     ifpc: "__ifpc",
+    landFertilityDegradation: "lfd",
     lfd: "lfd",
+    landFertilityDegradationRate: "lfdr",
     lfdr: "lfdr",
+    landFertility: "lfert",
     lfert: "lfert",
+    landFertilityRegeneration: "lfr",
     lfr: "lfr",
+    landFertilityRegenerationTime: "lfrt",
     lfrt: "lfrt",
+    landLifeMultiplierFromYield: "llmy",
     llmy: "llmy",
+    landDevelopmentRate: "ldr",
     ldr: "ldr",
+    landErosionRate: "ler",
     ler: "ler",
+    landYieldMultiplierFromAirPollution: "__lymap",
     lymap: "__lymap",
+    landYieldMultiplierFromCapital: "__lymc",
     lymc: "__lymc",
+    landYieldFactor: "__lyf",
     lyf: "__lyf",
+    marginalProductivityOfAgriculturalInputs: "mpai",
     mpai: "mpai",
+    marginalProductivityOfLandDevelopment: "mpld",
     mpld: "mpld",
+    marginalLandYieldMultiplierFromCapital: "mlymc",
     mlymc: "mlymc",
+    perceivedFoodRatio: "pfr",
     pfr: "pfr",
+    potentiallyArableLand: "pal",
     pal: "pal",
+    urbanIndustrialLand: "uil",
     uil: "uil",
+    urbanIndustrialLandPerCapita: "uilpc",
     uilpc: "uilpc",
+    urbanIndustrialLandRequired: "uilr",
     uilr: "uilr",
+    landRemovalForUrbanIndustrialUse: "lrui",
     lrui: "lrui",
 };
+/** @deprecated Prefer AGRICULTURE_INTERNAL_SERIES for TypeScript-facing code. */
+export const AGRICULTURE_HIDDEN_SERIES = AGRICULTURE_INTERNAL_SERIES;
 function clipAtPolicyYear(beforeValue, afterValue, time, policyYear) {
     return time > policyYear ? afterValue : beforeValue;
 }
@@ -109,6 +140,14 @@ export function createFoodDerivedDefinition(constantsUsed) {
         },
     };
 }
+export const createFoodProductionDefinition = createFoodDerivedDefinition;
+export const createFoodPerCapitaDefinition = createFoodPerCapitaDerivedDefinition;
+export const createAgriculturalInputsPerHectareDefinition = createAiphDerivedDefinition;
+export const createLandYieldDefinition = createLyDerivedDefinition;
+export const createLandYieldFactorDefinition = createLyfDerivedDefinition;
+export const createLandYieldMultiplierFromAirPollutionDefinition = createLymapDerivedDefinition;
+export const createLandYieldMultiplierFromCapitalDefinition = createLymcDerivedDefinition;
+export const createTotalAgriculturalInvestmentDefinition = createTaiDerivedDefinition;
 export function createAiphDerivedDefinition() {
     return {
         variable: AGRICULTURE_HIDDEN_SERIES.aiph,

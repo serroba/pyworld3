@@ -1,9 +1,14 @@
 export const DEFAULT_RESOURCE_POLICY_YEAR = 1975;
-export const RESOURCE_HIDDEN_SERIES = {
+export const RESOURCE_INTERNAL_SERIES = {
+    nonrenewableResourceUsageRate: "__nr_rate",
     nrRate: "__nr_rate",
+    nonrenewableResourceUseFactor: "__nruf",
     nruf: "__nruf",
+    perCapitaResourceUseMultiplier: "__pcrum",
     pcrum: "__pcrum",
 };
+/** @deprecated Prefer RESOURCE_INTERNAL_SERIES for TypeScript-facing code. */
+export const RESOURCE_HIDDEN_SERIES = RESOURCE_INTERNAL_SERIES;
 function clipAtPolicyYear(beforeValue, afterValue, time, policyYear) {
     return time > policyYear ? afterValue : beforeValue;
 }
@@ -139,6 +144,12 @@ export function createFcaorDerivedDefinition(constantsUsed, fcaor1Lookup, fcaor2
         },
     };
 }
+export const createReferenceRateSeries = createOracleRateSeries;
+export const createResourceUseFactorDefinition = createNrufDerivedDefinition;
+export const createPerCapitaResourceUseMultiplierDefinition = createPcrumDerivedDefinition;
+export const createResourceUsageRateDefinition = createNrResourceUsageRateDefinition;
+export const createResourceFractionRemainingDefinition = createNrfrDerivedDefinition;
+export const createCapitalAllocationToResourcesDefinition = createFcaorDerivedDefinition;
 export function extendResourceSourceVariables(sourceVariables, outputVariables, fixture, lookupLibrary, canUseNativeCapitalOrdering) {
     if (outputVariables.includes("nrfr") ||
         outputVariables.includes("fcaor")) {

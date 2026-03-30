@@ -8,11 +8,17 @@ import type {
 import type { LookupInterpolator } from "./world3-tables.js";
 
 export const DEFAULT_RESOURCE_POLICY_YEAR = 1975;
-export const RESOURCE_HIDDEN_SERIES = {
+export const RESOURCE_INTERNAL_SERIES = {
+  nonrenewableResourceUsageRate: "__nr_rate",
   nrRate: "__nr_rate",
+  nonrenewableResourceUseFactor: "__nruf",
   nruf: "__nruf",
+  perCapitaResourceUseMultiplier: "__pcrum",
   pcrum: "__pcrum",
 } as const;
+
+/** @deprecated Prefer RESOURCE_INTERNAL_SERIES for TypeScript-facing code. */
+export const RESOURCE_HIDDEN_SERIES = RESOURCE_INTERNAL_SERIES;
 
 function clipAtPolicyYear(
   beforeValue: number,
@@ -213,6 +219,15 @@ export function createFcaorDerivedDefinition(
     },
   };
 }
+
+export const createReferenceRateSeries = createOracleRateSeries;
+export const createResourceUseFactorDefinition = createNrufDerivedDefinition;
+export const createPerCapitaResourceUseMultiplierDefinition =
+  createPcrumDerivedDefinition;
+export const createResourceUsageRateDefinition = createNrResourceUsageRateDefinition;
+export const createResourceFractionRemainingDefinition = createNrfrDerivedDefinition;
+export const createCapitalAllocationToResourcesDefinition =
+  createFcaorDerivedDefinition;
 
 export function extendResourceSourceVariables(
   sourceVariables: Set<string>,

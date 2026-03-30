@@ -1,22 +1,39 @@
 import { RESOURCE_HIDDEN_SERIES, createFcaorDerivedDefinition, } from "./resource-sector.js";
 const DEFAULT_CAPITAL_POLICY_YEAR = 1975;
-export const CAPITAL_HIDDEN_SERIES = {
+export const CAPITAL_INTERNAL_SERIES = {
+    averageLifetimeOfIndustrialCapital: "__alic",
     alic: "__alic",
+    averageLifetimeOfServiceCapital: "__alsc",
     alsc: "__alsc",
+    capitalUtilizationFraction: "__cuf",
     cuf: "__cuf",
+    fractionOfIndustrialOutputAllocatedToConsumption: "__fioac",
     fioac: "__fioac",
+    fractionOfIndustrialOutputAllocatedToIndustry: "__fioai",
     fioai: "__fioai",
+    industrialCapital: "__ic",
     ic: "__ic",
+    industrialCapitalDepreciationRate: "__icdr",
     icdr: "__icdr",
+    industrialCapitalOutputRatio: "__icor",
     icor: "__icor",
+    fractionOfIndustrialOutputAllocatedToServices: "__fioas",
     fioas: "__fioas",
+    industrialCapitalInvestmentRate: "__icir",
     icir: "__icir",
+    indicatedServiceOutputPerCapita: "__isopc",
     isopc: "__isopc",
+    serviceCapital: "__sc",
     sc: "__sc",
+    serviceCapitalOutputRatio: "__scor",
     scor: "__scor",
+    serviceCapitalDepreciationRate: "__scdr",
     scdr: "__scdr",
+    serviceCapitalInvestmentRate: "__scir",
     scir: "__scir",
 };
+/** @deprecated Prefer CAPITAL_INTERNAL_SERIES for TypeScript-facing code. */
+export const CAPITAL_HIDDEN_SERIES = CAPITAL_INTERNAL_SERIES;
 function clipAtPolicyYear(beforeValue, afterValue, time, policyYear) {
     return time > policyYear ? afterValue : beforeValue;
 }
@@ -797,3 +814,15 @@ export function computeCapitalOrderedSeries(sourceFrame, prepared, constantsUsed
         [CAPITAL_HIDDEN_SERIES.scir]: scir,
     };
 }
+export const createIndustrialOutputDefinition = createIoDerivedDefinition;
+export const createIndustrialOutputFromCapitalStocksDefinition = createCapitalIoDerivedDefinition;
+export const createIndustrialOutputPerCapitaDefinition = createIopcDerivedDefinition;
+export const createServiceOutputDefinition = createSoDerivedDefinition;
+export const createServiceOutputFromCapitalStocksDefinition = createCapitalSoDerivedDefinition;
+export const createServiceOutputPerCapitaDefinition = createSopcDerivedDefinition;
+export const createCapitalUtilizationFractionDefinition = createCufDerivedDefinition;
+export const createConsumptionAllocationFractionDefinition = createFioacDerivedDefinition;
+export const createIndustryAllocationFractionDefinition = createFioaiDerivedDefinition;
+export const createServiceAllocationFractionDefinition = createFioasDerivedDefinition;
+export const createIndustrialCapitalInvestmentRateDefinition = createIcirDerivedDefinition;
+export const createServiceCapitalInvestmentRateDefinition = createScirDerivedDefinition;
