@@ -122,15 +122,6 @@ const ALLOWED_TRANSLATION_ATTRS = new Map([
 ]);
 const LOCALIZED_TAG_PATTERN = /<(\/?)(a|em|strong|code|br)([^>]*)>/gi;
 const LOCALIZED_ATTR_PATTERN = /(\w+)="([^"]*)"/g;
-function decodeHtmlEntities(value) {
-    return value
-        .replace(/&nbsp;/g, "\u00a0")
-        .replace(/&amp;/g, "&")
-        .replace(/&lt;/g, "<")
-        .replace(/&gt;/g, ">")
-        .replace(/&quot;/g, '"')
-        .replace(/&#39;/g, "'");
-}
 function appendLocalizedHtml(doc, node, translated) {
     node.replaceChildren();
     const stack = [];
@@ -140,7 +131,7 @@ function appendLocalizedHtml(doc, node, translated) {
         if (!value) {
             return;
         }
-        currentParent.appendChild(doc.createTextNode(decodeHtmlEntities(value)));
+        currentParent.appendChild(doc.createTextNode(value));
     };
     for (const match of translated.matchAll(LOCALIZED_TAG_PATTERN)) {
         const [rawTag, slash, rawTagName, rawAttrs] = match;
@@ -176,7 +167,7 @@ function appendLocalizedHtml(doc, node, translated) {
             if (!allowedAttrs.has(attrName)) {
                 continue;
             }
-            const attrValue = decodeHtmlEntities(rawAttrValue).trim();
+            const attrValue = rawAttrValue.trim();
             if (tagName === "A" && attrName === "href") {
                 if (!/^https?:\/\//i.test(attrValue)) {
                     continue;
