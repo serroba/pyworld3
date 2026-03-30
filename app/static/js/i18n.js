@@ -134,7 +134,10 @@ function appendLocalizedHtml(doc, node, translated) {
         currentParent.appendChild(doc.createTextNode(value));
     };
     for (const match of translated.matchAll(LOCALIZED_TAG_PATTERN)) {
-        const [rawTag, slash, rawTagName, rawAttrs] = match;
+        const rawTag = match[0] ?? "";
+        const slash = match[1] ?? "";
+        const rawTagName = match[2] ?? "";
+        const rawAttrs = match[3] ?? "";
         const matchIndex = match.index ?? 0;
         appendText(translated.slice(cursor, matchIndex));
         cursor = matchIndex + rawTag.length;
@@ -162,7 +165,8 @@ function appendLocalizedHtml(doc, node, translated) {
         let attrMatch;
         LOCALIZED_ATTR_PATTERN.lastIndex = 0;
         while ((attrMatch = LOCALIZED_ATTR_PATTERN.exec(rawAttrs)) !== null) {
-            const [, rawAttrName, rawAttrValue] = attrMatch;
+            const rawAttrName = attrMatch[1] ?? "";
+            const rawAttrValue = attrMatch[2] ?? "";
             const attrName = rawAttrName.toLowerCase();
             if (!allowedAttrs.has(attrName)) {
                 continue;
