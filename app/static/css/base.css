@@ -111,6 +111,8 @@ img {
   .advanced-preview__sticky {
     position: sticky;
     top: calc(4.5rem + var(--space-md));
+    max-height: calc(100vh - 4.5rem - var(--space-md) * 2);
+    overflow-y: auto;
   }
 }
 
