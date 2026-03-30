@@ -356,7 +356,7 @@ describe("i18n", () => {
       ok: false,
       status: 500,
       json: async () => ({}),
-    })) as typeof fetch;
+    })) as unknown as typeof fetch;
 
     const i18n = createI18n({
       storage: makeStorage(),
