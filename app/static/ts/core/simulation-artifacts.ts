@@ -5,6 +5,8 @@ import type {
 
 const SVG_WIDTH = 1000;
 const SVG_HEIGHT = 600;
+const LEGEND_WIDTH = 220;
+const LEGEND_GAP = 20;
 const PADDING = { top: 48, right: 40, bottom: 48, left: 72 };
 const PLOT_VARIABLES = [
   [["pop"], "Population", "#2196F3"],
@@ -94,7 +96,8 @@ export function formatSimulationSummary(
 }
 
 export function renderSimulationSvg(result: SimulationResult): string {
-  const plotWidth = SVG_WIDTH - PADDING.left - PADDING.right;
+  const plotWidth =
+    SVG_WIDTH - PADDING.left - PADDING.right - LEGEND_WIDTH - LEGEND_GAP;
   const plotHeight = SVG_HEIGHT - PADDING.top - PADDING.bottom;
   const years = result.time;
   const minYear = years[0] ?? result.year_min;
@@ -102,6 +105,7 @@ export function renderSimulationSvg(result: SimulationResult): string {
   const xSpan = Math.max(1, maxYear - minYear);
   const legendItems: string[] = [];
   const paths: string[] = [];
+  const legendLeft = PADDING.left + plotWidth + LEGEND_GAP;
 
   PLOT_VARIABLES.forEach(([varNames, label, color], index) => {
     const series = varNames
@@ -128,8 +132,8 @@ export function renderSimulationSvg(result: SimulationResult): string {
     );
     const legendY = PADDING.top + index * 24;
     legendItems.push(
-      `<rect x="${SVG_WIDTH - 250}" y="${legendY - 12}" width="14" height="14" fill="${color}" rx="3" />`,
-      `<text x="${SVG_WIDTH - 228}" y="${legendY}" font-size="14" fill="#1f2937">${escapeXml(label)}</text>`,
+      `<rect x="${legendLeft}" y="${legendY - 12}" width="14" height="14" fill="${color}" rx="3" />`,
+      `<text x="${legendLeft + 22}" y="${legendY}" font-size="14" fill="#1f2937">${escapeXml(label)}</text>`,
     );
   });
 
@@ -146,7 +150,7 @@ export function renderSimulationSvg(result: SimulationResult): string {
     const y = PADDING.top + plotHeight * ratio;
     const label = (1 - ratio).toFixed(2);
     return [
-      `<line x1="${PADDING.left}" y1="${y}" x2="${SVG_WIDTH - PADDING.right}" y2="${y}" stroke="#e5e7eb" stroke-width="1" />`,
+      `<line x1="${PADDING.left}" y1="${y}" x2="${PADDING.left + plotWidth}" y2="${y}" stroke="#e5e7eb" stroke-width="1" />`,
       `<text x="18" y="${y + 4}" font-size="12" fill="#6b7280">${label}</text>`,
     ].join("");
   });
