@@ -27,6 +27,10 @@
   width: 100%;
 }
 
+.chart-container canvas {
+  cursor: crosshair;
+}
+
 .chart-container--combined {
   height: 420px;
 }
@@ -88,4 +92,45 @@
 .chart-view-toggle__button.active {
   background: var(--color-primary);
   color: white;
+}
+
+@media (max-width: 639px) {
+  .chart-panel {
+    padding: var(--space-md);
+  }
+
+  .chart-panel__header {
+    align-items: flex-start;
+    gap: 0.35rem;
+    flex-wrap: wrap;
+  }
+
+  .chart-panel__title {
+    font-size: var(--text-base);
+  }
+
+  .chart-container {
+    height: 240px;
+  }
+
+  .chart-container--combined {
+    height: 360px;
+  }
+
+  .chart-view-toggle {
+    display: grid;
+    grid-template-columns: 1fr;
+    width: 100%;
+    border-radius: 22px;
+    gap: 0.35rem;
+  }
+
+  .chart-view-toggle__label {
+    padding: 0.25rem 0.35rem 0;
+  }
+
+  .chart-view-toggle__button {
+    width: 100%;
+    justify-content: center;
+  }
 }

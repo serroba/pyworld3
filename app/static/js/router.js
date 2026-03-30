@@ -7,9 +7,15 @@
 
 const Router = (() => {
   const routes = [];
+  const DEFAULT_HASH = "#explore?preset=standard-run&view=combined";
+
+  function replaceHash(hash) {
+    const url = `${location.pathname}${location.search}${hash}`;
+    history.replaceState(null, "", url);
+  }
 
   function parseHash() {
-    const raw = location.hash || "#intro";
+    const raw = location.hash || DEFAULT_HASH;
     const [path, qs] = raw.split("?");
     const params = {};
     if (qs) {
@@ -41,11 +47,8 @@ const Router = (() => {
         route.render(params);
       }
     } else {
-      // Default to intro
-      const intro = document.getElementById("view-intro");
-      if (intro) intro.classList.add("active");
-      const introRoute = routes.find((r) => r.pattern === "#intro");
-      if (introRoute) introRoute.render({});
+      replaceHash(DEFAULT_HASH);
+      navigate();
     }
   }
 
@@ -58,6 +61,9 @@ const Router = (() => {
     /** Start listening for hash changes. */
     start() {
       window.addEventListener("hashchange", navigate);
+      if (!location.hash) {
+        replaceHash(DEFAULT_HASH);
+      }
       navigate();
     },
 

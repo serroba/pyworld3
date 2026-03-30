@@ -17,6 +17,7 @@ body {
   background: var(--color-bg);
   line-height: 1.6;
   min-height: 100dvh;
+  overflow-x: clip;
 }
 
 a {
@@ -144,6 +145,48 @@ img {
   color: var(--color-primary);
   background: var(--color-primary-light);
   text-decoration: none;
+}
+
+@media (max-width: 639px) {
+  .site-nav {
+    padding: var(--space-xs) 0;
+  }
+
+  .site-nav .container {
+    align-items: flex-start;
+  }
+
+  .site-nav__brand {
+    width: 100%;
+  }
+
+  .site-nav__brand-mark {
+    width: 2.15rem;
+    height: 2.15rem;
+  }
+
+  .site-nav__brand-lockup span {
+    font-size: 0.62rem;
+    letter-spacing: 0.12em;
+  }
+
+  .site-nav__links {
+    width: 100%;
+    gap: var(--space-xs);
+    overflow-x: auto;
+    padding-bottom: var(--space-xs);
+    flex-wrap: nowrap;
+    scrollbar-width: none;
+  }
+
+  .site-nav__links::-webkit-scrollbar {
+    display: none;
+  }
+
+  .site-nav__links a {
+    white-space: nowrap;
+    flex: 0 0 auto;
+  }
 }
 
 /* Utility */

@@ -1,11 +1,13 @@
 import { expect, test } from "@playwright/test";
 
-test("homepage loads with navigation and presets", async ({ page }) => {
+test("homepage loads standard run in the classic combined chart view", async ({ page }) => {
   await page.goto("/");
   await expect(page).toHaveTitle("World3 — Systems Simulation Explorer");
   await expect(page.locator("nav.site-nav")).toBeVisible();
-  await page.waitForSelector("#intro-presets .card");
-  await expect(page.locator("#intro-presets .card")).not.toHaveCount(0);
+  await page.waitForURL(/#explore\?preset=standard-run&view=combined/);
+  await page.waitForSelector("#explore-charts canvas");
+  await expect(page.locator("#explore-charts canvas")).toHaveCount(1);
+  await expect(page.locator(".chart-panel__title")).toContainText("Classic World3 Overview");
 });
 
 test("explore view supports sector cards and classic combined chart", async ({ page }) => {
