@@ -3,7 +3,6 @@ import { readFile, writeFile } from "node:fs/promises";
 import process from "node:process";
 import { ModelData } from "../model-data.js";
 import { createWorld3Core, } from "../core/index.js";
-const FIXTURE_PATH = new URL("../../data/standard-run-explore.json", import.meta.url);
 const TABLES_PATH = new URL("../../data/functions-table-world3.json", import.meta.url);
 function parseArgs(argv) {
     const options = {
@@ -43,17 +42,13 @@ function parseArgs(argv) {
     }
     return options;
 }
-async function loadStandardRunFixture() {
-    const raw = await readFile(FIXTURE_PATH, "utf8");
-    return JSON.parse(raw);
-}
 async function loadWorld3Tables() {
     const raw = await readFile(TABLES_PATH, "utf8");
     return JSON.parse(raw);
 }
 async function main() {
     const options = parseArgs(process.argv.slice(2));
-    const core = createWorld3Core(ModelData, loadWorld3Tables, loadStandardRunFixture);
+    const core = createWorld3Core(ModelData, loadWorld3Tables);
     const result = await core.simulateStandardRun();
     if (options.summary) {
         process.stdout.write(`${await core.summarizeStandardRun()}\n`);

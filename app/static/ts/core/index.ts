@@ -11,7 +11,7 @@ export { createCalibrationCore } from "./calibration-core.js";
 export { createOwidDataProvider } from "./owid-data.js";
 export { createValidationCore } from "./validation-core.js";
 export { createWorld3Core } from "./world3-core.js";
+export { simulateWorld3 } from "./world3-simulation.js";
 
 export type { OwidDataset } from "./owid-data.js";
-export type { LocalSimulationLoader } from "./local-simulation-core.js";
 export type { RawLookupTable } from "./world3-tables.js";

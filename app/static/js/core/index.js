@@ -10,3 +10,4 @@ export { createCalibrationCore } from "./calibration-core.js";
 export { createOwidDataProvider } from "./owid-data.js";
 export { createValidationCore } from "./validation-core.js";
 export { createWorld3Core } from "./world3-core.js";
+export { simulateWorld3 } from "./world3-simulation.js";

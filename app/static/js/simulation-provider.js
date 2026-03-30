@@ -2,33 +2,8 @@
  * Simulation provider seam for browser-native execution.
  */
 import { createWorld3Core, } from "./core/index.js";
-const LOCAL_STANDARD_RUN_FIXTURE_URL = new URL("../data/standard-run-explore.json", import.meta.url).toString();
 const WORLD3_TABLES_URL = new URL("../data/functions-table-world3.json", import.meta.url).toString();
-let localStandardRunFixturePromise = null;
 let world3TablesPromise = null;
-async function loadLocalStandardRunFixture(signal) {
-    if (!localStandardRunFixturePromise) {
-        const init = {};
-        if (signal !== undefined) {
-            init.signal = signal;
-        }
-        localStandardRunFixturePromise = fetch(LOCAL_STANDARD_RUN_FIXTURE_URL, init)
-            .then(async (response) => {
-            if (!response.ok) {
-                throw new Error(`Failed to load local simulation fixture (${response.status})`);
-            }
-            return response.json();
-        })
-            .catch((error) => {
-            localStandardRunFixturePromise = null;
-            throw error;
-        });
-    }
-    return localStandardRunFixturePromise;
-}
-function createBrowserFixtureLoader() {
-    return async (options) => loadLocalStandardRunFixture(options?.signal);
-}
 async function loadWorld3Tables(signal) {
     if (!world3TablesPromise) {
         const init = {};
@@ -53,7 +28,7 @@ function createBrowserTablesLoader() {
     return async () => loadWorld3Tables();
 }
 function createLocalSimulationProvider(modelData) {
-    const core = createWorld3Core(modelData, createBrowserTablesLoader(), createBrowserFixtureLoader());
+    const core = createWorld3Core(modelData, createBrowserTablesLoader());
     const localCore = core.createLocalSimulationCore();
     return {
         mode: "local",

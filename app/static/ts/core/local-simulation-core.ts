@@ -10,13 +10,6 @@ import {
 } from "../simulation-contracts.js";
 import type { BrowserNativeRuntime } from "./browser-native-runtime.js";
 
-export const LOCAL_PROVIDER_ERROR =
-  "Local simulation currently supports only the standard-run preset without overrides. Switch back to HTTP mode for other scenarios.";
-
-export type LocalSimulationLoader = (
-  options?: { signal?: AbortSignal },
-) => Promise<SimulationResult>;
-
 export type LocalSimulationCore = {
   simulatePreset: (
     name: string,
@@ -115,35 +108,6 @@ export function hasExplicitOverrides(request?: SimulationRequest): boolean {
   });
 }
 
-export function createLocalSimulationCore(
-  modelData: ModelDataPayload,
-  loadStandardRunFixture: LocalSimulationLoader,
-): LocalSimulationCore {
-  return {
-    async simulatePreset(name, overrides) {
-      if (name === "standard-run" && !hasExplicitOverrides(overrides)) {
-        return loadStandardRunFixture();
-      }
-      throw new Error(`${LOCAL_PROVIDER_ERROR} Requested preset: ${name}.`);
-    },
-
-    async simulate(request, options) {
-      if (!hasExplicitOverrides(request)) {
-        return loadStandardRunFixture(options);
-      }
-      throw new Error(LOCAL_PROVIDER_ERROR);
-    },
-
-    async compare(scenarioA, scenarioB) {
-      resolveScenarioRequest(modelData, scenarioA);
-      if (scenarioB) {
-        resolveScenarioRequest(modelData, scenarioB);
-      }
-      throw new Error(LOCAL_PROVIDER_ERROR);
-    },
-  };
-}
-
 export function createRuntimeBackedLocalSimulationCore(
   modelData: ModelDataPayload,
   runtime: BrowserNativeRuntime,
@@ -153,13 +117,11 @@ export function createRuntimeBackedLocalSimulationCore(
       const request = withLocalDefaultOutputs(
         buildSimulationRequestFromPreset(modelData, name, overrides),
       );
-      await runtime.prepare(request);
       return runtime.simulate(request);
     },
 
     async simulate(request, options) {
       const normalizedRequest = withLocalDefaultOutputs(request ?? {});
-      await runtime.prepare(normalizedRequest);
       return runtime.simulate(normalizedRequest, options);
     },
 

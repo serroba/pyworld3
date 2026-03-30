@@ -8,9 +8,7 @@ import {
   createWorld3Core,
 } from "../core/index.js";
 import type { RawLookupTable } from "../core/index.js";
-import type { SimulationResult } from "../simulation-contracts.js";
 
-const FIXTURE_PATH = new URL("../../data/standard-run-explore.json", import.meta.url);
 const TABLES_PATH = new URL("../../data/functions-table-world3.json", import.meta.url);
 
 function parseArgs(argv: string[]) {
@@ -59,11 +57,6 @@ function parseArgs(argv: string[]) {
   return options;
 }
 
-async function loadStandardRunFixture(): Promise<SimulationResult> {
-  const raw = await readFile(FIXTURE_PATH, "utf8");
-  return JSON.parse(raw) as SimulationResult;
-}
-
 async function loadWorld3Tables(): Promise<RawLookupTable[]> {
   const raw = await readFile(TABLES_PATH, "utf8");
   return JSON.parse(raw) as RawLookupTable[];
@@ -74,7 +67,6 @@ async function main() {
   const core = createWorld3Core(
     ModelData,
     loadWorld3Tables,
-    loadStandardRunFixture,
   );
   const result = await core.simulateStandardRun();
 

@@ -2,8 +2,6 @@ import { describe, expect, test, vi } from "vitest";
 
 import { ModelData } from "../ts/model-data.ts";
 import {
-  LOCAL_PROVIDER_ERROR,
-  createLocalSimulationCore,
   createRuntimeBackedLocalSimulationCore,
   hasExplicitOverrides,
 } from "../ts/core/local-simulation-core.ts";
@@ -30,70 +28,14 @@ describe("local simulation core", () => {
     expect(hasExplicitOverrides({ constants: { nri: 2 } })).toBe(true);
   });
 
-  test("serves the standard-run fixture without overrides", async () => {
-    const loader = vi.fn(async () => fixture);
-    const core = createLocalSimulationCore(ModelData, loader);
-
-    await expect(core.simulatePreset("standard-run")).resolves.toEqual(fixture);
-    await expect(core.simulate()).resolves.toEqual(fixture);
-    expect(loader).toHaveBeenCalledTimes(2);
-  });
-
-  test("passes options through to the fixture loader", async () => {
-    const loader = vi.fn(async () => fixture);
-    const core = createLocalSimulationCore(ModelData, loader);
-    const signal = new AbortController().signal;
-
-    await expect(core.simulate(undefined, { signal })).resolves.toEqual(fixture);
-    expect(loader).toHaveBeenCalledWith({ signal });
-  });
-
-  test("rejects unsupported scenarios with a clear message", async () => {
-    const core = createLocalSimulationCore(ModelData, async () => fixture);
-
-    await expect(
-      core.simulatePreset("doubled-resources"),
-    ).rejects.toThrow("Requested preset: doubled-resources");
-    await expect(
-      core.simulate({ output_variables: ["pop"] }),
-    ).rejects.toThrow(LOCAL_PROVIDER_ERROR);
-    await expect(
-      core.compare(
-        { preset: "standard-run" },
-        { request: { year_max: 2050 } },
-      ),
-    ).rejects.toThrow(LOCAL_PROVIDER_ERROR);
-  });
-
-  test("rejects local compare requests without a second scenario too", async () => {
-    const core = createLocalSimulationCore(ModelData, async () => fixture);
-
-    await expect(
-      core.compare({ preset: "standard-run" }),
-    ).rejects.toThrow(LOCAL_PROVIDER_ERROR);
-  });
-
   test("can run through the runtime-backed seam for standard-run", async () => {
     const runtime = {
-      prepare: vi.fn(async () => ({
-        request: {},
-        outputVariables: ["pop"],
-        time: new Float64Array([1900, 1900.5]),
-        lookupLibrary: new Map(),
-      })),
       simulate: vi.fn(async () => fixture),
-      prepareStandardRun: vi.fn(async () => ({
-        request: {},
-        outputVariables: ["pop"],
-        time: new Float64Array([1900, 1900.5]),
-        lookupLibrary: new Map(),
-      })),
       simulateStandardRun: vi.fn(async () => fixture),
     };
     const core = createRuntimeBackedLocalSimulationCore(ModelData, runtime);
 
     await expect(core.simulatePreset("standard-run")).resolves.toEqual(fixture);
-    expect(runtime.prepare).toHaveBeenCalledTimes(1);
     expect(runtime.simulate).toHaveBeenCalledTimes(1);
   });
 
@@ -110,12 +52,6 @@ describe("local simulation core", () => {
       },
     };
     const runtime = {
-      prepare: vi.fn(async (request = {}) => ({
-        request,
-        outputVariables: request.output_variables ?? ["pop"],
-        time: new Float64Array([1900, 1900.5]),
-        lookupLibrary: new Map(),
-      })),
       simulate: vi
         .fn()
         .mockResolvedValueOnce(compareFixture)
@@ -128,7 +64,6 @@ describe("local simulation core", () => {
             pop: { name: "pop", values: [2, 4] },
           },
         }),
-      prepareStandardRun: vi.fn(),
       simulateStandardRun: vi.fn(),
     };
     const core = createRuntimeBackedLocalSimulationCore(ModelData, runtime);
@@ -201,7 +136,6 @@ describe("local simulation core", () => {
       ],
     });
 
-    expect(runtime.prepare).toHaveBeenCalledTimes(2);
     expect(runtime.simulate).toHaveBeenCalledTimes(4);
   });
 });

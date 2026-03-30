@@ -48,20 +48,6 @@ describe("browser native bridge", () => {
           json: async () => [],
         } as Response;
       }
-      if (input === "http://localhost:3000/data/standard-run-explore.json") {
-        return {
-          ok: true,
-          status: 200,
-          json: async () => ({
-            year_min: 1900,
-            year_max: 1900.5,
-            dt: 0.5,
-            time: [1900, 1900.5],
-            constants_used: {},
-            series: { pop: { name: "pop", values: [1, 2] } },
-          }),
-        } as Response;
-      }
       throw new Error(`Unexpected fetch input: ${String(input)}`);
     });
   });

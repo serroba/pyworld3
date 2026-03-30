@@ -3,7 +3,7 @@ import type {
   SimulationRequest,
   SimulationResult,
 } from "../simulation-contracts.js";
-import { createFixtureBackedRuntime } from "./browser-native-runtime.js";
+import { createSimulationRuntime } from "./browser-native-runtime.js";
 import {
   createRuntimeBackedLocalSimulationCore,
   type LocalSimulationCore,
@@ -16,7 +16,7 @@ import type { RawLookupTable } from "./world3-tables.js";
 
 export type World3Core = {
   readonly modelData: ModelDataPayload;
-  readonly runtime: ReturnType<typeof createFixtureBackedRuntime>;
+  readonly runtime: ReturnType<typeof createSimulationRuntime>;
   createLocalSimulationCore: () => LocalSimulationCore;
   simulateStandardRun: (
     overrides?: SimulationRequest,
@@ -29,14 +29,10 @@ export type World3Core = {
 export function createWorld3Core(
   modelData: ModelDataPayload,
   loadTables: () => Promise<RawLookupTable[]>,
-  loadStandardRunFixture: (
-    options?: { signal?: AbortSignal },
-  ) => Promise<SimulationResult>,
 ): World3Core {
-  const runtime = createFixtureBackedRuntime(
+  const runtime = createSimulationRuntime(
     modelData,
     loadTables,
-    loadStandardRunFixture,
   );
 
   return {
@@ -47,9 +43,8 @@ export function createWorld3Core(
       return createRuntimeBackedLocalSimulationCore(modelData, runtime);
     },
 
-    async simulateStandardRun(overrides, options) {
-      await runtime.prepareStandardRun(overrides);
-      return runtime.simulateStandardRun(overrides, options);
+    async simulateStandardRun(overrides) {
+      return runtime.simulateStandardRun(overrides);
     },
 
     async summarizeStandardRun(overrides) {

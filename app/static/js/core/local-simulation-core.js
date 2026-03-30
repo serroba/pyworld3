@@ -1,5 +1,4 @@
 import { buildSimulationRequestFromPreset, resolveScenarioRequest, } from "../simulation-contracts.js";
-export const LOCAL_PROVIDER_ERROR = "Local simulation currently supports only the standard-run preset without overrides. Switch back to HTTP mode for other scenarios.";
 const COMPARE_METRICS = [
     { label: "Population", variable: "pop" },
     { label: "Industrial output/cap", variable: "iopc" },
@@ -59,39 +58,14 @@ export function hasExplicitOverrides(request) {
         return value !== undefined;
     });
 }
-export function createLocalSimulationCore(modelData, loadStandardRunFixture) {
-    return {
-        async simulatePreset(name, overrides) {
-            if (name === "standard-run" && !hasExplicitOverrides(overrides)) {
-                return loadStandardRunFixture();
-            }
-            throw new Error(`${LOCAL_PROVIDER_ERROR} Requested preset: ${name}.`);
-        },
-        async simulate(request, options) {
-            if (!hasExplicitOverrides(request)) {
-                return loadStandardRunFixture(options);
-            }
-            throw new Error(LOCAL_PROVIDER_ERROR);
-        },
-        async compare(scenarioA, scenarioB) {
-            resolveScenarioRequest(modelData, scenarioA);
-            if (scenarioB) {
-                resolveScenarioRequest(modelData, scenarioB);
-            }
-            throw new Error(LOCAL_PROVIDER_ERROR);
-        },
-    };
-}
 export function createRuntimeBackedLocalSimulationCore(modelData, runtime) {
     return {
         async simulatePreset(name, overrides) {
             const request = withLocalDefaultOutputs(buildSimulationRequestFromPreset(modelData, name, overrides));
-            await runtime.prepare(request);
             return runtime.simulate(request);
         },
         async simulate(request, options) {
             const normalizedRequest = withLocalDefaultOutputs(request ?? {});
-            await runtime.prepare(normalizedRequest);
             return runtime.simulate(normalizedRequest, options);
         },
         async compare(scenarioA, scenarioB) {
