@@ -97,6 +97,18 @@ describe("World3 coupled simulation", () => {
     expect(result.series.nrfr!.values[0]).toBeCloseTo(1.0, 5);
   });
 
+  test("throws when a required lookup table is missing", () => {
+    expect(() =>
+      simulateWorld3({
+        yearMin: 1900,
+        yearMax: 1901,
+        dt: 1,
+        constants: { ...ModelData.constantDefaults },
+        rawTables: [],
+      }),
+    ).toThrow("Missing lookup table");
+  });
+
   test("throws when a required constant is missing", () => {
     const incompleteConstants = { ...ModelData.constantDefaults };
     delete (incompleteConstants as Record<string, unknown>).nri;
