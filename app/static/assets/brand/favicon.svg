@@ -1,10 +1,15 @@
-<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect x="4" y="4" width="56" height="56" rx="14" fill="#F8F8F4" stroke="#D9E1DC" stroke-width="2"/>
-  <path d="M15 14V49" stroke="#17324D" stroke-width="3" stroke-linecap="round"/>
-  <path d="M14 48H49" stroke="#17324D" stroke-width="3" stroke-linecap="round"/>
-  <path d="M16 47C21 43 25 38 29 30C32 24 37 19 49 14" stroke="#2B7FFF" stroke-width="3" stroke-linecap="round"/>
-  <path d="M16 18C25 18 32 19 38 23C43 26 47 33 49 47" stroke="#51B86B" stroke-width="3" stroke-linecap="round"/>
-  <path d="M16 34C22 32 27 29 32 24C37 20 42 16 48 15" stroke="#E63946" stroke-width="3" stroke-linecap="round"/>
-  <path d="M16 28C22 26 28 22 34 18C39 15 44 13 49 13" stroke="#FB8500" stroke-width="3" stroke-linecap="round"/>
-  <path d="M16 48C25 47 32 45 38 40C43 35 47 27 49 15" stroke="#9B3ECB" stroke-width="3" stroke-linecap="round"/>
+<svg width="64" height="64" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect x="20" y="20" width="216" height="216" rx="40" fill="#F8F8F4" stroke="#D9E1DC" stroke-width="8"/>
+  <path d="M56 54V202" stroke="#17324D" stroke-width="10" stroke-linecap="round"/>
+  <path d="M54 200H202" stroke="#17324D" stroke-width="10" stroke-linecap="round"/>
+  <path d="M58 194C78 180 95 159 113 128C129 100 146 76 200 54" stroke="#2B7FFF" stroke-width="10" stroke-linecap="round"/>
+  <path d="M58 64C97 64 126 69 149 83C174 99 190 126 198 196" stroke="#51B86B" stroke-width="10" stroke-linecap="round"/>
+  <path d="M58 142C84 135 106 122 129 101C151 80 172 66 196 62" stroke="#E63946" stroke-width="10" stroke-linecap="round"/>
+  <path d="M58 116C85 109 110 95 135 74C154 59 175 54 198 54" stroke="#FB8500" stroke-width="10" stroke-linecap="round"/>
+  <path d="M58 198C94 196 122 186 145 164C169 141 182 111 198 62" stroke="#9B3ECB" stroke-width="10" stroke-linecap="round"/>
+  <circle cx="58" cy="194" r="7" fill="#2B7FFF"/>
+  <circle cx="198" cy="196" r="7" fill="#51B86B"/>
+  <circle cx="196" cy="62" r="7" fill="#E63946"/>
+  <circle cx="198" cy="54" r="7" fill="#FB8500"/>
+  <circle cx="198" cy="62" r="7" fill="#9B3ECB" opacity="0.88"/>
 </svg>
