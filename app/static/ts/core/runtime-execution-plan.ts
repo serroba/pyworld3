@@ -203,6 +203,7 @@ export function createRuntimeExecutionPlan(
     agricultureCapabilities.canUseNativeFoodPath ||
       agricultureCapabilities.canUseNativeAgricultureOrdering,
     pollutionCapabilities.canUseNativePollutionPath,
+    capitalCapabilities.canUseNativeCapitalOrdering,
   );
 
   return {

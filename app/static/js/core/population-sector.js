@@ -554,7 +554,7 @@ export const createTotalFertilityDefinition = createTfDerivedDefinition;
 export const createCrudeBirthRateDefinition = createBirthRateDerivedDefinition;
 export const createCrudeDeathRateDefinition = createCdrDerivedDefinition;
 export const createPopulationTotalDefinition = createPopulationSumDerivedDefinition;
-export function extendPopulationSourceVariables(sourceVariables, outputVariables, fixture, lookupLibrary, canUseNativeFoodPath = false, canUseNativePollutionPath = false) {
+export function extendPopulationSourceVariables(sourceVariables, outputVariables, fixture, lookupLibrary, canUseNativeFoodPath = false, canUseNativePollutionPath = false, canUseNativeCapitalOrdering = false) {
     const needsLifeExpectancy = outputVariables.includes("le") ||
         outputVariables.some((variable) => POPULATION_MORTALITY_OUTPUTS.includes(variable)) ||
         outputVariables.some((variable) => POPULATION_STOCK_OUTPUTS.includes(variable)) ||
@@ -565,7 +565,7 @@ export function extendPopulationSourceVariables(sourceVariables, outputVariables
         Boolean(fixture.series.pop) &&
         (Boolean(fixture.series.fpc) || canUseNativeFoodPath) &&
         Boolean(fixture.series.iopc) &&
-        Boolean(fixture.series.sopc) &&
+        (Boolean(fixture.series.sopc) || canUseNativeCapitalOrdering) &&
         (Boolean(fixture.series.ppolx) || canUseNativePollutionPath) &&
         fixture.constants_used.len !== undefined &&
         fixture.constants_used.sfpc !== undefined &&

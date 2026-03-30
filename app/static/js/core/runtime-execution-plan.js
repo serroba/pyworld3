@@ -113,7 +113,7 @@ export function createRuntimeExecutionPlan(prepared, fixture) {
     const needsNativePollutionForPopulation = prepared.outputVariables.some((variable) => POPULATION_OUTPUTS_REQUIRING_POLLUTION.has(variable));
     const pollutionCapabilities = extendPollutionSourceVariables(sourceVariables, prepared.outputVariables, fixture, prepared.lookupLibrary, agricultureCapabilities.canUseNativeAgricultureOrdering, canUseNativeNrFlow, needsNativePollutionForPopulation);
     const { canUseNativeLifeExpectancy, canUseNativeMortality, canUseNativeCohortSupport, canUseNativeDeathPath, canUseNativePopulationStocks, canUseNativeBirthSupport, canUseNativeP1Stock, } = extendPopulationSourceVariables(sourceVariables, prepared.outputVariables, fixture, prepared.lookupLibrary, agricultureCapabilities.canUseNativeFoodPath ||
-        agricultureCapabilities.canUseNativeAgricultureOrdering, pollutionCapabilities.canUseNativePollutionPath);
+        agricultureCapabilities.canUseNativeAgricultureOrdering, pollutionCapabilities.canUseNativePollutionPath, capitalCapabilities.canUseNativeCapitalOrdering);
     return {
         sourceVariables,
         agricultureCapabilities,
