@@ -1,9 +1,7 @@
 import logging
-from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
-from fastapi.staticfiles import StaticFiles
 
 from pyworld3.application.calibrate import CalibrationService
 from pyworld3.application.container import get_service
@@ -351,11 +349,3 @@ def validate_result(body: ValidationFromResultRequest):
             content={"detail": "Internal server error"},
         )
 
-
-# ---------------------------------------------------------------------------
-# Static files (must be registered after all API routes)
-# ---------------------------------------------------------------------------
-
-_static_dir = Path(__file__).resolve().parent.parent.parent / "app" / "static"
-if _static_dir.is_dir():
-    app.mount("/", StaticFiles(directory=_static_dir, html=True), name="static")

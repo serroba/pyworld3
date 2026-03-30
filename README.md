@@ -78,7 +78,8 @@ pyworld3 simulate --preset standard-run --summary
 
 **2. Web client** — interactive browser UI:
 ```bash
-uv run uvicorn pyworld3.adapters.api:app --port 8000
+cd app/static
+npm run serve -- --port 8000
 # Open http://localhost:8000
 ```
 
@@ -95,7 +96,7 @@ world3.run_world3()
 
 # Web Client
 
-The web client is served at `/` when the API server is running. It has four views:
+The web client is now a static app served independently from the Python API. It has four views:
 
 | View | Description |
 |------|-------------|
@@ -105,6 +106,8 @@ The web client is served at `/` when the API server is running. It has four view
 | **Advanced** | Edit any model constant with range sliders, then simulate |
 
 # REST API
+
+The Python REST API is optional and no longer serves the browser frontend.
 
 The FastAPI server exposes these endpoints:
 
@@ -249,7 +252,7 @@ docker build -t pyworld3 .
 docker run -p 8000:8000 pyworld3
 ```
 
-The container starts a Uvicorn server on port 8000, serving both the REST API and web client.
+The container now serves the static web client on port 8000. The Python API can still be run separately if you need the legacy REST surface.
 
 # Architecture
 

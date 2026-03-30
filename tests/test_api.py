@@ -233,74 +233,17 @@ def test_variable_metadata_endpoint():
     assert set(data.keys()) == set(VARIABLE_META.keys())
 
 
-# --- Static file serving ---
+# --- API and static app are decoupled ---
 
 
-def test_static_index_served():
+def test_api_root_does_not_serve_static_app():
     resp = client.get("/")
-    assert resp.status_code == 200
-    assert "PyWorld3" in resp.text
+    assert resp.status_code == 404
 
 
-def test_static_js_served():
+def test_api_does_not_serve_static_assets():
     resp = client.get("/js/app.js")
-    assert resp.status_code == 200
-    assert "State" in resp.text
-
-
-def test_static_model_data_served():
-    resp = client.get("/js/model-data.js")
-    assert resp.status_code == 200
-    assert "const ModelData" in resp.text
-    assert "standard-run" in resp.text
-
-
-def test_static_simulation_provider_served():
-    resp = client.get("/js/simulation-provider.js")
-    assert resp.status_code == 200
-    assert 'mode: "local"' in resp.text
-    assert "createSimulationProvider" in resp.text
-
-
-def test_static_simulation_contracts_served():
-    resp = client.get("/js/simulation-contracts.js")
-    assert resp.status_code == 200
-    assert "function buildSimulationRequestFromPreset" in resp.text
-    assert "function resolveScenarioRequest" in resp.text
-
-
-def test_static_browser_native_bridge_served():
-    resp = client.get("/js/browser-native.js")
-    assert resp.status_code == 200
-    assert "window.ModelData = ModelData" in resp.text
-    assert "window.SimulationProvider = createSimulationProvider(ModelData)" in resp.text
-
-
-def test_static_local_standard_run_fixture_served():
-    resp = client.get("/data/standard-run-explore.json")
-    assert resp.status_code == 200
-    assert '"year_min":1900' in resp.text
-    assert '"pop"' in resp.text
-
-
-def test_static_world3_lookup_tables_served():
-    resp = client.get("/data/functions-table-world3.json")
-    assert resp.status_code == 200
-    assert '"y.name": "M1"' in resp.text
-    assert '"sector": "Population"' in resp.text
-
-
-def test_static_owid_world_data_served():
-    resp = client.get("/data/owid-world-data.json")
-    assert resp.status_code == 200
-    assert '"World"' in resp.text
-    assert '"life_expectancy"' in resp.text
-
-
-def test_static_css_served():
-    resp = client.get("/css/variables.css")
-    assert resp.status_code == 200
-    assert "--color-primary" in resp.text
+    assert resp.status_code == 404
 
 
 # --- Calibrate endpoint ---

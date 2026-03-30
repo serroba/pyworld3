@@ -5,6 +5,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json && tsc -p tsconfig.cli.json",
     "browser-native:cli": "node js/cli/browser-native-cli.js",
+    "serve": "node js/cli/static-server.js",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.cli.json --noEmit && tsc -p tsconfig.test.json --noEmit",
     "typecheck:src": "tsc -p tsconfig.json --noEmit",
     "typecheck:cli": "tsc -p tsconfig.cli.json --noEmit",

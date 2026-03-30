@@ -25,7 +25,7 @@ jobs:
       - name: Wait for ready
         run: |
           for i in $(seq 1 15); do
-            if curl -sf http://localhost:8000/presets > /dev/null 2>&1; then
+            if curl -sf http://localhost:8000/ > /dev/null 2>&1; then
               echo "Server ready after ${i}s"
               exit 0
             fi
@@ -39,21 +39,11 @@ jobs:
           body=$(curl -sf http://localhost:8000/)
           echo "$body" | grep -q "PyWorld3"
 
-      - name: Verify API responds
-        run: |
-          body=$(curl -sf http://localhost:8000/presets)
-          echo "$body" | grep -q "standard"
-
-      - name: Verify simulation runs
-        run: |
-          body=$(curl -sf -X POST http://localhost:8000/simulate \
-            -H 'Content-Type: application/json' -d '{}')
-          echo "$body" | grep -q '"time"'
-
       - name: Verify static assets
         run: |
           curl -sf http://localhost:8000/js/app.js > /dev/null
           curl -sf http://localhost:8000/css/variables.css > /dev/null
+          curl -sf http://localhost:8000/data/standard-run-explore.json > /dev/null
 
       - name: Container logs on failure
         if: failure()
