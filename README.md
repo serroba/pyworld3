@@ -2,6 +2,8 @@
 
 > A static World3 explorer powered by a shared TypeScript simulation core
 
+[Live app](https://serroba.github.io/world3/) · [Logo mark](./app/static/assets/brand/world3-mark.svg)
+
 [![License: CeCILL 2.1](https://img.shields.io/badge/licence-CeCILL%202.1-028181)](https://opensource.org/licenses/CECILL-2.1)
 
 - [What This Repo Is](#what-this-repo-is)
