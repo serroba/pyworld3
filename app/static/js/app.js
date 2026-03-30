@@ -11,8 +11,8 @@
   } catch (_err) {
     shell.innerHTML = `<div class="container mt-xl">
       <div class="card" style="border-color: var(--color-danger); color: var(--color-danger);">
-        <strong>Failed to connect to the PyWorld3 API.</strong><br>
-        Make sure the server is running and reload the page.
+        <strong>Failed to initialize the browser-native app.</strong><br>
+        Reload the page and check that static data assets are available.
       </div>
     </div>`;
     return;

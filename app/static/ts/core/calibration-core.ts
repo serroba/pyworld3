@@ -1,7 +1,5 @@
-import type {
-  ConstantConstraintMap,
-  ModelDataPayload,
-} from "../simulation-contracts.js";
+import type { ConstantConstraintMap, ModelDataPayload } from "../simulation-contracts.js";
+import type { CalibrationDataResponse } from "./owid-data.js";
 
 type CalibrationConfidence = "high" | "medium" | "low";
 
@@ -14,13 +12,6 @@ type CalibrationMapping = {
   description: string;
   requiresIndicators?: string[];
   transform?: CalibrationTransform;
-};
-
-export type CalibrationDataResponse = {
-  reference_year: number;
-  entity: string;
-  indicators: Record<string, number>;
-  warnings: string[];
 };
 
 export type CalibratedConstantOutput = {

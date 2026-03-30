@@ -1,8 +1,8 @@
 /**
  * Simulation provider seam.
  *
- * HTTP remains the default implementation for now. This lets us move the UI
- * onto a stable abstraction before introducing a browser-native engine.
+ * Local/browser-native execution is the default implementation. HTTP remains
+ * available as an explicit compatibility override.
  */
 import { createWorld3Core, } from "./core/index.js";
 const HttpSimulationProvider = {
@@ -84,7 +84,7 @@ function createLocalSimulationProvider(modelData) {
     };
 }
 function resolveProviderMode() {
-    return window.__PYWORLD3_PROVIDER_MODE__ === "local" ? "local" : "http";
+    return window.__PYWORLD3_PROVIDER_MODE__ === "http" ? "http" : "local";
 }
 export function createSimulationProvider(modelData) {
     return resolveProviderMode() === "local"
