@@ -2,11 +2,11 @@ const SVG_WIDTH = 1000;
 const SVG_HEIGHT = 600;
 const PADDING = { top: 48, right: 40, bottom: 48, left: 72 };
 const PLOT_VARIABLES = [
-    ["pop", "Population", "#2196F3"],
-    ["nr", "Resources", "#4CAF50"],
-    ["iopc", "Industrial output/cap", "#F44336"],
-    ["fpc", "Food/capita", "#FF9800"],
-    ["ppolx", "Pollution index", "#9C27B0"],
+    [["pop"], "Population", "#2196F3"],
+    [["nr", "nrfr"], "Resources", "#4CAF50"],
+    [["iopc"], "Industrial output/cap", "#F44336"],
+    [["fpc"], "Food/capita", "#FF9800"],
+    [["ppolx"], "Pollution index", "#9C27B0"],
 ];
 function escapeXml(value) {
     return value
@@ -82,8 +82,11 @@ export function renderSimulationSvg(result) {
     const xSpan = Math.max(1, maxYear - minYear);
     const legendItems = [];
     const paths = [];
-    PLOT_VARIABLES.forEach(([varName, label, color], index) => {
-        const values = result.series[varName]?.values;
+    PLOT_VARIABLES.forEach(([varNames, label, color], index) => {
+        const series = varNames
+            .map((varName) => result.series[varName])
+            .find((candidate) => candidate?.values.length);
+        const values = series?.values;
         if (!values || values.length === 0) {
             return;
         }

@@ -57,6 +57,26 @@ describe("world3 core facade", () => {
     expect(loadFixture).toHaveBeenCalledTimes(1);
   });
 
+  test("renders the resources curve from nrfr when nr is unavailable", async () => {
+    const nrfrFixture = {
+      ...fixture,
+      series: {
+        pop: { name: "pop", values: [100, 110, 120] },
+        nrfr: { name: "nrfr", values: [1, 0.9, 0.8] },
+        iopc: { name: "iopc", values: [1, 1.5, 2] },
+        fpc: { name: "fpc", values: [3, 3.2, 3.4] },
+        ppolx: { name: "ppolx", values: [0.1, 0.2, 0.3] },
+      },
+    } satisfies SimulationResult;
+    const core = createWorld3Core(
+      ModelData,
+      async () => tables,
+      async () => nrfrFixture,
+    );
+
+    await expect(core.renderStandardRunSvg()).resolves.toContain("Resources");
+  });
+
   test("allows the shared core facade to project aligned standard-run overrides", async () => {
     const alignedFixture = {
       ...fixture,
