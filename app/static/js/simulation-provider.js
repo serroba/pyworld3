@@ -2,8 +2,8 @@
  * Simulation provider seam for browser-native execution.
  */
 import { createWorld3Core, } from "./core/index.js";
-const LOCAL_STANDARD_RUN_FIXTURE_URL = "/data/standard-run-explore.json";
-const WORLD3_TABLES_URL = "/data/functions-table-world3.json";
+const LOCAL_STANDARD_RUN_FIXTURE_URL = new URL("../data/standard-run-explore.json", import.meta.url).toString();
+const WORLD3_TABLES_URL = new URL("../data/functions-table-world3.json", import.meta.url).toString();
 let localStandardRunFixturePromise = null;
 let world3TablesPromise = null;
 async function loadLocalStandardRunFixture(signal) {

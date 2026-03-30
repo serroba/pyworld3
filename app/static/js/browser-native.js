@@ -2,7 +2,8 @@ import { ModelData, } from "./model-data.js";
 import { buildSimulationRequestFromPreset, resolveScenarioRequest, } from "./simulation-contracts.js";
 import { createSimulationProvider, } from "./simulation-provider.js";
 import { createOwidDataProvider, createValidationCore, createCalibrationCore, } from "./core/index.js";
-const LOCAL_OWID_DATA_URL = "/data/owid-world-data.json";
+const LOCAL_OWID_DATA_URL = new URL("../data/owid-world-data.json", import.meta.url)
+    .toString();
 let localOwidDatasetPromise = null;
 async function loadLocalOwidDataset() {
     if (!localOwidDatasetPromise) {

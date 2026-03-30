@@ -30,7 +30,8 @@ declare global {
   }
 }
 
-const LOCAL_OWID_DATA_URL = "/data/owid-world-data.json";
+const LOCAL_OWID_DATA_URL = new URL("../data/owid-world-data.json", import.meta.url)
+  .toString();
 let localOwidDatasetPromise: Promise<import("./core/index.js").OwidDataset> | null = null;
 
 async function loadLocalOwidDataset() {

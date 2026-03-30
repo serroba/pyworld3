@@ -38,8 +38,14 @@ declare global {
   }
 }
 
-const LOCAL_STANDARD_RUN_FIXTURE_URL = "/data/standard-run-explore.json";
-const WORLD3_TABLES_URL = "/data/functions-table-world3.json";
+const LOCAL_STANDARD_RUN_FIXTURE_URL = new URL(
+  "../data/standard-run-explore.json",
+  import.meta.url,
+).toString();
+const WORLD3_TABLES_URL = new URL(
+  "../data/functions-table-world3.json",
+  import.meta.url,
+).toString();
 let localStandardRunFixturePromise: Promise<SimulationResult> | null = null;
 let world3TablesPromise: Promise<RawLookupTable[]> | null = null;
 

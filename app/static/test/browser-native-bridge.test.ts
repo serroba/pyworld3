@@ -34,21 +34,21 @@ describe("browser native bridge", () => {
     Reflect.deleteProperty(window, "LocalOwidData");
     Reflect.deleteProperty(window, "SimulationProvider");
     globalThis.fetch = vi.fn(async (input) => {
-      if (input === "/data/owid-world-data.json") {
+      if (input === "http://localhost:3000/data/owid-world-data.json") {
         return {
           ok: true,
           status: 200,
           json: async () => owidDataset,
         } as Response;
       }
-      if (input === "/data/functions-table-world3.json") {
+      if (input === "http://localhost:3000/data/functions-table-world3.json") {
         return {
           ok: true,
           status: 200,
           json: async () => [],
         } as Response;
       }
-      if (input === "/data/standard-run-explore.json") {
+      if (input === "http://localhost:3000/data/standard-run-explore.json") {
         return {
           ok: true,
           status: 200,
@@ -119,7 +119,7 @@ describe("browser native bridge", () => {
   test("surfaces local OWID fetch failures and resets the loader", async () => {
     let firstCall = true;
     globalThis.fetch = vi.fn(async (input) => {
-      if (input !== "/data/owid-world-data.json") {
+      if (input !== "http://localhost:3000/data/owid-world-data.json") {
         throw new Error(`Unexpected fetch input: ${String(input)}`);
       }
       if (firstCall) {

@@ -45,21 +45,21 @@ type TestWindow = Window &
 
 function mockLocalFetch() {
   vi.mocked(globalThis.fetch).mockImplementation(async (input) => {
-    if (input === "/data/functions-table-world3.json") {
+    if (input === "http://localhost:3000/data/functions-table-world3.json") {
       return {
         ok: true,
         json: async () => world3TablesFixture,
       } as Response;
     }
 
-    if (input === "/data/standard-run-explore.json") {
+    if (input === "http://localhost:3000/data/standard-run-explore.json") {
       return {
         ok: true,
         json: async () => fixture,
       } as Response;
     }
 
-    if (input === "/data/owid-world-data.json") {
+    if (input === "http://localhost:3000/data/owid-world-data.json") {
       return {
         ok: true,
         json: async () => ({
@@ -141,12 +141,12 @@ describe("simulation provider", () => {
     ).resolves.toEqual(fixture);
     expect(globalThis.fetch).toHaveBeenNthCalledWith(
       1,
-      "/data/functions-table-world3.json",
+      "http://localhost:3000/data/functions-table-world3.json",
       {},
     );
     expect(globalThis.fetch).toHaveBeenNthCalledWith(
       2,
-      "/data/standard-run-explore.json",
+      "http://localhost:3000/data/standard-run-explore.json",
       { signal },
     );
   });
