@@ -89,10 +89,9 @@ async function main() {
             });
             response.end(payload.body);
         }
-        catch (error) {
-            const message = error instanceof Error ? error.message : String(error);
+        catch {
             response.writeHead(400, { "Content-Type": "text/plain; charset=utf-8" });
-            response.end(message);
+            response.end("Bad request");
         }
     });
     server.listen(options.port, options.host, () => {
