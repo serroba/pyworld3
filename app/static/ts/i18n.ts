@@ -182,6 +182,63 @@ function getStoredLocale(storage: StorageLike | null): string {
   }
 }
 
+const ALLOWED_TRANSLATION_TAGS = new Set(["A", "EM", "STRONG", "CODE", "BR"]);
+const ALLOWED_TRANSLATION_ATTRS = new Map<string, ReadonlySet<string>>([
+  ["A", new Set(["href", "target", "rel"])],
+]);
+
+function appendLocalizedHtml(
+  doc: Document,
+  node: HTMLElement,
+  translated: string,
+) {
+  const parser = new DOMParser();
+  const parsed = parser.parseFromString(translated, "text/html");
+  node.replaceChildren();
+
+  const appendSafeChildren = (source: ParentNode, target: Node) => {
+    source.childNodes.forEach((child) => {
+      if (child.nodeType === Node.TEXT_NODE) {
+        target.appendChild(doc.createTextNode(child.textContent ?? ""));
+        return;
+      }
+
+      if (child.nodeType !== Node.ELEMENT_NODE) {
+        return;
+      }
+
+      const element = child as HTMLElement;
+      const tagName = element.tagName.toUpperCase();
+      if (!ALLOWED_TRANSLATION_TAGS.has(tagName)) {
+        appendSafeChildren(element, target);
+        return;
+      }
+
+      const safeElement = doc.createElement(tagName.toLowerCase());
+      const allowedAttrs = ALLOWED_TRANSLATION_ATTRS.get(tagName) ?? new Set<string>();
+      Array.from(element.attributes).forEach((attribute) => {
+        const attrName = attribute.name.toLowerCase();
+        if (!allowedAttrs.has(attrName)) {
+          return;
+        }
+        if (tagName === "A" && attrName === "href") {
+          const value = attribute.value.trim();
+          if (!/^https?:\/\//i.test(value)) {
+            return;
+          }
+          safeElement.setAttribute(attrName, value);
+          return;
+        }
+        safeElement.setAttribute(attrName, attribute.value);
+      });
+      appendSafeChildren(element, safeElement);
+      target.appendChild(safeElement);
+    });
+  };
+
+  appendSafeChildren(parsed.body, node);
+}
+
 export function createI18n(options: I18nOptions = {}): I18nApi {
   const doc = options.document ?? document;
   const storage = options.storage ?? localStorage;
@@ -229,7 +286,7 @@ export function createI18n(options: I18nOptions = {}): I18nApi {
       if (attr) {
         node.setAttribute(attr, translated);
       } else if (node.dataset.i18nHtml === "true") {
-        node.innerHTML = translated;
+        appendLocalizedHtml(doc, node, translated);
       } else {
         node.textContent = translated;
       }

@@ -167,6 +167,25 @@ describe("i18n", () => {
     expect(i18n.getSupportedLocales().some((locale) => locale.code === "ar")).toBe(true);
   });
 
+  test("sanitizes localized html content before rendering", async () => {
+    document.body.innerHTML = '<p data-i18n="intro.body_1_html" data-i18n-html="true"></p>';
+    const i18n = createI18n({
+      storage: makeStorage(),
+      getNavigatorLanguages: () => ["en"],
+      catalogLoader: async () => ({
+        "meta.title": "World3",
+        "intro.body_1_html": 'Safe <strong>copy</strong> <a href="javascript:alert(1)" onclick="alert(2)">bad</a> <a href="https://example.com" target="_blank" rel="noopener">good</a>',
+      }),
+    });
+
+    await i18n.init();
+
+    const paragraph = document.querySelector("[data-i18n='intro.body_1_html']") as HTMLParagraphElement;
+    expect(paragraph.innerHTML).toBe(
+      'Safe <strong>copy</strong> <a>bad</a> <a href="https://example.com" target="_blank" rel="noopener">good</a>',
+    );
+  });
+
   test("returns fallback keys for missing message helpers", async () => {
     const i18n = createI18n({
       storage: makeStorage(),
