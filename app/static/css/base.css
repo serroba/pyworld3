@@ -124,6 +124,22 @@ img {
     max-height: calc(100vh - 4.5rem - var(--space-md) * 2);
     overflow-y: auto;
   }
+
+  /* Charts inside the workbench preview are too narrow for 2 columns */
+  .advanced-workbench__preview .grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 1440px) {
+  :root {
+    --max-width: 1360px;
+  }
+
+  /* Enough room to restore 2-column charts inside the workbench */
+  .advanced-workbench__preview .grid-2 {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 /* Nav */
