@@ -1,0 +1,26 @@
+{
+  "name": "World3 — Systems Simulation Explorer",
+  "short_name": "World3",
+  "description": "Interactive simulation of the World3 systems dynamics model from The Limits to Growth.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f5f5f0",
+  "theme_color": "#028181",
+  "icons": [
+    {
+      "src": "assets/brand/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any"
+    },
+    {
+      "src": "assets/brand/icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "assets/brand/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ]
+}
