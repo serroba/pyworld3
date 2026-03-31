@@ -10,6 +10,7 @@ export const SUPPORTED_LOCALES = [
     { code: "de", nativeLabel: "Deutsch", direction: "ltr" },
     { code: "it", nativeLabel: "Italiano", direction: "ltr" },
     { code: "nl", nativeLabel: "Nederlands", direction: "ltr" },
+    { code: "hu", nativeLabel: "Magyar", direction: "ltr" },
     { code: "pl", nativeLabel: "Polski", direction: "ltr" },
     { code: "tr", nativeLabel: "Türkçe", direction: "ltr" },
     { code: "ru", nativeLabel: "Русский", direction: "ltr" },
