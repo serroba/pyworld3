@@ -2,6 +2,7 @@ import type {
   ModelDataPayload,
   SimulationResult,
 } from "../simulation-contracts.js";
+import type { World3VariableKey } from "./world3-keys.js";
 import {
   resolveWorld3SimulationPlotVariable,
 } from "./world3-registry.js";
@@ -18,6 +19,8 @@ const PLOT_VARIABLES = [
   { variables: ["fpc"], label: resolveWorld3SimulationPlotVariable("fpc").label, color: "#FF9800" },
   { variables: ["ppolx"], label: resolveWorld3SimulationPlotVariable("ppolx").label, color: "#9C27B0" },
 ] as const;
+
+type PlotVariableKey = (typeof PLOT_VARIABLES)[number]["variables"][number];
 
 function escapeXml(value: string): string {
   return value
@@ -52,8 +55,9 @@ export function formatSimulationSummary(
   const lines: string[] = [header, ""];
   const bySector = new Map<string, string[]>();
 
-  for (const [varName, series] of Object.entries(result.series)) {
-    if (series.values.length === 0) {
+  for (const varName of Object.keys(result.series) as World3VariableKey[]) {
+    const series = result.series[varName];
+    if (!series || series.values.length === 0) {
       continue;
     }
 
@@ -111,7 +115,7 @@ export function renderSimulationSvg(result: SimulationResult): string {
   const legendLeft = PADDING.left + plotWidth + LEGEND_GAP;
 
   PLOT_VARIABLES.forEach(({ variables: varNames, label, color }, index) => {
-    const series = varNames
+    const series = (varNames as readonly PlotVariableKey[])
       .map((varName) => result.series[varName])
       .find((candidate) => candidate?.values.length);
     const values = series?.values;

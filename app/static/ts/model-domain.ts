@@ -1,21 +1,22 @@
 import { ModelData } from "./model-data.js";
 import type { SimulationRequest } from "./simulation-contracts.js";
+import type { World3ConstantKey, World3VariableKey } from "./core/world3-keys.js";
 import {
   WORLD3_SCENARIO_CONTROL_REGISTRY,
   type ScenarioControlKey,
 } from "./scenario-controls.js";
 
-type VariableMeta = (typeof ModelData.variableMeta)[string];
-type ConstantMeta = (typeof ModelData.constantMeta)[string];
+type VariableMeta = (typeof ModelData.variableMeta)[World3VariableKey];
+type ConstantMeta = (typeof ModelData.constantMeta)[World3ConstantKey];
 type RequestFieldKey = ScenarioControlKey;
 
 export type ModelVariableReference = {
-  key: string;
+  key: World3VariableKey;
   meta: VariableMeta;
 };
 
 export type ModelControlReference = {
-  key: string;
+  key: World3ConstantKey | RequestFieldKey;
   label: string;
   unit: string;
   defaultValue: number | undefined;
@@ -24,30 +25,30 @@ export type ModelControlReference = {
 
 export type RawModelSection = {
   id: string;
-  chartVars?: string[];
-  constantKeys?: string[];
+  chartVars?: World3VariableKey[];
+  constantKeys?: World3ConstantKey[];
   requestKeys?: RequestFieldKey[];
-  constants?: Array<string | { key: string }>;
+  constants?: Array<World3ConstantKey | { key: World3ConstantKey }>;
 };
 
 export type HydratedModelSection = Omit<
   RawModelSection,
   "chartVars" | "constants" | "constantKeys" | "requestKeys"
 > & {
-  chartVars: string[];
+  chartVars: World3VariableKey[];
   variables: ModelVariableReference[];
   constants: ModelControlReference[];
 };
 
 export type RawMathExplainer = {
-  variables?: string[];
+  variables?: World3VariableKey[];
 };
 
 export type HydratedMathExplainer = Omit<RawMathExplainer, "variables"> & {
   variables: ModelVariableReference[];
 };
 
-function resolveVariable(key: string): ModelVariableReference {
+function resolveVariable(key: World3VariableKey): ModelVariableReference {
   const meta = ModelData.variableMeta[key];
   if (!meta) {
     throw new Error(`Unknown World3 variable: ${key}`);
@@ -55,7 +56,7 @@ function resolveVariable(key: string): ModelVariableReference {
   return { key, meta };
 }
 
-function resolveConstant(key: string): ModelControlReference {
+function resolveConstant(key: World3ConstantKey): ModelControlReference {
   const meta = ModelData.constantMeta[key];
   if (!meta) {
     throw new Error(`Unknown World3 constant: ${key}`);
@@ -91,9 +92,9 @@ function resolveRequestField(key: RequestFieldKey): ModelControlReference {
 }
 
 function normalizeConstantKeys(
-  constantKeys?: string[],
-  legacyConstants?: Array<string | { key: string }>,
-): string[] {
+  constantKeys?: World3ConstantKey[],
+  legacyConstants?: Array<World3ConstantKey | { key: World3ConstantKey }>,
+): World3ConstantKey[] {
   if (Array.isArray(constantKeys)) {
     return constantKeys;
   }

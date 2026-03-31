@@ -1,4 +1,5 @@
 import type { SimulationResult } from "../simulation-contracts.js";
+import type { World3VariableKey } from "./world3-keys.js";
 import type { ValidationDataResponse } from "./owid-data.js";
 
 type ValidationConfidence = "high" | "medium" | "low";
@@ -7,14 +8,14 @@ type ValidationTransform = (value: number) => number;
 
 type ValidationMapping = {
   owidIndicator: string;
-  world3Param: string;
+  world3Param: World3VariableKey;
   confidence: ValidationConfidence;
   description: string;
   transform?: ValidationTransform;
 };
 
 export type ValidationMetricOutput = {
-  variable: string;
+  variable: World3VariableKey;
   owid_indicator: string;
   confidence: ValidationConfidence;
   description: string;
@@ -29,13 +30,13 @@ export type ValidationResponse = {
   entity: string;
   overlap_start: number;
   overlap_end: number;
-  metrics: Record<string, ValidationMetricOutput>;
+  metrics: Partial<Record<World3VariableKey, ValidationMetricOutput>>;
   warnings: string[];
 };
 
 type ValidationOptions = {
   entity?: string;
-  variables?: string[];
+  variables?: World3VariableKey[];
 };
 
 const validationMappings: ValidationMapping[] = [
@@ -277,7 +278,7 @@ export function validateSimulationResult(
   const mappings = requested
     ? validationMappings.filter((mapping) => requested.has(mapping.world3Param))
     : validationMappings;
-  const metrics: Record<string, ValidationMetricOutput> = {};
+  const metrics: Partial<Record<World3VariableKey, ValidationMetricOutput>> = {};
   const warnings = [...validationData.warnings];
   let overlapStart = Number.POSITIVE_INFINITY;
   let overlapEnd = Number.NEGATIVE_INFINITY;

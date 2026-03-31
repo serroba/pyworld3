@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 
 import { ModelDomain } from "../ts/model-domain.ts";
+import type { RawModelSection } from "../ts/model-domain.ts";
 
 describe("ModelDomain", () => {
   test("hydrates model sections from canonical variable and constant metadata", () => {
@@ -41,14 +42,14 @@ describe("ModelDomain", () => {
       ModelDomain.hydrateSection({
         id: "broken",
         chartVars: ["pop", "not-real"],
-      }),
+      } as unknown as RawModelSection),
     ).toThrow("Unknown World3 variable: not-real");
 
     expect(() =>
       ModelDomain.hydrateSection({
         id: "broken-constants",
         constantKeys: ["len", "bad-constant"],
-      }),
+      } as unknown as RawModelSection),
     ).toThrow("Unknown World3 constant: bad-constant");
 
     expect(() =>

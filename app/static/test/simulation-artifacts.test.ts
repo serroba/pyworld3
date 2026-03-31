@@ -50,7 +50,7 @@ describe("simulation artifacts", () => {
           custom_metric: { name: "custom_metric", values: [5, 5, 5] },
           empty: { name: "empty", values: [] },
         },
-      },
+      } as unknown as SimulationResult,
       ModelData,
     );
 
@@ -68,7 +68,7 @@ describe("simulation artifacts", () => {
           malformed_start: { name: "malformed_start", values: [undefined as unknown as number, 5] },
           malformed_end: { name: "malformed_end", values: [5, undefined as unknown as number] },
         },
-      },
+      } as unknown as SimulationResult,
       ModelData,
     );
 

@@ -38,8 +38,9 @@ export function formatSimulationSummary(result, modelData) {
     const header = `World3 Simulation Summary (${result.year_min}-${result.year_max}, dt=${result.dt})`;
     const lines = [header, ""];
     const bySector = new Map();
-    for (const [varName, series] of Object.entries(result.series)) {
-        if (series.values.length === 0) {
+    for (const varName of Object.keys(result.series)) {
+        const series = result.series[varName];
+        if (!series || series.values.length === 0) {
             continue;
         }
         const meta = modelData.variableMeta[varName];

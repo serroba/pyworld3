@@ -1,5 +1,6 @@
 import type { TimeSeriesResult } from "../simulation-contracts.js";
 import type { World3SimulationBuffers } from "./world3-simulation-sectors.js";
+import type { World3ConstantKey, World3VariableKey } from "./world3-keys.js";
 
 export type World3SectorName =
   | "Population"
@@ -12,7 +13,7 @@ export type World3SectorName =
 export type World3SeriesKind = "stock" | "flow" | "auxiliary";
 
 export type World3SeriesDefinition = {
-  key: keyof World3SimulationBuffers;
+  key: World3VariableKey;
   fullName: string;
   sector: World3SectorName;
   unit: string;
@@ -23,7 +24,7 @@ export type World3SeriesDefinition = {
 };
 
 export type World3ConstantDefinition = {
-  key: string;
+  key: World3ConstantKey;
   fullName: string;
   sector: Exclude<World3SectorName, "Cross-sector">;
   unit: string;
@@ -165,7 +166,7 @@ const SERIES_BY_KEY = new Map(
   WORLD3_SERIES_REGISTRY.map((definition) => [definition.key, definition] as const),
 );
 
-export const WORLD3_DEFAULT_VARIABLES: ReadonlyArray<keyof World3SimulationBuffers> = [
+export const WORLD3_DEFAULT_VARIABLES: ReadonlyArray<World3VariableKey> = [
   "pop",
   "nr",
   "nrfr",
@@ -189,9 +190,9 @@ export const WORLD3_DEFAULT_VARIABLES: ReadonlyArray<keyof World3SimulationBuffe
 ] as const;
 
 export function resolveWorld3CompareMetric(
-  key: keyof World3SimulationBuffers,
-  definitions: ReadonlyMap<keyof World3SimulationBuffers, World3SeriesDefinition> = SERIES_BY_KEY,
-): { label: string; variable: keyof World3SimulationBuffers } {
+  key: World3VariableKey,
+  definitions: ReadonlyMap<World3VariableKey, World3SeriesDefinition> = SERIES_BY_KEY,
+): { label: string; variable: World3VariableKey } {
   const definition = definitions.get(key);
   if (!definition?.compareMetricLabel) {
     throw new Error(`Missing compare metric label for ${key}`);
@@ -212,9 +213,9 @@ export const WORLD3_COMPARE_METRICS = ([
 ] as const).map((key) => resolveWorld3CompareMetric(key));
 
 export function resolveWorld3SimulationPlotVariable(
-  key: keyof World3SimulationBuffers,
-  definitions: ReadonlyMap<keyof World3SimulationBuffers, World3SeriesDefinition> = SERIES_BY_KEY,
-): { label: string; variable: keyof World3SimulationBuffers } {
+  key: World3VariableKey,
+  definitions: ReadonlyMap<World3VariableKey, World3SeriesDefinition> = SERIES_BY_KEY,
+): { label: string; variable: World3VariableKey } {
   const definition = definitions.get(key);
   if (!definition?.simulationPlotLabel) {
     throw new Error(`Missing simulation plot label for ${key}`);
@@ -234,7 +235,7 @@ export const WORLD3_SIMULATION_PLOT_VARIABLES = ([
 ] as const).map((key) => resolveWorld3SimulationPlotVariable(key));
 
 export function buildWorld3VariableMeta(): Record<
-  string,
+  World3VariableKey,
   { full_name: string; sector: string; unit: string }
 > {
   return Object.fromEntries(
@@ -246,11 +247,11 @@ export function buildWorld3VariableMeta(): Record<
         unit: definition.unit,
       },
     ]),
-  );
+  ) as Record<World3VariableKey, { full_name: string; sector: string; unit: string }>;
 }
 
 export function buildWorld3ConstantMeta(): Record<
-  string,
+  World3ConstantKey,
   { full_name: string; sector: string; unit: string }
 > {
   return Object.fromEntries(
@@ -262,13 +263,13 @@ export function buildWorld3ConstantMeta(): Record<
         unit: definition.unit,
       },
     ]),
-  );
+  ) as Record<World3ConstantKey, { full_name: string; sector: string; unit: string }>;
 }
 
 export function buildWorld3SeriesResult(
   buffers: World3SimulationBuffers,
-): Record<string, TimeSeriesResult> {
-  const series: Record<string, TimeSeriesResult> = {};
+): Record<World3VariableKey, TimeSeriesResult<World3VariableKey>> {
+  const series = {} as Record<World3VariableKey, TimeSeriesResult<World3VariableKey>>;
   for (const definition of WORLD3_SERIES_REGISTRY) {
     series[definition.key] = {
       name: definition.key,

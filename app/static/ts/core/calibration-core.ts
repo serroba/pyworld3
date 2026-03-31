@@ -1,4 +1,5 @@
 import type { ConstantConstraintMap, ModelDataPayload } from "../simulation-contracts.js";
+import type { World3ConstantKey } from "./world3-keys.js";
 import type { CalibrationDataResponse } from "./owid-data.js";
 
 type CalibrationConfidence = "high" | "medium" | "low";
@@ -7,7 +8,7 @@ type CalibrationTransform = (value: number, context: Record<string, number>) => 
 
 type CalibrationMapping = {
   owidIndicator: string;
-  world3Param: string;
+  world3Param: World3ConstantKey;
   confidence: CalibrationConfidence;
   description: string;
   requiresIndicators?: string[];
@@ -15,7 +16,7 @@ type CalibrationMapping = {
 };
 
 export type CalibratedConstantOutput = {
-  name: string;
+  name: World3ConstantKey;
   value: number;
   confidence: CalibrationConfidence;
   owid_indicator: string;
@@ -26,12 +27,12 @@ export type CalibratedConstantOutput = {
 export type CalibrationResponse = {
   reference_year: number;
   entity: string;
-  constants: Record<string, CalibratedConstantOutput>;
+  constants: Partial<Record<World3ConstantKey, CalibratedConstantOutput>>;
   warnings: string[];
 };
 
 type CalibrateOptions = {
-  parameters?: string[];
+  parameters?: World3ConstantKey[];
 };
 
 const calibrationMappings: CalibrationMapping[] = [
@@ -112,7 +113,7 @@ function formatFourSig(value: number): string {
 }
 
 function applyConstraint(
-  param: string,
+  param: World3ConstantKey,
   value: number,
   constraints: ConstantConstraintMap,
   warnings: string[],
@@ -148,7 +149,7 @@ export function calibrateFromIndicatorData(
     ? calibrationMappings.filter((mapping) => requested.has(mapping.world3Param))
     : calibrationMappings;
 
-  const constants: Record<string, CalibratedConstantOutput> = {};
+  const constants: Partial<Record<World3ConstantKey, CalibratedConstantOutput>> = {};
   const warnings = [...data.warnings];
 
   for (const mapping of mappings) {

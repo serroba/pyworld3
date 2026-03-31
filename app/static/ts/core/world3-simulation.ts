@@ -8,6 +8,7 @@
  */
 
 import type { ConstantMap, SimulationResult } from "../simulation-contracts.js";
+import type { World3ConstantKey } from "./world3-keys.js";
 import { createTimeGrid, createSeriesBuffer, Smooth, Delay3, Dlinf3 } from "./runtime-primitives.js";
 import { type LookupInterpolator, type RawLookupTable, createLookupLibrary } from "./world3-tables.js";
 import {
@@ -37,7 +38,7 @@ function requireLookup(lib: Map<string, LookupInterpolator>, name: string): Look
   return entry.evaluate;
 }
 
-function c(constants: ConstantMap, name: string): number {
+function c(constants: ConstantMap, name: World3ConstantKey): number {
   const val = constants[name];
   if (val === undefined) {
     throw new Error(`Missing constant: ${name}`);

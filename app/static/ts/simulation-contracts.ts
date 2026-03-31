@@ -5,8 +5,11 @@
  * browser-native migration honest about request/response boundaries.
  */
 
-export type ConstantMap = Record<string, number>;
-export type ConstantConstraintMap = Record<string, [number | null, number | null]>;
+import type { World3ConstantKey, World3VariableKey } from "./core/world3-keys.js";
+
+export type ConstantMap = Partial<Record<World3ConstantKey, number>>;
+export type ConstantDefaultsMap = Record<World3ConstantKey, number>;
+export type ConstantConstraintMap = Partial<Record<World3ConstantKey, [number | null, number | null]>>;
 
 export type SimulationRequest = {
   year_min?: number;
@@ -15,7 +18,7 @@ export type SimulationRequest = {
   pyear?: number;
   iphst?: number;
   constants?: ConstantMap;
-  output_variables?: string[];
+  output_variables?: World3VariableKey[];
 };
 
 export type ScenarioSpec = {
@@ -23,8 +26,8 @@ export type ScenarioSpec = {
   request?: SimulationRequest;
 };
 
-export type TimeSeriesResult = {
-  name: string;
+export type TimeSeriesResult<K extends World3VariableKey = World3VariableKey> = {
+  name: K;
   values: number[];
 };
 
@@ -34,12 +37,12 @@ export type SimulationResult = {
   dt: number;
   time: number[];
   constants_used: ConstantMap;
-  series: Record<string, TimeSeriesResult>;
+  series: Partial<Record<World3VariableKey, TimeSeriesResult>>;
 };
 
 export type CompareMetric = {
   label: string;
-  variable: string;
+  variable: World3VariableKey;
   value_a: number;
   value_b: number;
   delta_pct: number | null;
@@ -62,14 +65,14 @@ export type PresetInfo = {
   dt?: number;
   pyear?: number;
   iphst?: number;
-  output_variables?: string[];
+  output_variables?: World3VariableKey[];
 };
 
 export type ModelDataPayload = {
-  constantDefaults: ConstantMap;
+  constantDefaults: ConstantDefaultsMap;
   constantConstraints: ConstantConstraintMap;
   constantMeta: Record<
-    string,
+    World3ConstantKey,
     {
       full_name: string;
       sector: string;
@@ -77,14 +80,14 @@ export type ModelDataPayload = {
     }
   >;
   variableMeta: Record<
-    string,
+    World3VariableKey,
     {
       full_name: string;
       sector: string;
       unit: string;
     }
   >;
-  defaultVariables: string[];
+  defaultVariables: World3VariableKey[];
   scenarioControlDefaults: Partial<Record<keyof SimulationRequest, number>>;
   scenarioControlConstraints: Partial<
     Record<keyof SimulationRequest, [number | null, number | null]>
