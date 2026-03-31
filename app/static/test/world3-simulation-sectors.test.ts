@@ -279,4 +279,34 @@ describe("world3 simulation sector helpers", () => {
     expect(buffers.fioai[0]).toBeCloseTo(0.4);
     expect(buffers.icir[0]).toBeCloseTo(16);
   });
+
+  test("derives fertility and birth flows through the DSL-backed population birth equations", () => {
+    const buffers = createBuffers();
+    const constants = createConstants();
+    const lookups = createLookups();
+
+    buffers.le[0] = 2;
+    buffers.p1[0] = 30;
+    buffers.p2[0] = 60;
+    buffers.p3[0] = 90;
+    buffers.p4[0] = 120;
+    buffers.d[0] = 12;
+    buffers.sopc[0] = 5;
+    buffers.dtf[0] = 3;
+    buffers.fce[0] = 0.25;
+    buffers.fioaa[0] = 0.1;
+    buffers.fioas[0] = 0.2;
+    buffers.fioac[0] = 0.3;
+    buffers.io[0] = 40;
+
+    computeMortalityAndBirthStep(0, 1900, buffers, constants, lookups);
+
+    expect(buffers.mtf[0]).toBeCloseTo(constants.mtfn);
+    expect(buffers.fcapc[0]).toBeCloseTo((constants.mtfn / 3 - 1) * 5);
+    expect(buffers.tf[0]).toBeCloseTo(Math.min(constants.mtfn, constants.mtfn * 0.75 + 3 * 0.25));
+    expect(buffers.b[0]).toBeCloseTo(buffers.tf[0]! * 60 * 0.5 / constants.rlt);
+
+    computeMortalityAndBirthStep(0, 5000, buffers, constants, lookups);
+    expect(buffers.b[0]).toBeCloseTo(12);
+  });
 });
