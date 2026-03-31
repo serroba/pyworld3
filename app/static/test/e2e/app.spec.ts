@@ -52,7 +52,7 @@ test.describe("localization", () => {
     await page.waitForURL(/#explore\?preset=standard-run&view=combined/);
     await expect(page).toHaveTitle("World3 — Systemsimulations-Explorer");
     await expect(page.locator("nav.site-nav")).toContainText("Erkunden");
-    await expect(page.locator(".chart-view-toggle")).toContainText("Klassisches Einzelchart");
+    await expect(page.locator(".chart-view-toggle")).toContainText("Klassisches Einzeldiagramm");
   });
 });
 
