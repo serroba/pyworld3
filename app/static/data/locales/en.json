@@ -236,5 +236,6 @@
   "unit.dollar_per_ha_yr": "$/ha/yr",
   "unit.kg_per_yr": "kg/yr",
   "unit.kg_per_ha_yr": "kg/ha/yr",
-  "unit.ha": "ha"
+  "unit.ha": "ha",
+  "intro.ack.item_0_html": "<a href=\"https://www.clubofrome.org/\" target=\"_blank\" rel=\"noopener\">Club of Rome</a> — commissioned the original <em>Limits to Growth</em> study at MIT (1972)"
 }
