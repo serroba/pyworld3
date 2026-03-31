@@ -1,14 +1,15 @@
+import { resolveWorld3SimulationPlotVariable, } from "./world3-registry.js";
 const SVG_WIDTH = 1000;
 const SVG_HEIGHT = 600;
 const LEGEND_WIDTH = 220;
 const LEGEND_GAP = 20;
 const PADDING = { top: 48, right: 40, bottom: 48, left: 72 };
 const PLOT_VARIABLES = [
-    [["pop"], "Population", "#2196F3"],
-    [["nr", "nrfr"], "Resources", "#4CAF50"],
-    [["iopc"], "Industrial output/cap", "#F44336"],
-    [["fpc"], "Food/capita", "#FF9800"],
-    [["ppolx"], "Pollution index", "#9C27B0"],
+    { variables: ["pop"], label: resolveWorld3SimulationPlotVariable("pop").label, color: "#2196F3" },
+    { variables: ["nr", "nrfr"], label: resolveWorld3SimulationPlotVariable("nrfr").label, color: "#4CAF50" },
+    { variables: ["iopc"], label: resolveWorld3SimulationPlotVariable("iopc").label, color: "#F44336" },
+    { variables: ["fpc"], label: resolveWorld3SimulationPlotVariable("fpc").label, color: "#FF9800" },
+    { variables: ["ppolx"], label: resolveWorld3SimulationPlotVariable("ppolx").label, color: "#9C27B0" },
 ];
 function escapeXml(value) {
     return value
@@ -85,7 +86,7 @@ export function renderSimulationSvg(result) {
     const legendItems = [];
     const paths = [];
     const legendLeft = PADDING.left + plotWidth + LEGEND_GAP;
-    PLOT_VARIABLES.forEach(([varNames, label, color], index) => {
+    PLOT_VARIABLES.forEach(({ variables: varNames, label, color }, index) => {
         const series = varNames
             .map((varName) => result.series[varName])
             .find((candidate) => candidate?.values.length);

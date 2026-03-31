@@ -60,6 +60,22 @@ describe("simulation artifacts", () => {
     expect(summary).not.toContain("empty");
   });
 
+  test("skips malformed series entries with missing first or last values", () => {
+    const summary = formatSimulationSummary(
+      {
+        ...fixture,
+        series: {
+          malformed_start: { name: "malformed_start", values: [undefined as unknown as number, 5] },
+          malformed_end: { name: "malformed_end", values: [5, undefined as unknown as number] },
+        },
+      },
+      ModelData,
+    );
+
+    expect(summary).not.toContain("malformed_start");
+    expect(summary).not.toContain("malformed_end");
+  });
+
   test("renders sparse series with fallback years and compact dt formatting", () => {
     const sparse = {
       ...fixture,
@@ -85,5 +101,18 @@ describe("simulation artifacts", () => {
     expect(inMillions).toContain("dt 2.00M");
     expect(inBillions).toContain("dt 3.00B");
     expect(inTrillions).toContain("dt 4.00T");
+  });
+
+  test("omits legend entries and paths for missing plotted series", () => {
+    const svg = renderSimulationSvg({
+      ...fixture,
+      series: {
+        pop: fixture.series.pop!,
+      },
+    });
+
+    expect(svg).toContain("Population");
+    expect(svg).not.toContain("Resources");
+    expect(svg).not.toContain("Industrial output/cap");
   });
 });

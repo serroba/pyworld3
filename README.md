@@ -9,6 +9,7 @@
 - [What This Repo Is](#what-this-repo-is)
 - [Quick Start](#quick-start)
 - [GitHub Pages](#github-pages)
+- [Cloudflare](#cloudflare)
 - [CLI](#cli)
 - [Project Layout](#project-layout)
 - [Architecture](#architecture)
@@ -78,6 +79,14 @@ The static app is deployed through GitHub Pages using `.github/workflows/deploy-
 The site is built from `app/static/` and is safe to serve under the repository subpath:
 
 `https://serroba.github.io/world3/`
+
+# Cloudflare
+
+The repo also includes a root [wrangler.jsonc](./wrangler.jsonc) so Cloudflare can deploy the app as static assets directly from:
+
+`app/static/`
+
+That means the current browser app does not require a server runtime on Cloudflare either; it can be published as an assets-only Worker deployment.
 
 # CLI
 

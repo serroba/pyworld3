@@ -1,0 +1,8 @@
+{
+  "name": "world3",
+  "compatibility_date": "2026-03-31",
+  "assets": {
+    "directory": "./app/static",
+    "not_found_handling": "single-page-application"
+  }
+}
