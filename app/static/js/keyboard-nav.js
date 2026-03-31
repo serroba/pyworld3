@@ -7,6 +7,9 @@
  */
 
 (function initKeyboardNav() {
+  const isMac = /Mac|iPhone|iPad|iPod/.test(navigator.platform || navigator.userAgent);
+  const modLabel = isMac ? "\u2303" : "Alt"; // ⌃ (Control) on Mac, Alt elsewhere
+
   const shortcuts = {
     "1": "#intro",
     "2": "#history",
@@ -20,14 +23,14 @@
 
   const shortcutDescriptions = [
     { keys: "?", desc: "Show this help" },
-    { keys: "Alt + 1", desc: "Home" },
-    { keys: "Alt + 2", desc: "History" },
-    { keys: "Alt + 3", desc: "FAQ" },
-    { keys: "Alt + 4", desc: "Model" },
-    { keys: "Alt + 5", desc: "Explore" },
-    { keys: "Alt + 6", desc: "Compare" },
-    { keys: "Alt + 7", desc: "Advanced" },
-    { keys: "Alt + 8", desc: "Calibrate" },
+    { keys: modLabel + " +1", desc: "Home" },
+    { keys: modLabel + " +2", desc: "History" },
+    { keys: modLabel + " +3", desc: "FAQ" },
+    { keys: modLabel + " +4", desc: "Model" },
+    { keys: modLabel + " +5", desc: "Explore" },
+    { keys: modLabel + " +6", desc: "Compare" },
+    { keys: modLabel + " +7", desc: "Advanced" },
+    { keys: modLabel + " +8", desc: "Calibrate" },
     { keys: "Esc", desc: "Close dialog / accordion" },
     { keys: "Tab", desc: "Move focus forward" },
     { keys: "Shift + Tab", desc: "Move focus backward" },
@@ -123,8 +126,8 @@
       return;
     }
 
-    // Alt+number navigation
-    if (e.altKey && shortcuts[e.key]) {
+    // Modifier+number navigation (Ctrl on Mac, Alt elsewhere)
+    if ((isMac ? e.ctrlKey : e.altKey) && shortcuts[e.key]) {
       e.preventDefault();
       if (dialog) closeDialog();
       Router.go(shortcuts[e.key]);
