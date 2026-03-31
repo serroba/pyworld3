@@ -24,6 +24,7 @@
   // Register routes
   Router.register("#intro", "view-intro", IntroView.render);
   Router.register("#history", "view-history", HistoryView.render);
+  Router.register("#faq", "view-faq", FaqView.render);
   Router.register("#model", "view-model", ModelView.render);
   Router.register("#explore", "view-explore", ExploreView.render);
   Router.register("#compare", "view-compare", CompareView.render);
