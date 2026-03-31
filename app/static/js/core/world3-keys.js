@@ -86,6 +86,67 @@ export const WORLD3_VARIABLE_KEYS = [
     "ai",
     "mtf",
 ];
+export const WORLD3_STOCK_KEYS = [
+    "p1",
+    "p2",
+    "p3",
+    "p4",
+    "pop",
+    "ic",
+    "sc",
+    "al",
+    "pal",
+    "uil",
+    "lfert",
+    "ppol",
+    "nr",
+];
+export const WORLD3_FLOW_KEYS = [
+    "d",
+    "icdr",
+    "scdr",
+    "so",
+    "ppgao",
+    "ppapr",
+    "ppasr",
+    "io",
+    "scir",
+    "lfd",
+    "lrui",
+    "lfr",
+    "nrur",
+    "f",
+    "tai",
+    "ldr",
+    "cai",
+    "ler",
+    "ppgr",
+    "mat1",
+    "mat2",
+    "mat3",
+    "d1",
+    "d2",
+    "d3",
+    "d4",
+    "b",
+    "fioai",
+    "icir",
+    "ai",
+];
+export const WORLD3_AUXILIARY_KEYS = WORLD3_VARIABLE_KEYS.filter((key) => !WORLD3_STOCK_KEYS.includes(key) &&
+    !WORLD3_FLOW_KEYS.includes(key));
+const STOCK_KEY_SET = new Set(WORLD3_STOCK_KEYS);
+const FLOW_KEY_SET = new Set(WORLD3_FLOW_KEYS);
+const AUXILIARY_KEY_SET = new Set(WORLD3_AUXILIARY_KEYS);
+export function isWorld3StockKey(key) {
+    return STOCK_KEY_SET.has(key);
+}
+export function isWorld3FlowKey(key) {
+    return FLOW_KEY_SET.has(key);
+}
+export function isWorld3AuxiliaryKey(key) {
+    return AUXILIARY_KEY_SET.has(key);
+}
 export const WORLD3_CONSTANT_KEYS = [
     "ahl70",
     "alai1",

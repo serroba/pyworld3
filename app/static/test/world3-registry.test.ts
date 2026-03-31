@@ -2,6 +2,16 @@ import { describe, expect, test } from "vitest";
 
 import { ModelData } from "../ts/model-data.ts";
 import {
+  type World3VariableKey,
+  isWorld3AuxiliaryKey,
+  isWorld3FlowKey,
+  isWorld3StockKey,
+  WORLD3_AUXILIARY_KEYS,
+  WORLD3_FLOW_KEYS,
+  WORLD3_STOCK_KEYS,
+  WORLD3_VARIABLE_KEYS,
+} from "../ts/core/world3-keys.ts";
+import {
   buildWorld3SeriesResult,
   buildWorld3ConstantMeta,
   buildWorld3VariableMeta,
@@ -10,6 +20,7 @@ import {
   WORLD3_COMPARE_METRICS,
   WORLD3_DEFAULT_VARIABLES,
   WORLD3_SERIES_REGISTRY,
+  type World3SeriesDefinition,
 } from "../ts/core/world3-registry.ts";
 import type { World3SimulationBuffers } from "../ts/core/world3-simulation-sectors.ts";
 
@@ -111,6 +122,34 @@ describe("World3 registry", () => {
     expect(new Set(keys).size).toBe(keys.length);
   });
 
+  test("partitions variable keys into stock, flow, and auxiliary families", () => {
+    const allFamilyKeys = [
+      ...WORLD3_STOCK_KEYS,
+      ...WORLD3_FLOW_KEYS,
+      ...WORLD3_AUXILIARY_KEYS,
+    ];
+    expect(new Set(allFamilyKeys).size).toBe(WORLD3_VARIABLE_KEYS.length);
+    expect(new Set(allFamilyKeys)).toEqual(new Set(WORLD3_VARIABLE_KEYS));
+
+    for (const key of WORLD3_STOCK_KEYS) {
+      expect(isWorld3StockKey(key)).toBe(true);
+      expect(isWorld3FlowKey(key)).toBe(false);
+      expect(isWorld3AuxiliaryKey(key)).toBe(false);
+    }
+
+    for (const key of WORLD3_FLOW_KEYS) {
+      expect(isWorld3StockKey(key)).toBe(false);
+      expect(isWorld3FlowKey(key)).toBe(true);
+      expect(isWorld3AuxiliaryKey(key)).toBe(false);
+    }
+
+    for (const key of WORLD3_AUXILIARY_KEYS) {
+      expect(isWorld3StockKey(key)).toBe(false);
+      expect(isWorld3FlowKey(key)).toBe(false);
+      expect(isWorld3AuxiliaryKey(key)).toBe(true);
+    }
+  });
+
   test("covers all default UI variables", () => {
     const exportedKeys = new Set(WORLD3_SERIES_REGISTRY.map((definition) => definition.key));
     expect(WORLD3_DEFAULT_VARIABLES).toEqual([
@@ -163,11 +202,12 @@ describe("World3 registry", () => {
   });
 
   test("throws when a requested compare metric lacks a registry label", () => {
-    const definitions = new Map(
+    const definitions = new Map<World3VariableKey, World3SeriesDefinition>(
       WORLD3_SERIES_REGISTRY.map((definition) => [definition.key, definition] as const),
     );
     const popDefinition = definitions.get("pop")!;
-    const { compareMetricLabel: _compareMetricLabel, ...withoutCompareMetric } = popDefinition;
+    const { compareMetricLabel: _compareMetricLabel, ...withoutCompareMetric } =
+      popDefinition as World3SeriesDefinition;
     definitions.set("pop", {
       ...withoutCompareMetric,
     });
@@ -178,11 +218,12 @@ describe("World3 registry", () => {
   });
 
   test("throws when a requested simulation plot variable lacks a registry label", () => {
-    const definitions = new Map(
+    const definitions = new Map<World3VariableKey, World3SeriesDefinition>(
       WORLD3_SERIES_REGISTRY.map((definition) => [definition.key, definition] as const),
     );
     const popDefinition = definitions.get("pop")!;
-    const { simulationPlotLabel: _simulationPlotLabel, ...withoutSimulationPlot } = popDefinition;
+    const { simulationPlotLabel: _simulationPlotLabel, ...withoutSimulationPlot } =
+      popDefinition as World3SeriesDefinition;
     definitions.set("pop", {
       ...withoutSimulationPlot,
     });

@@ -1,5 +1,4 @@
 import type { TimeSeriesResult } from "../simulation-contracts.js";
-import type { World3SimulationBuffers } from "./world3-simulation-sectors.js";
 import type { World3ConstantKey, World3VariableKey } from "./world3-keys.js";
 
 export type World3SectorName =
@@ -30,7 +29,7 @@ export type World3ConstantDefinition = {
   unit: string;
 };
 
-export const WORLD3_SERIES_REGISTRY: ReadonlyArray<World3SeriesDefinition> = [
+export const WORLD3_SERIES_REGISTRY = [
   { key: "pop", fullName: "Total population", sector: "Population", unit: "people", kind: "stock", defaultOutput: true, compareMetricLabel: "Population", simulationPlotLabel: "Population" },
   { key: "le", fullName: "Life expectancy", sector: "Population", unit: "years", kind: "auxiliary", defaultOutput: true, compareMetricLabel: "Life expectancy" },
   { key: "iopc", fullName: "Industrial output per capita", sector: "Capital", unit: "$/person/yr", kind: "auxiliary", defaultOutput: true, compareMetricLabel: "Industrial output/cap", simulationPlotLabel: "Industrial output/cap" },
@@ -92,9 +91,9 @@ export const WORLD3_SERIES_REGISTRY: ReadonlyArray<World3SeriesDefinition> = [
   { key: "lrui", fullName: "Land removal for urban-industrial use", sector: "Agriculture", unit: "ha/yr", kind: "flow" },
   { key: "ppapr", fullName: "Persistent pollution appearance rate", sector: "Pollution", unit: "pollution units/yr", kind: "flow" },
   { key: "ppasr", fullName: "Persistent pollution assimilation rate", sector: "Pollution", unit: "pollution units/yr", kind: "flow" },
-] satisfies readonly World3SeriesDefinition[];
+] as const satisfies readonly World3SeriesDefinition[];
 
-export const WORLD3_CONSTANT_REGISTRY: ReadonlyArray<World3ConstantDefinition> = [
+export const WORLD3_CONSTANT_REGISTRY = [
   { key: "ahl70", fullName: "Assimilation half-life in 1970", sector: "Pollution", unit: "years" },
   { key: "alai1", fullName: "Avg lifetime agricultural input 1", sector: "Agriculture", unit: "years" },
   { key: "alai2", fullName: "Avg lifetime agricultural input 2", sector: "Agriculture", unit: "years" },
@@ -160,7 +159,7 @@ export const WORLD3_CONSTANT_REGISTRY: ReadonlyArray<World3ConstantDefinition> =
   { key: "uildt", fullName: "Urban-industrial land development time", sector: "Agriculture", unit: "years" },
   { key: "uili", fullName: "Initial urban-industrial land", sector: "Agriculture", unit: "ha" },
   { key: "zpgt", fullName: "Zero population growth time", sector: "Population", unit: "year" },
-] satisfies readonly World3ConstantDefinition[];
+] as const satisfies readonly World3ConstantDefinition[];
 
 const SERIES_BY_KEY = new Map(
   WORLD3_SERIES_REGISTRY.map((definition) => [definition.key, definition] as const),
@@ -267,7 +266,7 @@ export function buildWorld3ConstantMeta(): Record<
 }
 
 export function buildWorld3SeriesResult(
-  buffers: World3SimulationBuffers,
+  buffers: Record<World3VariableKey, Float64Array>,
 ): Record<World3VariableKey, TimeSeriesResult<World3VariableKey>> {
   const series = {} as Record<World3VariableKey, TimeSeriesResult<World3VariableKey>>;
   for (const definition of WORLD3_SERIES_REGISTRY) {

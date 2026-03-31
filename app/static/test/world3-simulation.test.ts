@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
-import type { World3VariableKey } from "../ts/core/world3-keys.ts";
+import type { World3StockKey, World3VariableKey } from "../ts/core/world3-keys.ts";
 import { simulateWorld3 } from "../ts/core/world3-simulation.ts";
 import type { RawLookupTable } from "../ts/core/world3-tables.ts";
 import { ModelData } from "../ts/model-data.ts";
@@ -117,7 +117,7 @@ describe("World3 coupled simulation", () => {
   });
 
   test("core stock series stay non-negative in the standard run", () => {
-    const stockNames: World3VariableKey[] = [
+    const stockNames: World3StockKey[] = [
       "p1",
       "p2",
       "p3",

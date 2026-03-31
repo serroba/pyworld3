@@ -89,6 +89,86 @@ export const WORLD3_VARIABLE_KEYS = [
 
 export type World3VariableKey = (typeof WORLD3_VARIABLE_KEYS)[number];
 
+export const WORLD3_STOCK_KEYS = [
+  "p1",
+  "p2",
+  "p3",
+  "p4",
+  "pop",
+  "ic",
+  "sc",
+  "al",
+  "pal",
+  "uil",
+  "lfert",
+  "ppol",
+  "nr",
+] as const satisfies readonly World3VariableKey[];
+
+export type World3StockKey = (typeof WORLD3_STOCK_KEYS)[number];
+
+export const WORLD3_FLOW_KEYS = [
+  "d",
+  "icdr",
+  "scdr",
+  "so",
+  "ppgao",
+  "ppapr",
+  "ppasr",
+  "io",
+  "scir",
+  "lfd",
+  "lrui",
+  "lfr",
+  "nrur",
+  "f",
+  "tai",
+  "ldr",
+  "cai",
+  "ler",
+  "ppgr",
+  "mat1",
+  "mat2",
+  "mat3",
+  "d1",
+  "d2",
+  "d3",
+  "d4",
+  "b",
+  "fioai",
+  "icir",
+  "ai",
+] as const satisfies readonly World3VariableKey[];
+
+export type World3FlowKey = (typeof WORLD3_FLOW_KEYS)[number];
+
+export const WORLD3_AUXILIARY_KEYS = WORLD3_VARIABLE_KEYS.filter(
+  (key) =>
+    !WORLD3_STOCK_KEYS.includes(key as World3StockKey) &&
+    !WORLD3_FLOW_KEYS.includes(key as World3FlowKey),
+) as World3VariableKey[];
+
+export type World3AuxiliaryKey = Exclude<
+  World3VariableKey,
+  World3StockKey | World3FlowKey
+>;
+
+const STOCK_KEY_SET = new Set<World3VariableKey>(WORLD3_STOCK_KEYS);
+const FLOW_KEY_SET = new Set<World3VariableKey>(WORLD3_FLOW_KEYS);
+const AUXILIARY_KEY_SET = new Set<World3VariableKey>(WORLD3_AUXILIARY_KEYS);
+
+export function isWorld3StockKey(key: World3VariableKey): key is World3StockKey {
+  return STOCK_KEY_SET.has(key);
+}
+
+export function isWorld3FlowKey(key: World3VariableKey): key is World3FlowKey {
+  return FLOW_KEY_SET.has(key);
+}
+
+export function isWorld3AuxiliaryKey(key: World3VariableKey): key is World3AuxiliaryKey {
+  return AUXILIARY_KEY_SET.has(key);
+}
+
 export const WORLD3_CONSTANT_KEYS = [
   "ahl70",
   "alai1",

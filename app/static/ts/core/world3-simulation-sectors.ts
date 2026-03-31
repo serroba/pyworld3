@@ -1,4 +1,9 @@
 import type { Smooth, Delay3, Dlinf3 } from "./runtime-primitives.js";
+import type {
+  World3AuxiliaryKey,
+  World3FlowKey,
+  World3StockKey,
+} from "./world3-keys.js";
 
 type LookupFn = (x: number) => number;
 
@@ -118,94 +123,11 @@ export type World3SimulationConstants = {
   uildt: number;
 };
 
-export type World3SimulationBuffers = {
-  p1: Float64Array;
-  p2: Float64Array;
-  p3: Float64Array;
-  p4: Float64Array;
-  pop: Float64Array;
-  fpu: Float64Array;
-  lmhs: Float64Array;
-  d: Float64Array;
-  cdr: Float64Array;
-  sfsn: Float64Array;
-  cmple: Float64Array;
-  fce: Float64Array;
-  cbr: Float64Array;
-  cuf: Float64Array;
-  ic: Float64Array;
-  icdr: Float64Array;
-  sc: Float64Array;
-  scdr: Float64Array;
-  so: Float64Array;
-  sopc: Float64Array;
-  pjss: Float64Array;
-  lf: Float64Array;
-  al: Float64Array;
-  pal: Float64Array;
-  uil: Float64Array;
-  lfert: Float64Array;
-  aiph: Float64Array;
-  falm: Float64Array;
-  ppol: Float64Array;
-  ppolx: Float64Array;
-  ppgao: Float64Array;
-  ppapr: Float64Array;
-  ppasr: Float64Array;
-  nr: Float64Array;
-  nrfr: Float64Array;
-  fcaor: Float64Array;
-  hsapc: Float64Array;
-  io: Float64Array;
-  iopc: Float64Array;
-  fioac: Float64Array;
-  fioas: Float64Array;
-  scir: Float64Array;
-  pjis: Float64Array;
-  pjas: Float64Array;
-  j: Float64Array;
-  luf: Float64Array;
-  ifpc: Float64Array;
-  lymap: Float64Array;
-  lfd: Float64Array;
-  ly: Float64Array;
-  llmy: Float64Array;
-  lrui: Float64Array;
-  lfr: Float64Array;
-  nrur: Float64Array;
-  lmc: Float64Array;
-  dcfs: Float64Array;
-  dtf: Float64Array;
-  f: Float64Array;
-  fpc: Float64Array;
-  fioaa: Float64Array;
-  tai: Float64Array;
-  ldr: Float64Array;
-  cai: Float64Array;
-  fr: Float64Array;
-  ler: Float64Array;
-  ppgr: Float64Array;
-  le: Float64Array;
-  m1: Float64Array;
-  m2: Float64Array;
-  m3: Float64Array;
-  m4: Float64Array;
-  mat1: Float64Array;
-  mat2: Float64Array;
-  mat3: Float64Array;
-  d1: Float64Array;
-  d2: Float64Array;
-  d3: Float64Array;
-  d4: Float64Array;
-  fcapc: Float64Array;
-  tf: Float64Array;
-  b: Float64Array;
-  fioai: Float64Array;
-  icir: Float64Array;
-  pfr: Float64Array;
-  ai: Float64Array;
-  mtf: Float64Array;
-};
+type World3SeriesBufferMap<K extends string> = Record<K, Float64Array>;
+
+export type World3SimulationBuffers = World3SeriesBufferMap<World3StockKey> &
+  World3SeriesBufferMap<World3FlowKey> &
+  World3SeriesBufferMap<World3AuxiliaryKey>;
 
 export type World3SimulationIntegrators = {
   smooth_hsapc: Smooth;
