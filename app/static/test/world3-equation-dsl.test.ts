@@ -33,12 +33,17 @@ describe("World3 stock equation DSL", () => {
     }
   });
 
-  test("declares derived non-stock equations with explicit dependencies", () => {
+  test("declares resource derived equations explicitly", () => {
     expect(WORLD3_RESOURCE_DERIVED_EQUATIONS).toEqual([
       expect.objectContaining({
         kind: "derived-equation",
         key: "nrfr",
         inputs: ["nr", "nri"],
+      }),
+      expect.objectContaining({
+        kind: "derived-equation",
+        key: "fcaor",
+        inputs: ["nrfr"],
       }),
     ]);
   });

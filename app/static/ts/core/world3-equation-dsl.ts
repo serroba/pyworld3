@@ -8,6 +8,7 @@ import type {
 import type {
   World3SimulationBuffers,
   World3SimulationConstants,
+  World3SimulationLookups,
 } from "./world3-simulation-sectors.js";
 
 export type World3EquationDependency = World3VariableKey | World3ConstantKey;
@@ -35,7 +36,11 @@ export type World3DerivedStockEquation<K extends World3StockKey = World3StockKey
   compute: (context: World3StockEquationContext) => number;
 };
 
-export type World3DerivedEquationContext = World3StockEquationContext;
+export type World3DerivedEquationContext = World3StockEquationContext & {
+  t: number;
+  policyYear: number;
+  lookups: World3SimulationLookups;
+};
 
 export type World3DerivedEquation<K extends World3DerivedEquationKey = World3DerivedEquationKey> =
   {

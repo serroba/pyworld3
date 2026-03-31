@@ -92,6 +92,11 @@ export const WORLD3_RESOURCE_DERIVED_EQUATIONS = [
         inputs: ["nr", "nri"],
         compute: ({ k, buffers, constants }) => buffers.nr[k] / constants.nri,
     }),
+    defineDerivedEquation({
+        key: "fcaor",
+        inputs: ["nrfr"],
+        compute: ({ k, t, buffers, lookups, policyYear }) => clip(lookups.FCAOR2(buffers.nrfr[k]), lookups.FCAOR1(buffers.nrfr[k]), t, policyYear),
+    }),
 ];
 export function advanceStateStocks(k, dt, buffers, constants) {
     const context = { k, dt, buffers, constants };
@@ -160,10 +165,18 @@ export function computePollutionStep(k, t, buffers, constants, lookups, integrat
     return { ppgf };
 }
 export function computeResourceStep(k, t, buffers, constants, lookups, policyYear) {
-    const context = { k, dt: 0, buffers, constants };
-    const [nrfrEquation] = WORLD3_RESOURCE_DERIVED_EQUATIONS;
-    buffers.nrfr[k] = nrfrEquation.compute(context);
-    buffers.fcaor[k] = clip(lookups.FCAOR2(buffers.nrfr[k]), lookups.FCAOR1(buffers.nrfr[k]), t, policyYear);
+    const context = {
+        k,
+        dt: 0,
+        buffers,
+        constants,
+        t,
+        policyYear,
+        lookups,
+    };
+    for (const equation of WORLD3_RESOURCE_DERIVED_EQUATIONS) {
+        buffers[equation.key][k] = equation.compute(context);
+    }
     return { nruf: clip(constants.nruf2, constants.nruf1, t, policyYear) };
 }
 export function computeCrossSectorStep(k, t, buffers, constants, lookups, capital, agriculture, resources, policyYear) {
