@@ -1,4 +1,4 @@
-import { defineDerivedStock, defineStateStock, } from "./world3-equation-dsl.js";
+import { defineDerivedEquation, defineDerivedStock, defineStateStock, } from "./world3-equation-dsl.js";
 function clip(ifTrue, ifFalse, t, switchTime) {
     return t > switchTime ? ifTrue : ifFalse;
 }
@@ -86,6 +86,13 @@ export const WORLD3_DERIVED_STOCK_EQUATIONS = [
         compute: ({ k, buffers }) => buffers.p1[k] + buffers.p2[k] + buffers.p3[k] + buffers.p4[k],
     }),
 ];
+export const WORLD3_RESOURCE_DERIVED_EQUATIONS = [
+    defineDerivedEquation({
+        key: "nrfr",
+        inputs: ["nr", "nri"],
+        compute: ({ k, buffers, constants }) => buffers.nr[k] / constants.nri,
+    }),
+];
 export function advanceStateStocks(k, dt, buffers, constants) {
     const context = { k, dt, buffers, constants };
     if (k === 0) {
@@ -153,7 +160,9 @@ export function computePollutionStep(k, t, buffers, constants, lookups, integrat
     return { ppgf };
 }
 export function computeResourceStep(k, t, buffers, constants, lookups, policyYear) {
-    buffers.nrfr[k] = buffers.nr[k] / constants.nri;
+    const context = { k, dt: 0, buffers, constants };
+    const [nrfrEquation] = WORLD3_RESOURCE_DERIVED_EQUATIONS;
+    buffers.nrfr[k] = nrfrEquation.compute(context);
     buffers.fcaor[k] = clip(lookups.FCAOR2(buffers.nrfr[k]), lookups.FCAOR1(buffers.nrfr[k]), t, policyYear);
     return { nruf: clip(constants.nruf2, constants.nruf1, t, policyYear) };
 }
