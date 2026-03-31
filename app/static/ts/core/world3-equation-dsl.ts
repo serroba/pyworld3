@@ -1,5 +1,7 @@
 import type {
+  World3AuxiliaryKey,
   World3ConstantKey,
+  World3FlowKey,
   World3StockKey,
   World3VariableKey,
 } from "./world3-keys.js";
@@ -9,6 +11,7 @@ import type {
 } from "./world3-simulation-sectors.js";
 
 export type World3EquationDependency = World3VariableKey | World3ConstantKey;
+export type World3DerivedEquationKey = World3AuxiliaryKey | World3FlowKey;
 
 export type World3StockEquationContext = {
   k: number;
@@ -32,6 +35,16 @@ export type World3DerivedStockEquation<K extends World3StockKey = World3StockKey
   compute: (context: World3StockEquationContext) => number;
 };
 
+export type World3DerivedEquationContext = World3StockEquationContext;
+
+export type World3DerivedEquation<K extends World3DerivedEquationKey = World3DerivedEquationKey> =
+  {
+    kind: "derived-equation";
+    key: K;
+    inputs: readonly World3EquationDependency[];
+    compute: (context: World3DerivedEquationContext) => number;
+  };
+
 export function defineStateStock<K extends World3StockKey>(
   definition: Omit<World3StateStockEquation<K>, "kind">,
 ): World3StateStockEquation<K> {
@@ -46,6 +59,15 @@ export function defineDerivedStock<K extends World3StockKey>(
 ): World3DerivedStockEquation<K> {
   return {
     kind: "derived-stock",
+    ...definition,
+  };
+}
+
+export function defineDerivedEquation<K extends World3DerivedEquationKey>(
+  definition: Omit<World3DerivedEquation<K>, "kind">,
+): World3DerivedEquation<K> {
+  return {
+    kind: "derived-equation",
     ...definition,
   };
 }

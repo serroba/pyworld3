@@ -1,6 +1,8 @@
 import {
+  defineDerivedEquation,
   defineDerivedStock,
   defineStateStock,
+  type World3DerivedEquation,
   type World3DerivedStockEquation,
   type World3StateStockEquation,
   type World3StockEquationContext,
@@ -278,6 +280,14 @@ export const WORLD3_DERIVED_STOCK_EQUATIONS = [
   }),
 ] as const satisfies readonly World3DerivedStockEquation[];
 
+export const WORLD3_RESOURCE_DERIVED_EQUATIONS = [
+  defineDerivedEquation({
+    key: "nrfr",
+    inputs: ["nr", "nri"],
+    compute: ({ k, buffers, constants }) => buffers.nr[k]! / constants.nri,
+  }),
+] as const satisfies readonly World3DerivedEquation[];
+
 export function advanceStateStocks(
   k: number,
   dt: number,
@@ -397,8 +407,15 @@ export function computeResourceStep(
   lookups: World3SimulationLookups,
   policyYear: number,
 ): ResourceState {
-  buffers.nrfr[k] = buffers.nr[k]! / constants.nri;
-  buffers.fcaor[k] = clip(lookups.FCAOR2(buffers.nrfr[k]!), lookups.FCAOR1(buffers.nrfr[k]!), t, policyYear);
+  const context: World3StockEquationContext = { k, dt: 0, buffers, constants };
+  const [nrfrEquation] = WORLD3_RESOURCE_DERIVED_EQUATIONS;
+  buffers.nrfr[k] = nrfrEquation.compute(context);
+  buffers.fcaor[k] = clip(
+    lookups.FCAOR2(buffers.nrfr[k]!),
+    lookups.FCAOR1(buffers.nrfr[k]!),
+    t,
+    policyYear,
+  );
   return { nruf: clip(constants.nruf2, constants.nruf1, t, policyYear) };
 }
 

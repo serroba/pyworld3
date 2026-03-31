@@ -3,6 +3,7 @@ import { describe, expect, test } from "vitest";
 import { WORLD3_STOCK_KEYS } from "../ts/core/world3-keys.ts";
 import {
   WORLD3_DERIVED_STOCK_EQUATIONS,
+  WORLD3_RESOURCE_DERIVED_EQUATIONS,
   WORLD3_STATE_STOCK_EQUATIONS,
 } from "../ts/core/world3-simulation-sectors.ts";
 
@@ -30,5 +31,15 @@ describe("World3 stock equation DSL", () => {
       expect(equation.kind).toBe("derived-stock");
       expect(equation.inputs.length).toBeGreaterThan(0);
     }
+  });
+
+  test("declares derived non-stock equations with explicit dependencies", () => {
+    expect(WORLD3_RESOURCE_DERIVED_EQUATIONS).toEqual([
+      expect.objectContaining({
+        kind: "derived-equation",
+        key: "nrfr",
+        inputs: ["nr", "nri"],
+      }),
+    ]);
   });
 });

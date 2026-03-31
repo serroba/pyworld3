@@ -10,3 +10,9 @@ export function defineDerivedStock(definition) {
         ...definition,
     };
 }
+export function defineDerivedEquation(definition) {
+    return {
+        kind: "derived-equation",
+        ...definition,
+    };
+}
