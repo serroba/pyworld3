@@ -98,6 +98,63 @@ export const WORLD3_RESOURCE_DERIVED_EQUATIONS = [
         compute: ({ k, t, buffers, lookups, policyYear }) => clip(lookups.FCAOR2(buffers.nrfr[k]), lookups.FCAOR1(buffers.nrfr[k]), t, policyYear),
     }),
 ];
+export const WORLD3_POPULATION_FLOW_EQUATIONS = [
+    defineDerivedEquation({
+        key: "m1",
+        inputs: ["le"],
+        compute: ({ k, buffers, lookups }) => lookups.M1(buffers.le[k]),
+    }),
+    defineDerivedEquation({
+        key: "m2",
+        inputs: ["le"],
+        compute: ({ k, buffers, lookups }) => lookups.M2(buffers.le[k]),
+    }),
+    defineDerivedEquation({
+        key: "m3",
+        inputs: ["le"],
+        compute: ({ k, buffers, lookups }) => lookups.M3(buffers.le[k]),
+    }),
+    defineDerivedEquation({
+        key: "m4",
+        inputs: ["le"],
+        compute: ({ k, buffers, lookups }) => lookups.M4(buffers.le[k]),
+    }),
+    defineDerivedEquation({
+        key: "mat1",
+        inputs: ["p1", "m1"],
+        compute: ({ k, buffers }) => buffers.p1[k] * (1 - buffers.m1[k]) / 15,
+    }),
+    defineDerivedEquation({
+        key: "mat2",
+        inputs: ["p2", "m2"],
+        compute: ({ k, buffers }) => buffers.p2[k] * (1 - buffers.m2[k]) / 30,
+    }),
+    defineDerivedEquation({
+        key: "mat3",
+        inputs: ["p3", "m3"],
+        compute: ({ k, buffers }) => buffers.p3[k] * (1 - buffers.m3[k]) / 20,
+    }),
+    defineDerivedEquation({
+        key: "d1",
+        inputs: ["p1", "m1"],
+        compute: ({ k, buffers }) => buffers.p1[k] * buffers.m1[k],
+    }),
+    defineDerivedEquation({
+        key: "d2",
+        inputs: ["p2", "m2"],
+        compute: ({ k, buffers }) => buffers.p2[k] * buffers.m2[k],
+    }),
+    defineDerivedEquation({
+        key: "d3",
+        inputs: ["p3", "m3"],
+        compute: ({ k, buffers }) => buffers.p3[k] * buffers.m3[k],
+    }),
+    defineDerivedEquation({
+        key: "d4",
+        inputs: ["p4", "m4"],
+        compute: ({ k, buffers }) => buffers.p4[k] * buffers.m4[k],
+    }),
+];
 export function advanceStateStocks(k, dt, buffers, constants) {
     const context = { k, dt, buffers, constants };
     if (k === 0) {
@@ -225,17 +282,10 @@ export function computePopulationFeedbackStep(k, t, buffers, constants, lookups,
     buffers.le[k] = constants.len * lmf * buffers.lmhs[k] * lmp * buffers.lmc[k];
 }
 export function computeMortalityAndBirthStep(k, t, buffers, constants, lookups) {
-    buffers.m1[k] = lookups.M1(buffers.le[k]);
-    buffers.m2[k] = lookups.M2(buffers.le[k]);
-    buffers.m3[k] = lookups.M3(buffers.le[k]);
-    buffers.m4[k] = lookups.M4(buffers.le[k]);
-    buffers.mat1[k] = buffers.p1[k] * (1 - buffers.m1[k]) / 15;
-    buffers.mat2[k] = buffers.p2[k] * (1 - buffers.m2[k]) / 30;
-    buffers.mat3[k] = buffers.p3[k] * (1 - buffers.m3[k]) / 20;
-    buffers.d1[k] = buffers.p1[k] * buffers.m1[k];
-    buffers.d2[k] = buffers.p2[k] * buffers.m2[k];
-    buffers.d3[k] = buffers.p3[k] * buffers.m3[k];
-    buffers.d4[k] = buffers.p4[k] * buffers.m4[k];
+    const context = { k, dt: 0, buffers, constants, t, policyYear: constants.pet, lookups };
+    for (const equation of WORLD3_POPULATION_FLOW_EQUATIONS) {
+        buffers[equation.key][k] = equation.compute(context);
+    }
     const fm = lookups.FM(buffers.le[k]);
     buffers.mtf[k] = constants.mtfn * fm;
     buffers.fcapc[k] = lookups.FSAFC(buffers.mtf[k] / buffers.dtf[k] - 1) * buffers.sopc[k];

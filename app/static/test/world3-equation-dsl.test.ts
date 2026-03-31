@@ -3,6 +3,7 @@ import { describe, expect, test } from "vitest";
 import { WORLD3_STOCK_KEYS } from "../ts/core/world3-keys.ts";
 import {
   WORLD3_DERIVED_STOCK_EQUATIONS,
+  WORLD3_POPULATION_FLOW_EQUATIONS,
   WORLD3_RESOURCE_DERIVED_EQUATIONS,
   WORLD3_STATE_STOCK_EQUATIONS,
 } from "../ts/core/world3-simulation-sectors.ts";
@@ -46,5 +47,27 @@ describe("World3 stock equation DSL", () => {
         inputs: ["nrfr"],
       }),
     ]);
+  });
+
+  test("declares population mortality and maturation flow equations explicitly", () => {
+    expect(WORLD3_POPULATION_FLOW_EQUATIONS).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "derived-equation",
+          key: "m1",
+          inputs: ["le"],
+        }),
+        expect.objectContaining({
+          kind: "derived-equation",
+          key: "mat1",
+          inputs: ["p1", "m1"],
+        }),
+        expect.objectContaining({
+          kind: "derived-equation",
+          key: "d4",
+          inputs: ["p4", "m4"],
+        }),
+      ]),
+    );
   });
 });

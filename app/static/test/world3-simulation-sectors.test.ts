@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 
 import {
   advanceStateStocks,
+  computeMortalityAndBirthStep,
   computePopulationLeadingStep,
   computeResourceStep,
   type World3SimulationBuffers,
@@ -156,5 +157,36 @@ describe("world3 simulation sector helpers", () => {
     buffers.nr[1] = 60;
     computeResourceStep(1, 1980, buffers, constants, lookups, 1975);
     expect(buffers.fcaor[1]).toBeCloseTo(1.5);
+  });
+
+  test("derives mortality, maturation, and death flows through the DSL-backed population step", () => {
+    const buffers = createBuffers();
+    const constants = createConstants();
+    const lookups = createLookups();
+
+    buffers.le[0] = 2;
+    buffers.p1[0] = 30;
+    buffers.p2[0] = 60;
+    buffers.p3[0] = 90;
+    buffers.p4[0] = 120;
+    buffers.d[0] = 12;
+    buffers.sopc[0] = 5;
+    buffers.dtf[0] = 3;
+    buffers.fce[0] = 0.25;
+    buffers.fioaa[0] = 0.1;
+    buffers.fioas[0] = 0.2;
+    buffers.fioac[0] = 0.3;
+    buffers.io[0] = 40;
+
+    computeMortalityAndBirthStep(0, 1900, buffers, constants, lookups);
+
+    expect(buffers.m1[0]).toBe(1);
+    expect(buffers.m4[0]).toBe(1);
+    expect(buffers.mat1[0]).toBe(0);
+    expect(buffers.mat2[0]).toBe(0);
+    expect(buffers.d1[0]).toBe(30);
+    expect(buffers.d4[0]).toBe(120);
+    expect(buffers.fioai[0]).toBeCloseTo(0.4);
+    expect(buffers.icir[0]).toBeCloseTo(16);
   });
 });
