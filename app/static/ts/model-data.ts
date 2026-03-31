@@ -11,6 +11,11 @@ import {
   buildWorld3VariableMeta,
   WORLD3_DEFAULT_VARIABLES,
 } from "./core/world3-registry.js";
+import {
+  buildWorld3ScenarioControlConstraints,
+  buildWorld3ScenarioControlDefaults,
+  buildWorld3ScenarioControlMeta,
+} from "./scenario-controls.js";
 
 export const ModelData: ModelDataPayload = {
   constantDefaults: {
@@ -152,6 +157,12 @@ export const ModelData: ModelDataPayload = {
   variableMeta: buildWorld3VariableMeta(),
 
   defaultVariables: [...WORLD3_DEFAULT_VARIABLES],
+
+  scenarioControlDefaults: buildWorld3ScenarioControlDefaults(),
+
+  scenarioControlConstraints: buildWorld3ScenarioControlConstraints(),
+
+  scenarioControlMeta: buildWorld3ScenarioControlMeta(),
 
   presets: [
     {

@@ -5,6 +5,7 @@
  * Build it with `npm run build` to regenerate `js/model-data.js`.
  */
 import { buildWorld3ConstantMeta, buildWorld3VariableMeta, WORLD3_DEFAULT_VARIABLES, } from "./core/world3-registry.js";
+import { buildWorld3ScenarioControlConstraints, buildWorld3ScenarioControlDefaults, buildWorld3ScenarioControlMeta, } from "./scenario-controls.js";
 export const ModelData = {
     constantDefaults: {
         ahl70: 1.5,
@@ -141,6 +142,9 @@ export const ModelData = {
     constantMeta: buildWorld3ConstantMeta(),
     variableMeta: buildWorld3VariableMeta(),
     defaultVariables: [...WORLD3_DEFAULT_VARIABLES],
+    scenarioControlDefaults: buildWorld3ScenarioControlDefaults(),
+    scenarioControlConstraints: buildWorld3ScenarioControlConstraints(),
+    scenarioControlMeta: buildWorld3ScenarioControlMeta(),
     presets: [
         {
             name: "comprehensive-policy",

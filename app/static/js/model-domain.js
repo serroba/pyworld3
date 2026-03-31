@@ -1,4 +1,5 @@
 import { ModelData } from "./model-data.js";
+import { WORLD3_SCENARIO_CONTROL_REGISTRY, } from "./scenario-controls.js";
 function resolveVariable(key) {
     const meta = ModelData.variableMeta[key];
     if (!meta) {
@@ -19,26 +20,18 @@ function resolveConstant(key) {
         source: "constant",
     };
 }
-const REQUEST_FIELD_DEFINITIONS = {
-    pyear: {
-        label: "Policy implementation year",
-        unit: "year",
-        defaultValue: 1975,
-    },
-    iphst: {
-        label: "Health services impact delay start",
-        unit: "year",
-        defaultValue: 1940,
-    },
-};
+const REQUEST_FIELD_DEFINITIONS = new Map(WORLD3_SCENARIO_CONTROL_REGISTRY.map((definition) => [
+    definition.key,
+    definition,
+]));
 function resolveRequestField(key) {
-    const definition = REQUEST_FIELD_DEFINITIONS[key];
+    const definition = REQUEST_FIELD_DEFINITIONS.get(key);
     if (!definition) {
         throw new Error(`Unknown World3 request field: ${key}`);
     }
     return {
         key,
-        label: definition.label,
+        label: definition.fullName,
         unit: definition.unit,
         defaultValue: definition.defaultValue,
         source: "request",

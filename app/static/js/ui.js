@@ -92,6 +92,10 @@ const UI = (() => {
       return I18n.labelForConstant(key, fallback);
     },
 
+    labelControl(key, fallback) {
+      return I18n.t(`control.${key}`, undefined, fallback ?? key);
+    },
+
     labelSector(key, fallback) {
       return I18n.labelForSector(key, fallback);
     },

@@ -85,6 +85,19 @@ export type ModelDataPayload = {
     }
   >;
   defaultVariables: string[];
+  scenarioControlDefaults: Partial<Record<keyof SimulationRequest, number>>;
+  scenarioControlConstraints: Partial<
+    Record<keyof SimulationRequest, [number | null, number | null]>
+  >;
+  scenarioControlMeta: Partial<
+    Record<
+      keyof SimulationRequest,
+      {
+        full_name: string;
+        unit: string;
+      }
+    >
+  >;
   presets: PresetInfo[];
 };
 

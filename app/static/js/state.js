@@ -18,6 +18,15 @@ const State = {
   /** @type {string[]} */
   defaultVariables: [],
 
+  /** @type {Object<string, number>} */
+  scenarioControlDefaults: {},
+
+  /** @type {Object<string, [number|null, number|null]>} */
+  scenarioControlConstraints: {},
+
+  /** @type {Object<string, {full_name:string, unit:string}>} */
+  scenarioControlMeta: {},
+
   /** True once all metadata has been loaded */
   ready: false,
 
@@ -31,6 +40,9 @@ const State = {
     this.defaultVariables = [...ModelData.defaultVariables];
     this.constantMeta = { ...ModelData.constantMeta };
     this.variableMeta = { ...ModelData.variableMeta };
+    this.scenarioControlDefaults = { ...ModelData.scenarioControlDefaults };
+    this.scenarioControlConstraints = { ...ModelData.scenarioControlConstraints };
+    this.scenarioControlMeta = { ...ModelData.scenarioControlMeta };
     this.ready = true;
   },
 };

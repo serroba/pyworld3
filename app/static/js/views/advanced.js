@@ -25,6 +25,7 @@ const AdvancedView = (() => {
   const DEBOUNCE_MS = 400;
 
   let editedConstants = {};
+  let editedControls = {};
   let debounceTimer = null;
   let abortController = null;
   let baselineResultPromise = null;
@@ -44,6 +45,23 @@ const AdvancedView = (() => {
     // Large values: 0 to 5× with magnitude-appropriate step
     const magnitude = Math.pow(10, Math.floor(Math.log10(abs)) - 1);
     return { min: 0, max: defaultVal * 5, step: magnitude };
+  }
+
+  function controlSliderRange(name, defaultVal) {
+    const constraints = State.scenarioControlConstraints[name];
+    if (constraints) {
+      const [min, max] = constraints;
+      const safeMin = min ?? sliderRange(defaultVal).min;
+      const safeMax = max ?? sliderRange(defaultVal).max;
+      const abs = Math.abs(defaultVal || 1);
+      const step = name === "dt"
+        ? 0.01
+        : abs <= 100
+          ? 1
+          : Math.pow(10, Math.max(0, Math.floor(Math.log10(abs)) - 1));
+      return { min: safeMin, max: safeMax, step };
+    }
+    return sliderRange(defaultVal);
   }
 
   // ---------------------------------------------------------------------------
@@ -86,6 +104,104 @@ const AdvancedView = (() => {
   function buildAccordions(container) {
     container.innerHTML = "";
     editedConstants = {};
+    editedControls = {};
+
+    const controlDetails = document.createElement("details");
+    controlDetails.className = "accordion";
+    controlDetails.open = true;
+
+    const controlSummary = document.createElement("summary");
+    controlSummary.textContent = I18n.t(
+      "advanced.scenario_controls",
+      undefined,
+      "Scenario controls",
+    );
+    controlDetails.appendChild(controlSummary);
+
+    const controlBody = UI.el("div", "accordion__body");
+    for (const [name, meta] of Object.entries(State.scenarioControlMeta)) {
+      const defaultVal = State.scenarioControlDefaults[name];
+      const range = controlSliderRange(name, defaultVal);
+
+      const group = UI.el("div", "input-group");
+      const label = document.createElement("label");
+      label.textContent = UI.labelControl(name, meta.full_name);
+      label.setAttribute("for", `control-${name}`);
+      group.appendChild(label);
+
+      const desc = UI.el("div", "input-desc", `${name} — default: ${defaultVal}`);
+      group.appendChild(desc);
+
+      const row = UI.el("div", "input-row");
+      const input = document.createElement("input");
+      input.type = "number";
+      input.id = `control-${name}`;
+      input.value = defaultVal;
+      input.step = "any";
+      row.appendChild(input);
+
+      const unit = UI.el("span", "unit", Charts.translateUnit(meta.unit) || meta.unit);
+      row.appendChild(unit);
+
+      const resetBtn = document.createElement("button");
+      resetBtn.className = "btn-reset";
+      resetBtn.textContent = I18n.t("advanced.reset");
+      row.appendChild(resetBtn);
+      group.appendChild(row);
+
+      const sliderRow = UI.el("div", "slider-row");
+      const minLabel = UI.el("span", "slider-bounds slider-bounds--min", UI.formatNumber(range.min));
+      const slider = document.createElement("input");
+      slider.type = "range";
+      slider.min = range.min;
+      slider.max = range.max;
+      slider.step = range.step;
+      slider.value = defaultVal;
+      slider.setAttribute(
+        "aria-label",
+        I18n.t("advanced.slider_aria", { name: UI.labelControl(name, meta.full_name) }),
+      );
+      const maxLabel = UI.el("span", "slider-bounds slider-bounds--max", UI.formatNumber(range.max));
+      sliderRow.appendChild(minLabel);
+      sliderRow.appendChild(slider);
+      sliderRow.appendChild(maxLabel);
+      group.appendChild(sliderRow);
+
+      function onControlChange(val) {
+        if (!isNaN(val) && val !== defaultVal) {
+          editedControls[name] = val;
+        } else {
+          delete editedControls[name];
+        }
+        triggerSimulation();
+      }
+
+      slider.addEventListener("input", () => {
+        const val = parseFloat(slider.value);
+        input.value = val;
+        onControlChange(val);
+      });
+
+      input.addEventListener("change", () => {
+        const val = parseFloat(input.value);
+        if (!isNaN(val)) {
+          slider.value = Math.min(Math.max(val, range.min), range.max);
+          onControlChange(val);
+        }
+      });
+
+      resetBtn.addEventListener("click", () => {
+        input.value = defaultVal;
+        slider.value = defaultVal;
+        delete editedControls[name];
+        triggerSimulation();
+      });
+
+      controlBody.appendChild(group);
+    }
+
+    controlDetails.appendChild(controlBody);
+    container.appendChild(controlDetails);
 
     // Group constants by sector
     const sectors = {};
@@ -326,6 +442,7 @@ const AdvancedView = (() => {
 
     try {
       const request = {};
+      Object.assign(request, editedControls);
       if (Object.keys(editedConstants).length > 0) {
         request.constants = { ...editedConstants };
       }

@@ -1,9 +1,13 @@
 import { ModelData } from "./model-data.js";
 import type { SimulationRequest } from "./simulation-contracts.js";
+import {
+  WORLD3_SCENARIO_CONTROL_REGISTRY,
+  type ScenarioControlKey,
+} from "./scenario-controls.js";
 
 type VariableMeta = (typeof ModelData.variableMeta)[string];
 type ConstantMeta = (typeof ModelData.constantMeta)[string];
-type RequestFieldKey = keyof Pick<SimulationRequest, "pyear" | "iphst">;
+type RequestFieldKey = ScenarioControlKey;
 
 export type ModelVariableReference = {
   key: string;
@@ -65,28 +69,21 @@ function resolveConstant(key: string): ModelControlReference {
   };
 }
 
-const REQUEST_FIELD_DEFINITIONS: Readonly<Record<RequestFieldKey, { label: string; unit: string; defaultValue: number }>> =
-  {
-    pyear: {
-      label: "Policy implementation year",
-      unit: "year",
-      defaultValue: 1975,
-    },
-    iphst: {
-      label: "Health services impact delay start",
-      unit: "year",
-      defaultValue: 1940,
-    },
-  };
+const REQUEST_FIELD_DEFINITIONS = new Map(
+  WORLD3_SCENARIO_CONTROL_REGISTRY.map((definition) => [
+    definition.key,
+    definition,
+  ] as const),
+);
 
 function resolveRequestField(key: RequestFieldKey): ModelControlReference {
-  const definition = REQUEST_FIELD_DEFINITIONS[key];
+  const definition = REQUEST_FIELD_DEFINITIONS.get(key);
   if (!definition) {
     throw new Error(`Unknown World3 request field: ${key}`);
   }
   return {
     key,
-    label: definition.label,
+    label: definition.fullName,
     unit: definition.unit,
     defaultValue: definition.defaultValue,
     source: "request",
