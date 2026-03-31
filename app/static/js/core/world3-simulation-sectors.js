@@ -212,6 +212,28 @@ export const WORLD3_CAPITAL_INVESTMENT_EQUATIONS = [
         compute: ({ k, buffers }) => buffers.io[k] * buffers.fioai[k],
     }),
 ];
+export const WORLD3_POPULATION_BIRTH_EQUATIONS = [
+    defineDerivedEquation({
+        key: "mtf",
+        inputs: ["le", "mtfn"],
+        compute: ({ k, buffers, constants, lookups }) => constants.mtfn * lookups.FM(buffers.le[k]),
+    }),
+    defineDerivedEquation({
+        key: "fcapc",
+        inputs: ["mtf", "dtf", "sopc"],
+        compute: ({ k, buffers, lookups }) => lookups.FSAFC(buffers.mtf[k] / buffers.dtf[k] - 1) * buffers.sopc[k],
+    }),
+    defineDerivedEquation({
+        key: "tf",
+        inputs: ["mtf", "dtf", "fce"],
+        compute: ({ k, buffers }) => Math.min(buffers.mtf[k], buffers.mtf[k] * (1 - buffers.fce[k]) + buffers.dtf[k] * buffers.fce[k]),
+    }),
+    defineDerivedEquation({
+        key: "b",
+        inputs: ["d", "tf", "p2", "rlt"],
+        compute: ({ k, t, buffers, constants }) => clip(buffers.d[k], buffers.tf[k] * buffers.p2[k] * 0.5 / constants.rlt, t, constants.pet),
+    }),
+];
 export function advanceStateStocks(k, dt, buffers, constants) {
     const context = { k, dt, buffers, constants };
     if (k === 0) {
@@ -359,11 +381,9 @@ export function computeMortalityAndBirthStep(k, t, buffers, constants, lookups) 
     for (const equation of WORLD3_POPULATION_FLOW_EQUATIONS) {
         buffers[equation.key][k] = equation.compute(context);
     }
-    const fm = lookups.FM(buffers.le[k]);
-    buffers.mtf[k] = constants.mtfn * fm;
-    buffers.fcapc[k] = lookups.FSAFC(buffers.mtf[k] / buffers.dtf[k] - 1) * buffers.sopc[k];
-    buffers.tf[k] = Math.min(buffers.mtf[k], buffers.mtf[k] * (1 - buffers.fce[k]) + buffers.dtf[k] * buffers.fce[k]);
-    buffers.b[k] = clip(buffers.d[k], buffers.tf[k] * buffers.p2[k] * 0.5 / constants.rlt, t, constants.pet);
+    for (const equation of WORLD3_POPULATION_BIRTH_EQUATIONS) {
+        buffers[equation.key][k] = equation.compute(context);
+    }
     for (const equation of WORLD3_CAPITAL_INVESTMENT_EQUATIONS) {
         buffers[equation.key][k] = equation.compute(context);
     }

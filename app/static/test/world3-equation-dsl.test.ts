@@ -6,6 +6,7 @@ import {
   WORLD3_CAPITAL_INVESTMENT_EQUATIONS,
   WORLD3_CAPITAL_FLOW_EQUATIONS,
   WORLD3_DERIVED_STOCK_EQUATIONS,
+  WORLD3_POPULATION_BIRTH_EQUATIONS,
   WORLD3_POPULATION_FLOW_EQUATIONS,
   WORLD3_RESOURCE_DERIVED_EQUATIONS,
   WORLD3_STATE_STOCK_EQUATIONS,
@@ -128,6 +129,33 @@ describe("World3 stock equation DSL", () => {
           kind: "derived-equation",
           key: "icir",
           inputs: ["io", "fioai"],
+        }),
+      ]),
+    );
+  });
+
+  test("declares population fertility and birth equations explicitly", () => {
+    expect(WORLD3_POPULATION_BIRTH_EQUATIONS).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "derived-equation",
+          key: "mtf",
+          inputs: ["le", "mtfn"],
+        }),
+        expect.objectContaining({
+          kind: "derived-equation",
+          key: "fcapc",
+          inputs: ["mtf", "dtf", "sopc"],
+        }),
+        expect.objectContaining({
+          kind: "derived-equation",
+          key: "tf",
+          inputs: ["mtf", "dtf", "fce"],
+        }),
+        expect.objectContaining({
+          kind: "derived-equation",
+          key: "b",
+          inputs: ["d", "tf", "p2", "rlt"],
         }),
       ]),
     );
