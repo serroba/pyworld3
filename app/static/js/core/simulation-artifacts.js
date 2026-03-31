@@ -1,14 +1,15 @@
+import { WORLD3_SIMULATION_PLOT_VARIABLES } from "./world3-registry.js";
 const SVG_WIDTH = 1000;
 const SVG_HEIGHT = 600;
 const LEGEND_WIDTH = 220;
 const LEGEND_GAP = 20;
 const PADDING = { top: 48, right: 40, bottom: 48, left: 72 };
 const PLOT_VARIABLES = [
-    [["pop"], "Population", "#2196F3"],
-    [["nr", "nrfr"], "Resources", "#4CAF50"],
-    [["iopc"], "Industrial output/cap", "#F44336"],
-    [["fpc"], "Food/capita", "#FF9800"],
-    [["ppolx"], "Pollution index", "#9C27B0"],
+    { variables: ["pop"], label: WORLD3_SIMULATION_PLOT_VARIABLES.find((d) => d.variable === "pop")?.label ?? "Population", color: "#2196F3" },
+    { variables: ["nr", "nrfr"], label: WORLD3_SIMULATION_PLOT_VARIABLES.find((d) => d.variable === "nrfr")?.label ?? "Resources", color: "#4CAF50" },
+    { variables: ["iopc"], label: WORLD3_SIMULATION_PLOT_VARIABLES.find((d) => d.variable === "iopc")?.label ?? "Industrial output/cap", color: "#F44336" },
+    { variables: ["fpc"], label: WORLD3_SIMULATION_PLOT_VARIABLES.find((d) => d.variable === "fpc")?.label ?? "Food/capita", color: "#FF9800" },
+    { variables: ["ppolx"], label: WORLD3_SIMULATION_PLOT_VARIABLES.find((d) => d.variable === "ppolx")?.label ?? "Pollution index", color: "#9C27B0" },
 ];
 function escapeXml(value) {
     return value
@@ -85,7 +86,7 @@ export function renderSimulationSvg(result) {
     const legendItems = [];
     const paths = [];
     const legendLeft = PADDING.left + plotWidth + LEGEND_GAP;
-    PLOT_VARIABLES.forEach(([varNames, label, color], index) => {
+    PLOT_VARIABLES.forEach(({ variables: varNames, label, color }, index) => {
         const series = varNames
             .map((varName) => result.series[varName])
             .find((candidate) => candidate?.values.length);

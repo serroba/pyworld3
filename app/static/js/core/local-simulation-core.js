@@ -1,12 +1,6 @@
 import { buildSimulationRequestFromPreset, resolveScenarioRequest, } from "../simulation-contracts.js";
-const COMPARE_METRICS = [
-    { label: "Population", variable: "pop" },
-    { label: "Industrial output/cap", variable: "iopc" },
-    { label: "Food/capita", variable: "fpc" },
-    { label: "Pollution index", variable: "ppolx" },
-    { label: "Resources remaining", variable: "nrfr" },
-    { label: "Life expectancy", variable: "le" },
-];
+import { WORLD3_COMPARE_METRICS } from "./world3-registry.js";
+const COMPARE_METRICS = WORLD3_COMPARE_METRICS;
 const LOCAL_DEFAULT_OUTPUT_VARIABLES = COMPARE_METRICS.map((metric) => metric.variable);
 function resolveScenarioLabel(spec) {
     return spec.preset ?? "Custom";

@@ -9,6 +9,7 @@ import {
   resolveScenarioRequest,
 } from "../simulation-contracts.js";
 import type { BrowserNativeRuntime } from "./browser-native-runtime.js";
+import { WORLD3_COMPARE_METRICS } from "./world3-registry.js";
 
 export type LocalSimulationCore = {
   simulatePreset: (
@@ -25,17 +26,7 @@ export type LocalSimulationCore = {
   ) => Promise<CompareResult>;
 };
 
-const COMPARE_METRICS: ReadonlyArray<{
-  label: string;
-  variable: string;
-}> = [
-  { label: "Population", variable: "pop" },
-  { label: "Industrial output/cap", variable: "iopc" },
-  { label: "Food/capita", variable: "fpc" },
-  { label: "Pollution index", variable: "ppolx" },
-  { label: "Resources remaining", variable: "nrfr" },
-  { label: "Life expectancy", variable: "le" },
-];
+const COMPARE_METRICS = WORLD3_COMPARE_METRICS;
 
 const LOCAL_DEFAULT_OUTPUT_VARIABLES = COMPARE_METRICS.map(
   (metric) => metric.variable,
