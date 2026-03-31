@@ -12,7 +12,9 @@ export type CompareScenarioParams = {
 };
 
 function toBase64Url(value: string): string {
-  return btoa(unescape(encodeURIComponent(value)))
+  const bytes = new TextEncoder().encode(value);
+  const binary = Array.from(bytes, (byte) => String.fromCharCode(byte)).join("");
+  return btoa(binary)
     .replace(/\+/g, "-")
     .replace(/\//g, "_")
     .replace(/=+$/g, "");
@@ -23,7 +25,13 @@ function fromBase64Url(value: string): string {
   const padded = `${value}${"=".repeat(padding)}`
     .replace(/-/g, "+")
     .replace(/_/g, "/");
-  return decodeURIComponent(escape(atob(padded)));
+  const binary = atob(padded);
+  const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+  return new TextDecoder().decode(bytes);
+}
+
+function isSafeScenarioKey(key: string): boolean {
+  return key !== "__proto__" && key !== "constructor" && key !== "prototype";
 }
 
 function sortNumericRecord(
@@ -34,7 +42,7 @@ function sortNumericRecord(
   }
   return Object.fromEntries(
     Object.entries(record)
-      .filter(([, value]) => Number.isFinite(value))
+      .filter(([key, value]) => isSafeScenarioKey(key) && Number.isFinite(value))
       .sort(([left], [right]) => left.localeCompare(right)),
   );
 }

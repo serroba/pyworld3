@@ -708,6 +708,8 @@ const AdvancedView = (() => {
         }
       }
       State.calibratedConstants = null;
+      renderScenarioSummary();
+      syncScenarioUrl();
     }
 
     // Render chart grid once (charts update in-place on each simulation)

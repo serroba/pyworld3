@@ -51,10 +51,9 @@ test("advanced writes shareable scenario state into the URL", async ({ page }) =
   await page.locator("summary", { hasText: /scenario controls/i }).click();
   await page.fill("#control-pyear", "2000");
   await page.locator("#control-pyear").dispatchEvent("change");
-  await page.waitForTimeout(700);
 
   await expect(page).toHaveURL(/#advanced\?/);
-  await expect(page).toHaveURL(/state=/);
+  await expect(page).toHaveURL(/state=/, { timeout: 3000 });
 });
 
 test.describe("localization", () => {
