@@ -353,6 +353,34 @@ export const WORLD3_POPULATION_FLOW_EQUATIONS = [
   }),
 ] as const satisfies readonly World3DerivedEquation[];
 
+export const WORLD3_CAPITAL_FLOW_EQUATIONS = [
+  defineDerivedEquation({
+    key: "icdr",
+    inputs: ["ic", "alic1", "alic2"],
+    compute: ({ k, t, buffers, constants, policyYear }) =>
+      buffers.ic[k]! / clip(constants.alic2, constants.alic1, t, policyYear),
+  }),
+  defineDerivedEquation({
+    key: "scdr",
+    inputs: ["sc", "alsc1", "alsc2"],
+    compute: ({ k, t, buffers, constants, policyYear }) =>
+      buffers.sc[k]! / clip(constants.alsc2, constants.alsc1, t, policyYear),
+  }),
+  defineDerivedEquation({
+    key: "so",
+    inputs: ["sc", "cuf", "scor1", "scor2"],
+    compute: ({ k, t, buffers, constants, policyYear }) => {
+      const scor = clip(constants.scor2, constants.scor1, t, policyYear);
+      return buffers.sc[k]! * buffers.cuf[k]! / scor;
+    },
+  }),
+  defineDerivedEquation({
+    key: "sopc",
+    inputs: ["so", "pop"],
+    compute: ({ k, buffers }) => buffers.so[k]! / buffers.pop[k]!,
+  }),
+] as const satisfies readonly World3DerivedEquation[];
+
 export function advanceStateStocks(
   k: number,
   dt: number,
@@ -414,12 +442,21 @@ export function computeCapitalStep(
 ): CapitalState {
   const lufd = integrators.smooth_luf.step(k, constants.lufdt);
   buffers.cuf[k] = lookups.CUF(lufd);
-  buffers.icdr[k] = buffers.ic[k]! / clip(constants.alic2, constants.alic1, t, policyYear);
+
   const icor = clip(constants.icor2, constants.icor1, t, policyYear);
-  buffers.scdr[k] = buffers.sc[k]! / clip(constants.alsc2, constants.alsc1, t, policyYear);
   const scor = clip(constants.scor2, constants.scor1, t, policyYear);
-  buffers.so[k] = buffers.sc[k]! * buffers.cuf[k]! / scor;
-  buffers.sopc[k] = buffers.so[k]! / buffers.pop[k]!;
+  const context: World3DerivedEquationContext = {
+    k,
+    dt: 0,
+    buffers,
+    constants,
+    t,
+    policyYear,
+    lookups,
+  };
+  for (const equation of WORLD3_CAPITAL_FLOW_EQUATIONS) {
+    buffers[equation.key][k] = equation.compute(context);
+  }
   buffers.pjss[k] = buffers.sc[k]! * lookups.JPSCU(buffers.sopc[k]!);
   buffers.lf[k] = (buffers.p2[k]! + buffers.p3[k]!) * constants.lfpf;
   return { icor, scor };

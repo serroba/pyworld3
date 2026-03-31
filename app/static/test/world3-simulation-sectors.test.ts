@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 
 import {
   advanceStateStocks,
+  computeCapitalStep,
   computeMortalityAndBirthStep,
   computePopulationLeadingStep,
   computeResourceStep,
@@ -157,6 +158,41 @@ describe("world3 simulation sector helpers", () => {
     buffers.nr[1] = 60;
     computeResourceStep(1, 1980, buffers, constants, lookups, 1975);
     expect(buffers.fcaor[1]).toBeCloseTo(1.5);
+  });
+
+  test("derives capital depreciation and service output flows through the DSL-backed capital step", () => {
+    const buffers = createBuffers();
+    const constants = createConstants();
+    const lookups = createLookups();
+    const integrators = createIntegrators();
+
+    buffers.ic[0] = 50;
+    buffers.ic[1] = 50;
+    buffers.sc[0] = 60;
+    buffers.sc[1] = 60;
+    buffers.pop[0] = 100;
+    buffers.pop[1] = 100;
+    buffers.p2[0] = 20;
+    buffers.p2[1] = 20;
+    buffers.p3[0] = 30;
+    buffers.p3[1] = 30;
+
+    const prePolicy = computeCapitalStep(0, 1970, buffers, constants, lookups, integrators, 1975);
+    expect(prePolicy.icor).toBe(3);
+    expect(prePolicy.scor).toBe(1);
+    expect(buffers.cuf[0]).toBe(8);
+    expect(buffers.icdr[0]).toBeCloseTo(50 / 14);
+    expect(buffers.scdr[0]).toBeCloseTo(60 / 20);
+    expect(buffers.so[0]).toBeCloseTo(60 * 8);
+    expect(buffers.sopc[0]).toBeCloseTo((60 * 8) / 100);
+
+    const postPolicy = computeCapitalStep(1, 1980, buffers, constants, lookups, integrators, 1975);
+    expect(postPolicy.icor).toBe(4);
+    expect(postPolicy.scor).toBe(2);
+    expect(buffers.icdr[1]).toBeCloseTo(50 / 15);
+    expect(buffers.scdr[1]).toBeCloseTo(60 / 21);
+    expect(buffers.so[1]).toBeCloseTo((60 * 8) / 2);
+    expect(buffers.lf[1]).toBeCloseTo((20 + 30) * constants.lfpf);
   });
 
   test("derives mortality, maturation, and death flows through the DSL-backed population step", () => {

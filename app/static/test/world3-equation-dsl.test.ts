@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 
 import { WORLD3_STOCK_KEYS } from "../ts/core/world3-keys.ts";
 import {
+  WORLD3_CAPITAL_FLOW_EQUATIONS,
   WORLD3_DERIVED_STOCK_EQUATIONS,
   WORLD3_POPULATION_FLOW_EQUATIONS,
   WORLD3_RESOURCE_DERIVED_EQUATIONS,
@@ -66,6 +67,28 @@ describe("World3 stock equation DSL", () => {
           kind: "derived-equation",
           key: "d4",
           inputs: ["p4", "m4"],
+        }),
+      ]),
+    );
+  });
+
+  test("declares capital depreciation and service-output equations explicitly", () => {
+    expect(WORLD3_CAPITAL_FLOW_EQUATIONS).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "derived-equation",
+          key: "icdr",
+          inputs: ["ic", "alic1", "alic2"],
+        }),
+        expect.objectContaining({
+          kind: "derived-equation",
+          key: "so",
+          inputs: ["sc", "cuf", "scor1", "scor2"],
+        }),
+        expect.objectContaining({
+          kind: "derived-equation",
+          key: "sopc",
+          inputs: ["so", "pop"],
         }),
       ]),
     );
