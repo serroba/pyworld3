@@ -4,7 +4,7 @@
 
 [Live app](https://limits.world) · [Logo mark](./app/static/assets/brand/world3-mark.svg)
 
-[![License: CeCILL 2.1](https://img.shields.io/badge/licence-CeCILL%202.1-028181)](https://opensource.org/licenses/CECILL-2.1)
+[![License: GPL v3](https://img.shields.io/badge/licence-GPL%20v3-028181)](https://www.gnu.org/licenses/gpl-3.0.html)
 
 - [What This Repo Is](#what-this-repo-is)
 - [Quick Start](#quick-start)
@@ -147,4 +147,4 @@ The TS CLI consumes the same shared core to generate summaries and SVG plots in 
 
 # Licence
 
-The project is under the CeCILL 2.1 licence, a GPL-compatible licence. See [LICENSE](./LICENSE) for details.
+This project is licensed under the [GNU General Public License v3.0](https://www.gnu.org/licenses/gpl-3.0.html). See [LICENSE](./LICENSE) for details.

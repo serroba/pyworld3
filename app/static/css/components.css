@@ -479,11 +479,6 @@ select:focus {
   color: var(--color-primary);
 }
 
-.icon-inline {
-  display: inline-block;
-  vertical-align: -0.15em;
-}
-
 .ack__licence {
   font-size: var(--text-xs);
   color: var(--color-text-muted);
