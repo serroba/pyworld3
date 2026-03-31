@@ -113,6 +113,7 @@ export const WORLD3_CONSTANT_REGISTRY = [
     { key: "ppgf1", fullName: "Persistent pollution gen factor 1", sector: "Pollution", unit: "-" },
     { key: "ppgf2", fullName: "Persistent pollution gen factor 2", sector: "Pollution", unit: "-" },
     { key: "ppgf21", fullName: "Persistent pollution gen factor 2 (post-policy)", sector: "Pollution", unit: "-" },
+    { key: "pyear", fullName: "Policy implementation year", sector: "Capital", unit: "year" },
     { key: "ppol70", fullName: "Pollution level in 1970", sector: "Pollution", unit: "pollution units" },
     { key: "ppoli", fullName: "Initial persistent pollution", sector: "Pollution", unit: "pollution units" },
     { key: "pptd1", fullName: "Pollution transmission delay 1", sector: "Pollution", unit: "years" },

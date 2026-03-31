@@ -562,7 +562,11 @@ const Charts = (() => {
     renderExplainer(panel, groupId) {
       // Normalize prefixed IDs to base key
       const baseId = groupId.replace(/^(?:cmp-|adv-)/, "");
-      const data = typeof MATH_EXPLAINERS !== "undefined" && MATH_EXPLAINERS[baseId];
+      const rawData = typeof MATH_EXPLAINERS !== "undefined" ? MATH_EXPLAINERS[baseId] : null;
+      const data =
+        rawData && typeof ModelDomain !== "undefined"
+          ? ModelDomain.hydrateExplainer(rawData)
+          : null;
       if (!data) return;
 
       const wrapper = document.createElement("div");
@@ -607,11 +611,13 @@ const Charts = (() => {
       if (data.variables && data.variables.length) {
         const tags = document.createElement("div");
         tags.className = "explainer-vars";
-        data.variables.forEach((v) => {
+        data.variables.forEach((variableRef) => {
           const tag = document.createElement("span");
           tag.className = "var-tag";
-          const meta = State.variableMeta[v];
-          tag.textContent = meta ? `${v}: ${UI.labelVariable(v, meta.full_name)}` : v;
+          tag.textContent = `${variableRef.key}: ${UI.labelVariable(
+            variableRef.key,
+            variableRef.meta.full_name,
+          )}`;
           tags.appendChild(tag);
         });
         outer.appendChild(tags);

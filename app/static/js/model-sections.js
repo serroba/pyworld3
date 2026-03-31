@@ -73,17 +73,7 @@ const MODEL_SECTIONS = [
         "industrial output \u2192 better health services \u2192 higher life expectancy. But " +
         "pollution and food shortages create balancing loops that eventually dominate.",
     },
-    constants: [
-      { key: "len", sector: "Population" },
-      { key: "p1i", sector: "Population" },
-      { key: "p2i", sector: "Population" },
-      { key: "p3i", sector: "Population" },
-      { key: "p4i", sector: "Population" },
-      { key: "dcfsn", sector: "Population" },
-      { key: "zpgt", sector: "Population" },
-      { key: "pet", sector: "Population" },
-      { key: "fce", sector: "Population" },
-    ],
+    constantKeys: ["len", "p1i", "p2i", "p3i", "p4i", "dcfsn", "zpgt", "pet", "fce"],
     sources: [
       { text: "Dynamics of Growth in a Finite World, Ch. 2 \u2014 Population Sector", url: null },
       { text: "Limits to Growth: The 30-Year Update, Ch. 3", url: null },
@@ -155,11 +145,7 @@ const MODEL_SECTIONS = [
         "output \u2192 lower consumption rate \u2192 slower depletion. But the economy shrinks " +
         "in the process.",
     },
-    constants: [
-      { key: "nri", sector: "Non-Renewable Resources" },
-      { key: "nruf1", sector: "Non-Renewable Resources" },
-      { key: "nruf2", sector: "Non-Renewable Resources" },
-    ],
+    constantKeys: ["nri", "nruf1", "nruf2"],
     sources: [
       { text: "Dynamics of Growth in a Finite World, Ch. 5 \u2014 Nonrenewable Resource Sector", url: null },
       { text: "Nebel et al. (2024) recalibration", url: "https://doi.org/10.1111/jiec.13442" },
@@ -228,13 +214,7 @@ const MODEL_SECTIONS = [
         "and consumption growth create reinforcing loops that can overwhelm the gains. The " +
         "model suggests technology is necessary but not sufficient without demand-side changes.",
     },
-    constants: [
-      { key: "nruf1", sector: "Non-Renewable Resources" },
-      { key: "nruf2", sector: "Non-Renewable Resources" },
-      { key: "icor1", sector: "Capital" },
-      { key: "icor2", sector: "Capital" },
-      { key: "pyear", sector: "Capital" },
-    ],
+    constantKeys: ["nruf1", "nruf2", "icor1", "icor2", "pyear"],
     sources: [
       { text: "Dynamics of Growth in a Finite World, Ch. 7 \u2014 Policy Scenarios", url: null },
       { text: "Limits to Growth: The 30-Year Update, Ch. 7 \u2014 Technology", url: null },
@@ -307,13 +287,7 @@ const MODEL_SECTIONS = [
         "\u2192 longer absorption time \u2192 even more pollution (reinforcing). The reinforcing " +
         "loop dominates during the overshoot phase.",
     },
-    constants: [
-      { key: "ppoli", sector: "Persistent Pollution" },
-      { key: "ppol70", sector: "Persistent Pollution" },
-      { key: "ahl70", sector: "Persistent Pollution" },
-      { key: "ppgf1", sector: "Persistent Pollution" },
-      { key: "ppgf2", sector: "Persistent Pollution" },
-    ],
+    constantKeys: ["ppoli", "ppol70", "ahl70", "ppgf1", "ppgf2"],
     sources: [
       { text: "Dynamics of Growth in a Finite World, Ch. 4 \u2014 Pollution Sector", url: null },
       { text: "Nebel et al. (2024) \u2014 CO\u2082 as validation proxy for PPOL", url: "https://doi.org/10.1111/jiec.13442" },
@@ -385,15 +359,7 @@ const MODEL_SECTIONS = [
         "\u2192 more people \u2192 more capital needed (reinforcing). But pollution degrades " +
         "fertility and arable land erodes, creating balancing loops.",
     },
-    constants: [
-      { key: "ali", sector: "Agriculture" },
-      { key: "pali", sector: "Agriculture" },
-      { key: "lfh", sector: "Agriculture" },
-      { key: "sfpc", sector: "Agriculture" },
-      { key: "fspd", sector: "Agriculture" },
-      { key: "ifpc1", sector: "Agriculture" },
-      { key: "ifpc2", sector: "Agriculture" },
-    ],
+    constantKeys: ["ali", "pali", "lfh", "sfpc", "fspd", "ifpc1", "ifpc2"],
     sources: [
       { text: "Dynamics of Growth in a Finite World, Ch. 3 \u2014 Agriculture Sector", url: null },
       { text: "Limits to Growth: The 30-Year Update, Ch. 4", url: null },

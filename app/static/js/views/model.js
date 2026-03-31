@@ -147,15 +147,13 @@ const ModelView = (() => {
     table.appendChild(thead);
 
     const tbody = document.createElement("tbody");
-    constants.forEach((c) => {
-      const meta = State.constantMeta[c.key];
-      const val = State.constantDefaults[c.key];
-      if (!meta) return; // skip if constant not found in metadata
+    constants.forEach((constantRef) => {
+      const { key, meta, defaultValue } = constantRef;
       const tr = document.createElement("tr");
       tr.innerHTML =
-        "<td><code>" + UI.escapeHtml(c.key) + "</code></td>" +
-        "<td>" + UI.escapeHtml(UI.labelConstant(c.key, meta.full_name)) + "</td>" +
-        "<td>" + UI.formatNumber(val) + "</td>" +
+        "<td><code>" + UI.escapeHtml(key) + "</code></td>" +
+        "<td>" + UI.escapeHtml(UI.labelConstant(key, meta.full_name)) + "</td>" +
+        "<td>" + UI.formatNumber(defaultValue) + "</td>" +
         "<td>" + UI.escapeHtml(Charts.translateUnit(meta.unit) || meta.unit) + "</td>";
       tbody.appendChild(tr);
     });
@@ -214,7 +212,7 @@ const ModelView = (() => {
   // -------------------------------------------------------------------------
 
   function buildSectionDOM(section) {
-    const localizedSection = localizeSection(section);
+    const localizedSection = localizeSection(ModelDomain.hydrateSection(section));
     const card = UI.el("div", "model-section card");
     card.id = "section-" + localizedSection.id;
 
