@@ -47,7 +47,7 @@
 .chart-loading-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(255, 255, 255, 0.55);
+  background: var(--color-overlay);
   z-index: 2;
   opacity: 0;
   pointer-events: none;
@@ -67,7 +67,7 @@
   padding: 0.35rem;
   border: 1px solid var(--color-border);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.7);
+  background: var(--color-overlay-strong);
 }
 
 .chart-view-toggle__label {

@@ -47,4 +47,41 @@
   --radius-sm: 4px;
   --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+
+  /* Overlay (used by chart loading, toggle bg) */
+  --color-overlay: rgba(255, 255, 255, 0.55);
+  --color-overlay-strong: rgba(255, 255, 255, 0.7);
+
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #121a24;
+    --color-surface: #1a2332;
+    --color-text: #e0e6ed;
+    --color-text-muted: #8e9bab;
+    --color-primary: #2ec4b6;
+    --color-primary-hover: #26a69a;
+    --color-primary-light: #1a3336;
+    --color-accent: #ffb347;
+    --color-accent-light: #3a2e1a;
+    --color-danger: #f47b7b;
+    --color-danger-light: #3a1f22;
+    --color-border: #2a3544;
+    --color-border-hover: #3a4a5c;
+
+    --chart-1: #5b9bff;
+    --chart-2: #6dd58c;
+    --chart-3: #ffb347;
+    --chart-4: #f47b7b;
+    --chart-5: #b97adf;
+    --chart-6: #2ec4b6;
+
+    --shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
+
+    --color-overlay: rgba(18, 26, 36, 0.55);
+    --color-overlay-strong: rgba(18, 26, 36, 0.7);
+  }
 }

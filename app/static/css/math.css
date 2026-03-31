@@ -91,7 +91,7 @@
   font-size: 0.75rem;
   padding: 2px 8px;
   border-radius: 999px;
-  background: var(--color-surface-alt, #f0f0f0);
+  background: var(--color-bg);
   border: 1px solid var(--color-border);
   color: var(--color-text);
   font-family: monospace;

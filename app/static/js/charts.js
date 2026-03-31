@@ -19,9 +19,22 @@ const Charts = (() => {
   const FALLBACK_COLORS = [
     "#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#0a7b83",
   ];
-  const CROSSHAIR_COLOR = "#17324d55";
   const CROSSHAIR_YEAR_STEP = 0.5;
   let syncedYear = null;
+
+  /** Read a CSS variable from :root. */
+  function cssVar(name) {
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  }
+
+  /** Apply theme colors to Chart.js global defaults. */
+  function applyChartTheme() {
+    const textColor = cssVar("--color-text-muted") || "#4f5e6e";
+    const borderColor = cssVar("--color-border") || "#dfe6e2";
+    Chart.defaults.color = textColor;
+    Chart.defaults.borderColor = borderColor;
+    Chart.defaults.plugins.legend.labels.color = textColor;
+  }
   let syncInProgress = false;
 
   const SyncCrosshairPlugin = {
@@ -63,7 +76,7 @@ const Charts = (() => {
       ctx.moveTo(x, top);
       ctx.lineTo(x, bottom);
       ctx.lineWidth = 1;
-      ctx.strokeStyle = CROSSHAIR_COLOR;
+      ctx.strokeStyle = (cssVar("--color-text") || "#17324d") + "55";
       ctx.setLineDash([4, 4]);
       ctx.stroke();
       ctx.restore();
@@ -324,6 +337,16 @@ const Charts = (() => {
       pointHoverRadius: 4,
       tension: 0.1,
     };
+  }
+
+  // Apply theme on load and when OS color scheme changes
+  applyChartTheme();
+  if (window.matchMedia) {
+    window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
+      applyChartTheme();
+      // Update existing charts
+      Object.values(Chart.instances).forEach((c) => c.update());
+    });
   }
 
   return {
