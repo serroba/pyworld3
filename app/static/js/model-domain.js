@@ -13,26 +13,58 @@ function resolveConstant(key) {
     }
     return {
         key,
-        meta,
+        label: meta.full_name,
+        unit: meta.unit,
         defaultValue: ModelData.constantDefaults[key],
+        source: "constant",
     };
 }
-function normalizeConstantKeys(section) {
-    if (Array.isArray(section.constantKeys)) {
-        return section.constantKeys;
+const REQUEST_FIELD_DEFINITIONS = {
+    pyear: {
+        label: "Policy implementation year",
+        unit: "year",
+        defaultValue: 1975,
+    },
+    iphst: {
+        label: "Health services impact delay start",
+        unit: "year",
+        defaultValue: 1940,
+    },
+};
+function resolveRequestField(key) {
+    const definition = REQUEST_FIELD_DEFINITIONS[key];
+    if (!definition) {
+        throw new Error(`Unknown World3 request field: ${key}`);
     }
-    return (section.constants ?? []).map((item) => typeof item === "string" ? item : item.key);
+    return {
+        key,
+        label: definition.label,
+        unit: definition.unit,
+        defaultValue: definition.defaultValue,
+        source: "request",
+    };
+}
+function normalizeConstantKeys(constantKeys, legacyConstants) {
+    if (Array.isArray(constantKeys)) {
+        return constantKeys;
+    }
+    return (legacyConstants ?? []).map((item) => typeof item === "string" ? item : item.key);
 }
 export const ModelDomain = {
     resolveVariable,
     resolveConstant,
+    resolveRequestField,
     hydrateSection(section) {
-        const chartVars = [...(section.chartVars ?? [])];
+        const { chartVars: rawChartVars, constantKeys, requestKeys, constants: legacyConstants, ...rest } = section;
+        const chartVars = [...(rawChartVars ?? [])];
         return {
-            ...section,
+            ...rest,
             chartVars,
             variables: chartVars.map(resolveVariable),
-            constants: normalizeConstantKeys(section).map(resolveConstant),
+            constants: [
+                ...normalizeConstantKeys(constantKeys, legacyConstants).map(resolveConstant),
+                ...(requestKeys ?? []).map(resolveRequestField),
+            ],
         };
     },
     hydrateExplainer(explainer) {

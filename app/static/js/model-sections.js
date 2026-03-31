@@ -214,7 +214,8 @@ const MODEL_SECTIONS = [
         "and consumption growth create reinforcing loops that can overwhelm the gains. The " +
         "model suggests technology is necessary but not sufficient without demand-side changes.",
     },
-    constantKeys: ["nruf1", "nruf2", "icor1", "icor2", "pyear"],
+    constantKeys: ["nruf1", "nruf2", "icor1", "icor2"],
+    requestKeys: ["pyear"],
     sources: [
       { text: "Dynamics of Growth in a Finite World, Ch. 7 \u2014 Policy Scenarios", url: null },
       { text: "Limits to Growth: The 30-Year Update, Ch. 7 \u2014 Technology", url: null },
