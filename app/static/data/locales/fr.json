@@ -16,11 +16,11 @@
   "intro.body_2_html": "Cet outil te permet d'explorer ces scénarios toi-même. Choisis un scénario prédéfini pour voir ce qui se passe sous différentes hypothèses technologiques, politiques et de ressources — ou ajuste des paramètres individuels dans l'éditeur avancé.",
   "intro.choose_scenario": "Choisis un scénario",
   "intro.acknowledgments": "Remerciements",
-  "intro.ack.item_1_html": "Meadows, D. L., Behrens, W. W., Meadows, D. H., Naill, R. F., Randers, J. & Zahn, E. — <em>Dynamique de la croissance dans un monde fini</em> (<em>Dynamics of Growth in a Finite World</em>) (1974)",
+  "intro.ack.item_1_html": "Meadows, D. L., Behrens, W. W., Meadows, D. H., Naill, R. F., Randers, J. & Zahn, E. — <a href=\"https://en.wikipedia.org/wiki/The_Limits_to_Growth\" target=\"_blank\" rel=\"noopener\"><em>Dynamique de la croissance dans un monde fini</em> (<em>Dynamics of Growth in a Finite World</em>)</a> (1974)",
   "intro.ack.item_2_html": "Meadows, D. H., Meadows, D. L., Randers, J. & Behrens, W. W. — <a href=\"https://www.clubofrome.org/publication/the-limits-to-growth/\" target=\"_blank\" rel=\"noopener\"><em>Les limites à la croissance</em> (<em>The Limits to Growth</em>)</a> (1972)",
-  "intro.ack.item_3_html": "Meadows, D. H., Randers, J. & Meadows, D. L. — <em>Les limites à la croissance : le rapport de 30 ans</em> (<em>Limits to Growth: The 30-Year Update</em>) (2005)",
+  "intro.ack.item_3_html": "Meadows, D. H., Randers, J. & Meadows, D. L. — <a href=\"https://en.wikipedia.org/wiki/The_Limits_to_Growth\" target=\"_blank\" rel=\"noopener\"><em>Les limites à la croissance : le rapport de 30 ans</em> (<em>Limits to Growth: The 30-Year Update</em>)</a> (2005)",
   "intro.ack.item_4_html": "Vanwynsberghe, C. — lignée d'implémentation open-source originale de World3 référencée par ce projet : <a href=\"https://hal.archives-ouvertes.fr/hal-03414394\" target=\"_blank\" rel=\"noopener\">hal-03414394</a> (2021)",
-  "intro.ack.item_5_html": "Nebel, A., Kling, A., Willamowski, R. & Schell, T. — <a href=\"https://github.com/TimSchell98/PyWorld3-03\" target=\"_blank\" rel=\"noopener\">implémentation de recalibration World3-03</a> (2024)",
+  "intro.ack.item_5_html": "Nebel, A., Kling, A., Willamowski, R. & Schell, T. — <a href=\"https://github.com/TimSchell98/PyWorld3-03\" target=\"_blank\" rel=\"noopener\"><svg class=\"icon-inline\" viewBox=\"0 0 16 16\" width=\"16\" height=\"16\" aria-hidden=\"true\"><path fill=\"currentColor\" d=\"M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z\"/></svg> implémentation de recalibration World3-03</a> (2024)",
   "intro.license_html": "Publié sous <a href=\"https://opensource.org/licenses/CECILL-2.1\" target=\"_blank\" rel=\"noopener\">CeCILL 2.1</a> (compatible GPL).",
   "model.title": "Comment fonctionne le modèle World3 ?",
   "model.hero_body_html": "En 1972, des chercheurs ont construit un modèle informatique de la trajectoire de la civilisation. Il suit cinq grandeurs : population, production industrielle, alimentation, pollution et ressources naturelles. Ci-dessous, nous parcourons les grandes questions auxquelles il répond — et te montrons exactement ce qu'il suppose.",
@@ -235,5 +235,6 @@
   "unit.dollar_per_ha_yr": "$/ha/yr",
   "unit.kg_per_yr": "kg/yr",
   "unit.kg_per_ha_yr": "kg/ha/yr",
-  "unit.ha": "ha"
+  "unit.ha": "ha",
+  "intro.ack.item_6_html": "Built by <a href=\"https://www.linkedin.com/in/serroba/\" target=\"_blank\" rel=\"noopener\">serroba</a> — <a href=\"https://x.com/serroba\" target=\"_blank\" rel=\"noopener\">@serroba</a>"
 }
