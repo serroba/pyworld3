@@ -73,7 +73,7 @@ const MODEL_SECTIONS = [
         "industrial output \u2192 better health services \u2192 higher life expectancy. But " +
         "pollution and food shortages create balancing loops that eventually dominate.",
     },
-    constantKeys: ["len", "p1i", "p2i", "p3i", "p4i", "dcfsn", "zpgt", "pet", "fce"],
+    constantKeys: ["len", "p1i", "p2i", "p3i", "p4i", "dcfsn", "zpgt", "pet"],
     sources: [
       { text: "Dynamics of Growth in a Finite World, Ch. 2 \u2014 Population Sector", url: null },
       { text: "Limits to Growth: The 30-Year Update, Ch. 3", url: null },
@@ -360,7 +360,7 @@ const MODEL_SECTIONS = [
         "\u2192 more people \u2192 more capital needed (reinforcing). But pollution degrades " +
         "fertility and arable land erodes, creating balancing loops.",
     },
-    constantKeys: ["ali", "pali", "lfh", "sfpc", "fspd", "ifpc1", "ifpc2"],
+    constantKeys: ["ali", "pali", "lfh", "sfpc", "fspd"],
     sources: [
       { text: "Dynamics of Growth in a Finite World, Ch. 3 \u2014 Agriculture Sector", url: null },
       { text: "Limits to Growth: The 30-Year Update, Ch. 4", url: null },
