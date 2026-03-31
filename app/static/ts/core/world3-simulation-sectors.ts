@@ -660,7 +660,7 @@ export const WORLD3_CROSS_SECTOR_EQUATIONS = [
   }),
   defineDerivedEquation({
     key: "lfr",
-    inputs: ["lfert"],
+    inputs: ["lfert", "ilf"],
     compute: (context) =>
       (context.constants.ilf - context.buffers.lfert[context.k]!) /
       requireWorld3RuntimeValue(context, "lfrt"),
@@ -739,7 +739,7 @@ export const WORLD3_POPULATION_FEEDBACK_PRIMARY_EQUATIONS = [
 export const WORLD3_POPULATION_FEEDBACK_LATE_EQUATIONS = [
   defineDerivedEquation({
     key: "ldr",
-    inputs: ["tai"],
+    inputs: ["tai", "pal", "palt"],
     compute: (context) =>
       context.buffers.tai[context.k]! *
       requireWorld3RuntimeValue(context, "fiald") /
@@ -758,7 +758,7 @@ export const WORLD3_POPULATION_FEEDBACK_LATE_EQUATIONS = [
   }),
   defineDerivedEquation({
     key: "ppgr",
-    inputs: ["pop", "ppgao"],
+    inputs: ["pop", "ppgao", "frpm", "imef", "imti"],
     compute: (context) =>
       (requireWorld3RuntimeValue(context, "pcrum") *
         context.buffers.pop[context.k]! *
@@ -770,7 +770,7 @@ export const WORLD3_POPULATION_FEEDBACK_LATE_EQUATIONS = [
   }),
   defineDerivedEquation({
     key: "le",
-    inputs: ["lmhs", "lmc"],
+    inputs: ["lmhs", "lmc", "len"],
     compute: (context) =>
       context.constants.len *
       requireWorld3RuntimeValue(context, "lmf") *

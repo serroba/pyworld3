@@ -201,7 +201,7 @@ describe("World3 stock equation DSL", () => {
       expect.arrayContaining([
         expect.objectContaining({ kind: "derived-equation", key: "io", inputs: ["ic", "fcaor", "cuf"] }),
         expect.objectContaining({ kind: "derived-equation", key: "ly", inputs: ["lfert", "lymap"] }),
-        expect.objectContaining({ kind: "derived-equation", key: "lfr", inputs: ["lfert"] }),
+        expect.objectContaining({ kind: "derived-equation", key: "lfr", inputs: ["lfert", "ilf"] }),
       ]),
     );
 
@@ -221,9 +221,9 @@ describe("World3 stock equation DSL", () => {
 
     expect(WORLD3_POPULATION_FEEDBACK_LATE_EQUATIONS).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ kind: "derived-equation", key: "ldr", inputs: ["tai"] }),
-        expect.objectContaining({ kind: "derived-equation", key: "ppgr", inputs: ["pop", "ppgao"] }),
-        expect.objectContaining({ kind: "derived-equation", key: "le", inputs: ["lmhs", "lmc"] }),
+        expect.objectContaining({ kind: "derived-equation", key: "ldr", inputs: ["tai", "pal", "palt"] }),
+        expect.objectContaining({ kind: "derived-equation", key: "ppgr", inputs: ["pop", "ppgao", "frpm", "imef", "imti"] }),
+        expect.objectContaining({ kind: "derived-equation", key: "le", inputs: ["lmhs", "lmc", "len"] }),
       ]),
     );
   });
