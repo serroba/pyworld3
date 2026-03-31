@@ -31,6 +31,26 @@ describe("World3 coupled simulation", () => {
     expect(result.time.length).toBe(401);
   });
 
+  test("uses default simulation bounds and policy years when omitted", () => {
+    const defaulted = simulateWorld3({
+      constants: { ...ModelData.constantDefaults },
+      rawTables: tables,
+    });
+
+    expect(defaulted.year_min).toBe(1900);
+    expect(defaulted.year_max).toBe(2100);
+    expect(defaulted.dt).toBe(0.5);
+    expect(defaulted.time[0]).toBe(1900);
+    expect(defaulted.time[defaulted.time.length - 1]).toBe(2100);
+    expect(defaulted.constants_used).toEqual(ModelData.constantDefaults);
+  });
+
+  test("time array is strictly monotonic with the configured dt", () => {
+    for (let index = 1; index < result.time.length; index += 1) {
+      expect(result.time[index]! - result.time[index - 1]!).toBeCloseTo(0.5, 10);
+    }
+  });
+
   test("population starts at sum of p1i-p4i", () => {
     const expected =
       ModelData.constantDefaults.p1i! +
@@ -57,6 +77,52 @@ describe("World3 coupled simulation", () => {
   test("nrfr declines over the simulation", () => {
     const nrfrValues = result.series.nrfr!.values;
     expect(nrfrValues[0]).toBeGreaterThan(nrfrValues[nrfrValues.length - 1]!);
+  });
+
+  test("population equals the sum of its cohort stocks for every timestep", () => {
+    const popValues = result.series.pop!.values;
+    const p1Values = result.series.p1!.values;
+    const p2Values = result.series.p2!.values;
+    const p3Values = result.series.p3!.values;
+    const p4Values = result.series.p4!.values;
+
+    for (let index = 0; index < result.time.length; index += 1) {
+      const cohortSum =
+        p1Values[index]! +
+        p2Values[index]! +
+        p3Values[index]! +
+        p4Values[index]!;
+      expect(popValues[index]).toBeCloseTo(cohortSum, 6);
+    }
+  });
+
+  test("resource fraction equals remaining resources divided by initial resources", () => {
+    const nrValues = result.series.nr!.values;
+    const nrfrValues = result.series.nrfr!.values;
+    const nri = ModelData.constantDefaults.nri!;
+
+    for (let index = 0; index < result.time.length; index += 1) {
+      expect(nrfrValues[index]).toBeCloseTo(nrValues[index]! / nri, 6);
+    }
+  });
+
+  test("all exported series are finite and aligned to the time grid", () => {
+    for (const series of Object.values(result.series)) {
+      expect(series.values.length).toBe(result.time.length);
+      for (const value of series.values) {
+        expect(Number.isFinite(value)).toBe(true);
+      }
+    }
+  });
+
+  test("core stock series stay non-negative in the standard run", () => {
+    const stockNames = ["p1", "p2", "p3", "p4", "pop", "ic", "sc", "al", "uil", "lfert", "ppol", "nr"];
+    for (const stockName of stockNames) {
+      const values = result.series[stockName]!.values;
+      for (const value of values) {
+        expect(value).toBeGreaterThanOrEqual(0);
+      }
+    }
   });
 
   test("ppolx rises from initial low value", () => {
@@ -94,6 +160,14 @@ describe("World3 coupled simulation", () => {
         yearMax: 1901,
         dt: 1,
         constants: incompleteConstants,
+        rawTables: tables,
+      }),
+    ).toThrow("Missing constant");
+  });
+
+  test("throws when constants are omitted entirely", () => {
+    expect(() =>
+      simulateWorld3({
         rawTables: tables,
       }),
     ).toThrow("Missing constant");
