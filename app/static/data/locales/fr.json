@@ -236,5 +236,6 @@
   "unit.kg_per_yr": "kg/yr",
   "unit.kg_per_ha_yr": "kg/ha/yr",
   "unit.ha": "ha",
-  "intro.ack.item_6_html": "Built by <a href=\"https://www.linkedin.com/in/serroba/\" target=\"_blank\" rel=\"noopener\">serroba</a> — <a href=\"https://x.com/serroba\" target=\"_blank\" rel=\"noopener\">@serroba</a>"
+  "intro.ack.item_6_html": "Built by <a href=\"https://www.linkedin.com/in/serroba/\" target=\"_blank\" rel=\"noopener\">serroba</a> — <a href=\"https://x.com/serroba\" target=\"_blank\" rel=\"noopener\">@serroba</a>",
+  "intro.ack.item_0_html": "<a href=\"https://www.clubofrome.org/\" target=\"_blank\" rel=\"noopener\">Club de Rome</a> — a commandité l'étude originale <em>Les limites à la croissance</em> au MIT (1972)"
 }
