@@ -408,3 +408,43 @@ html[dir="rtl"] .tooltip-trigger {
   clip: rect(0, 0, 0, 0);
   border: 0;
 }
+
+/* Skip link becomes visible on focus */
+.sr-only--focusable:focus {
+  position: fixed;
+  top: var(--space-sm);
+  left: var(--space-sm);
+  z-index: 200;
+  width: auto;
+  height: auto;
+  padding: var(--space-sm) var(--space-md);
+  margin: 0;
+  overflow: visible;
+  clip: auto;
+  background: var(--color-primary);
+  color: #fff;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+/* Global focus-visible styles for interactive elements */
+.btn:focus-visible,
+.pill:focus-visible,
+.chart-view-toggle__button:focus-visible,
+details > summary:focus-visible,
+.site-nav__links a:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

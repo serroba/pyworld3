@@ -91,6 +91,13 @@ const Charts = (() => {
   function destroyIfExists(canvas) {
     const existing = Chart.getChart(canvas);
     if (existing) existing.destroy();
+    // Ensure canvas has accessibility attributes
+    canvas.setAttribute("role", "img");
+    if (!canvas.getAttribute("aria-label")) {
+      const panel = canvas.closest(".chart-panel");
+      const title = panel && panel.querySelector(".chart-panel__title");
+      canvas.setAttribute("aria-label", title ? title.textContent : "Simulation chart");
+    }
   }
 
   function connectedCharts() {

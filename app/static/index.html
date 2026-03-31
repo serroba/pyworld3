@@ -68,6 +68,8 @@
 </head>
 <body>
 
+<a href="#app-shell" class="sr-only sr-only--focusable">Skip to main content</a>
+
 <nav class="site-nav">
   <div class="container">
     <a href="#intro" class="site-nav__brand" aria-label="World3 home" data-i18n="brand.home_aria" data-i18n-attr="aria-label">
@@ -125,7 +127,7 @@
 
       <div id="intro-resources" style="margin-top:var(--space-2xl);">
         <h2 class="section-title" data-i18n="intro.resources_title">Go Deeper</h2>
-        <div data-i18n="intro.resources_html" data-i18n-html="true"></div>
+        <ul class="ack__list" id="intro-resources-list"></ul>
       </div>
 
       <footer class="ack">
@@ -199,7 +201,7 @@
       <h2 class="section-title" data-i18n="explore.title">Explore a scenario</h2>
       <div id="explore-pills" class="pill-group mb-lg"></div>
       <div id="explore-view-controls" class="mb-lg"></div>
-      <div id="explore-status"></div>
+      <div id="explore-status" aria-live="polite"></div>
       <div id="explore-charts" class="grid-2"></div>
       <div class="view-links">
         <a href="#compare" class="btn btn-outline btn-sm" data-i18n="action.compare_scenarios">Compare scenarios</a>
@@ -221,7 +223,7 @@
           <select id="compare-select-b"></select>
         </div>
       </div>
-      <div id="compare-status"></div>
+      <div id="compare-status" aria-live="polite"></div>
       <div id="compare-metrics" class="card mb-lg"></div>
       <div id="compare-charts" class="grid-2"></div>
       <div class="view-links">
@@ -251,7 +253,7 @@
               </div>
             </div>
             <input id="advanced-import-file" type="file" accept="application/json" hidden>
-            <div id="advanced-status"></div>
+            <div id="advanced-status" aria-live="polite"></div>
             <div id="advanced-scenario-summary" class="card advanced-scenario-summary"></div>
             <div id="advanced-charts" class="grid-2 mt-lg"></div>
           </div>
@@ -295,7 +297,7 @@
           <button id="calibrate-run" class="btn btn-primary" data-i18n="action.calibrate">Calibrate</button>
           <button id="calibrate-apply" class="btn btn-outline" style="display:none;" data-i18n="action.apply_to_advanced">Apply to Advanced</button>
         </div>
-        <div id="calibrate-status" class="mt-lg"></div>
+        <div id="calibrate-status" class="mt-lg" aria-live="polite"></div>
         <div id="calibrate-results" class="mt-lg"></div>
       </div>
 
@@ -313,7 +315,7 @@
           <input type="text" id="validate-entity" value="World" style="padding:var(--space-sm) var(--space-md);border:1px solid var(--color-border);border-radius:var(--radius-sm);font-size:var(--text-sm);min-height:40px;">
         </div>
         <button id="validate-run" class="btn btn-primary" data-i18n="action.validate">Validate</button>
-        <div id="validate-status" class="mt-lg"></div>
+        <div id="validate-status" class="mt-lg" aria-live="polite"></div>
         <div id="validate-results" class="mt-lg"></div>
         <div id="validate-charts" class="grid-2 mt-lg"></div>
       </div>
