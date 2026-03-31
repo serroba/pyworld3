@@ -76,9 +76,15 @@
   transition: box-shadow 0.15s, border-color 0.15s;
 }
 
-.card--clickable:hover {
+.card--clickable:hover,
+.card--clickable:focus-visible {
   box-shadow: var(--shadow-md);
   border-color: var(--color-primary);
+}
+
+.card--clickable:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }
 
 .card__title {

@@ -10,12 +10,16 @@ const IntroView = (() => {
     container.innerHTML = "";
     State.presets.forEach((preset) => {
       const card = UI.el("div", "card card--clickable");
+      card.setAttribute("tabindex", "0");
+      card.setAttribute("role", "button");
       card.innerHTML = `
         <div class="card__title">${UI.escapeHtml(UI.labelPreset(preset))}</div>
         <div class="card__desc">${UI.escapeHtml(UI.describePreset(preset))}</div>
       `;
-      card.addEventListener("click", () => {
-        Router.go(`#explore?preset=${encodeURIComponent(preset.name)}&view=combined`);
+      const go = () => Router.go(`#explore?preset=${encodeURIComponent(preset.name)}&view=combined`);
+      card.addEventListener("click", go);
+      card.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); }
       });
       container.appendChild(card);
     });
