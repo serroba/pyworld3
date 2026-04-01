@@ -96,8 +96,7 @@ test.describe("localization", () => {
   test.use({ locale: "de-DE" });
 
   test("uses browser locale by default when supported", async ({ page }) => {
-    await page.goto("/");
-    await expect(page.locator("#view-intro")).toBeVisible();
+    await page.goto("/explore?preset=standard-run&view=combined");
     await expect(page).toHaveTitle(/World3-Simulator/);
     await expect(page.locator("nav.site-nav")).toContainText("Erkunden");
     await expect(page.locator(".chart-view-toggle")).toContainText("Klassisches Einzeldiagramm");
@@ -108,8 +107,7 @@ test.describe("spanish localization", () => {
   test.use({ locale: "es-ES" });
 
   test("uses spanish browser locale when supported", async ({ page }) => {
-    await page.goto("/");
-    await expect(page.locator("#view-intro")).toBeVisible();
+    await page.goto("/explore?preset=standard-run&view=combined");
     await expect(page).toHaveTitle(/Simulador World3/);
     await expect(page.locator("nav.site-nav")).toContainText("Explorar");
     await expect(page.locator(".chart-view-toggle")).toContainText("Gráfico clásico único");
