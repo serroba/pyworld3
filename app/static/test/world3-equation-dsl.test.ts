@@ -2,16 +2,25 @@ import { describe, expect, test } from "vitest";
 
 import { WORLD3_STOCK_KEYS } from "../ts/core/world3-keys.ts";
 import {
+  defineDerivedEquation,
+  defineEquationPhase,
+  defineRuntimePhase,
+  defineRuntimeValue,
+  runWorld3ExecutionPhase,
+} from "../ts/core/world3-equation-dsl.ts";
+import {
   WORLD3_CAPITAL_ALLOCATION_EQUATIONS,
   WORLD3_CAPITAL_INVESTMENT_EQUATIONS,
   WORLD3_CAPITAL_FLOW_EQUATIONS,
   WORLD3_CROSS_SECTOR_EQUATIONS,
+  WORLD3_CROSS_SECTOR_PHASES,
   WORLD3_CROSS_SECTOR_RESOURCE_EQUATIONS,
   WORLD3_DERIVED_STOCK_EQUATIONS,
   WORLD3_AGRICULTURE_EQUATIONS,
   WORLD3_POLLUTION_EQUATIONS,
   WORLD3_POPULATION_BIRTH_EQUATIONS,
   WORLD3_POPULATION_FEEDBACK_LATE_EQUATIONS,
+  WORLD3_POPULATION_FEEDBACK_PHASES,
   WORLD3_POPULATION_FEEDBACK_PRIMARY_EQUATIONS,
   WORLD3_POPULATION_LEADING_EQUATIONS,
   WORLD3_POPULATION_FLOW_EQUATIONS,
@@ -226,5 +235,60 @@ describe("World3 stock equation DSL", () => {
         expect.objectContaining({ kind: "derived-equation", key: "le", inputs: ["lmhs", "lmc", "len"] }),
       ]),
     );
+  });
+
+  test("declares phase-aware execution for cross-sector and population feedback", () => {
+    expect(WORLD3_CROSS_SECTOR_PHASES.map((phase) => phase.name)).toEqual([
+      "cross-sector-primary",
+      "cross-sector-runtime",
+      "cross-sector-allocation",
+      "cross-sector-resource",
+    ]);
+
+    expect(WORLD3_POPULATION_FEEDBACK_PHASES.map((phase) => phase.name)).toEqual([
+      "population-feedback-primary-runtime",
+      "population-feedback-primary",
+      "population-feedback-late-runtime",
+      "population-feedback-late",
+    ]);
+  });
+
+  test("runs runtime and equation phases against shared context", () => {
+    const buffers = {
+      iopc: Float64Array.of(4),
+      io: Float64Array.of(0),
+    } as unknown as Parameters<typeof runWorld3ExecutionPhase>[1]["buffers"];
+
+    const context: Parameters<typeof runWorld3ExecutionPhase>[1] = {
+      k: 0,
+      dt: 0,
+      t: 1900,
+      policyYear: 1950,
+      buffers,
+      constants: {} as Parameters<typeof runWorld3ExecutionPhase>[1]["constants"],
+      lookups: {} as Parameters<typeof runWorld3ExecutionPhase>[1]["lookups"],
+      runtime: {},
+    };
+
+    const runtimePhase = defineRuntimePhase("runtime", [
+      defineRuntimeValue({
+        key: "pcrum",
+        inputs: ["iopc"],
+        compute: ({ k, buffers }) => buffers.iopc[k]! * 2,
+      }),
+    ]);
+    const equationPhase = defineEquationPhase("equations", [
+      defineDerivedEquation({
+        key: "io",
+        inputs: ["iopc"],
+        compute: (phaseContext) => phaseContext.buffers.iopc[phaseContext.k]! + phaseContext.runtime!.pcrum!,
+      }),
+    ]);
+
+    runWorld3ExecutionPhase(runtimePhase, context);
+    runWorld3ExecutionPhase(equationPhase, context);
+
+    expect(context.runtime?.pcrum).toBe(8);
+    expect(buffers.io[0]).toBe(12);
   });
 });

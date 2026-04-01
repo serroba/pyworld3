@@ -23,3 +23,37 @@ export function defineDerivedEquation(definition) {
         ...definition,
     };
 }
+export function defineRuntimeValue(definition) {
+    return {
+        kind: "runtime-value",
+        ...definition,
+    };
+}
+export function defineEquationPhase(name, equations) {
+    return {
+        kind: "equation-phase",
+        name,
+        equations,
+    };
+}
+export function defineRuntimePhase(name, values) {
+    return {
+        kind: "runtime-phase",
+        name,
+        values,
+    };
+}
+export function runWorld3ExecutionPhase(phase, context) {
+    if (phase.kind === "runtime-phase") {
+        const runtime = { ...(context.runtime ?? {}) };
+        for (const value of phase.values) {
+            context.runtime = runtime;
+            runtime[value.key] = value.compute(context);
+        }
+        context.runtime = runtime;
+        return;
+    }
+    for (const equation of phase.equations) {
+        context.buffers[equation.key][context.k] = equation.compute(context);
+    }
+}

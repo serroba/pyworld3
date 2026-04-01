@@ -1,4 +1,4 @@
-import { defineDerivedEquation, defineDerivedStock, defineStateStock, requireWorld3RuntimeValue, } from "./world3-equation-dsl.js";
+import { defineEquationPhase, defineDerivedEquation, defineDerivedStock, defineRuntimePhase, defineRuntimeValue, defineStateStock, requireWorld3RuntimeValue, runWorld3ExecutionPhase, } from "./world3-equation-dsl.js";
 function clip(ifTrue, ifFalse, t, switchTime) {
     return t > switchTime ? ifTrue : ifFalse;
 }
@@ -497,6 +497,67 @@ export const WORLD3_POPULATION_FEEDBACK_LATE_EQUATIONS = [
             context.buffers.lmc[context.k],
     }),
 ];
+export const WORLD3_CROSS_SECTOR_PHASES = [
+    defineEquationPhase("cross-sector-primary", WORLD3_CROSS_SECTOR_EQUATIONS),
+    defineRuntimePhase("cross-sector-runtime", [
+        defineRuntimeValue({
+            key: "pcrum",
+            inputs: ["iopc"],
+            compute: ({ k, buffers, lookups }) => lookups.PCRUM(buffers.iopc[k]),
+        }),
+    ]),
+    defineEquationPhase("cross-sector-allocation", WORLD3_CAPITAL_ALLOCATION_EQUATIONS),
+    defineEquationPhase("cross-sector-resource", WORLD3_CROSS_SECTOR_RESOURCE_EQUATIONS),
+];
+export const WORLD3_POPULATION_FEEDBACK_PHASES = [
+    defineRuntimePhase("population-feedback-primary-runtime", [
+        defineRuntimeValue({
+            key: "cmi",
+            inputs: ["iopc"],
+            compute: ({ k, buffers, lookups }) => lookups.CMI(buffers.iopc[k]),
+        }),
+        defineRuntimeValue({
+            key: "fie",
+            inputs: ["iopc"],
+            compute: (context) => {
+                const aiopc = requireWorld3RuntimeValue(context, "aiopc");
+                return aiopc === 0 ? 0 : (context.buffers.iopc[context.k] - aiopc) / aiopc;
+            },
+        }),
+    ]),
+    defineEquationPhase("population-feedback-primary", WORLD3_POPULATION_FEEDBACK_PRIMARY_EQUATIONS),
+    defineRuntimePhase("population-feedback-late-runtime", [
+        defineRuntimeValue({
+            key: "mpai",
+            inputs: ["ly", "aiph"],
+            compute: (context) => requireWorld3RuntimeValue(context, "alai") *
+                context.buffers.ly[context.k] *
+                context.lookups.MLYMC(context.buffers.aiph[context.k]) /
+                requireWorld3RuntimeValue(context, "lymc"),
+        }),
+        defineRuntimeValue({
+            key: "mpld",
+            inputs: ["ly", "pal", "palt", "sd"],
+            compute: ({ k, buffers, constants, lookups }) => buffers.ly[k] / (lookups.DCPH(buffers.pal[k] / constants.palt) * constants.sd),
+        }),
+        defineRuntimeValue({
+            key: "fiald",
+            inputs: [],
+            compute: (context) => context.lookups.FIALD(requireWorld3RuntimeValue(context, "mpld") / requireWorld3RuntimeValue(context, "mpai")),
+        }),
+        defineRuntimeValue({
+            key: "lmf",
+            inputs: ["fpc", "sfpc"],
+            compute: ({ k, buffers, constants, lookups }) => lookups.LMF(buffers.fpc[k] / constants.sfpc),
+        }),
+        defineRuntimeValue({
+            key: "lmp",
+            inputs: ["ppolx"],
+            compute: ({ k, buffers, lookups }) => lookups.LMP(buffers.ppolx[k]),
+        }),
+    ]),
+    defineEquationPhase("population-feedback-late", WORLD3_POPULATION_FEEDBACK_LATE_EQUATIONS),
+];
 export function advanceStateStocks(k, dt, buffers, constants) {
     const context = { k, dt, buffers, constants };
     if (k === 0) {
@@ -628,25 +689,12 @@ export function computeCrossSectorStep(k, t, buffers, constants, lookups, capita
             nruf: resources.nruf,
         },
     };
-    for (const equation of WORLD3_CROSS_SECTOR_EQUATIONS) {
-        buffers[equation.key][k] = equation.compute(context);
+    for (const phase of WORLD3_CROSS_SECTOR_PHASES) {
+        runWorld3ExecutionPhase(phase, context);
     }
-    const pcrum = lookups.PCRUM(buffers.iopc[k]);
-    context.runtime = {
-        ...context.runtime,
-        pcrum,
-    };
-    for (const equation of WORLD3_CAPITAL_ALLOCATION_EQUATIONS) {
-        buffers[equation.key][k] = equation.compute(context);
-    }
-    for (const equation of WORLD3_CROSS_SECTOR_RESOURCE_EQUATIONS) {
-        buffers[equation.key][k] = equation.compute(context);
-    }
-    return { pcrum };
+    return { pcrum: requireWorld3RuntimeValue(context, "pcrum") };
 }
 export function computePopulationFeedbackStep(k, t, buffers, constants, lookups, leading, agriculture, pollution, crossSector, policyYear) {
-    const cmi = lookups.CMI(buffers.iopc[k]);
-    const fie = leading.aiopc === 0 ? 0 : (buffers.iopc[k] - leading.aiopc) / leading.aiopc;
     const context = {
         k,
         dt: 0,
@@ -656,30 +704,15 @@ export function computePopulationFeedbackStep(k, t, buffers, constants, lookups,
         policyYear,
         lookups,
         runtime: {
-            cmi,
-            fie,
+            aiopc: leading.aiopc,
+            alai: agriculture.alai,
+            lymc: agriculture.lymc,
             pcrum: crossSector.pcrum,
             ppgf: pollution.ppgf,
         },
     };
-    for (const equation of WORLD3_POPULATION_FEEDBACK_PRIMARY_EQUATIONS) {
-        buffers[equation.key][k] = equation.compute(context);
-    }
-    const mpai = agriculture.alai * buffers.ly[k] * lookups.MLYMC(buffers.aiph[k]) / agriculture.lymc;
-    const mpld = buffers.ly[k] / (lookups.DCPH(buffers.pal[k] / constants.palt) * constants.sd);
-    const fiald = lookups.FIALD(mpld / mpai);
-    const lmf = lookups.LMF(buffers.fpc[k] / constants.sfpc);
-    const lmp = lookups.LMP(buffers.ppolx[k]);
-    context.runtime = {
-        ...context.runtime,
-        mpai,
-        mpld,
-        fiald,
-        lmf,
-        lmp,
-    };
-    for (const equation of WORLD3_POPULATION_FEEDBACK_LATE_EQUATIONS) {
-        buffers[equation.key][k] = equation.compute(context);
+    for (const phase of WORLD3_POPULATION_FEEDBACK_PHASES) {
+        runWorld3ExecutionPhase(phase, context);
     }
 }
 export function computeMortalityAndBirthStep(k, t, buffers, constants, lookups) {
