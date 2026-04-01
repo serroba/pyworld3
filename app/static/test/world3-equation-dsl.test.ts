@@ -267,7 +267,7 @@ describe("World3 stock equation DSL", () => {
       buffers,
       constants: {} as Parameters<typeof runWorld3ExecutionPhase>[1]["constants"],
       lookups: {} as Parameters<typeof runWorld3ExecutionPhase>[1]["lookups"],
-      runtime: {},
+      runtime: {} as Parameters<typeof runWorld3ExecutionPhase>[1]["runtime"],
     };
 
     const runtimePhase = defineRuntimePhase("runtime", [
