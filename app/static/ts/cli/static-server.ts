@@ -102,6 +102,13 @@ async function main() {
       const payload = await loadResponseBody(url.pathname);
 
       if (!payload) {
+        // SPA fallback: serve index.html for unknown paths (client-side routing)
+        const fallback = await loadResponseBody("/index.html");
+        if (fallback) {
+          response.writeHead(200, { "Content-Type": fallback.contentType, "Cache-Control": "no-cache" });
+          response.end(fallback.body);
+          return;
+        }
         response.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
         response.end("Not found");
         return;
