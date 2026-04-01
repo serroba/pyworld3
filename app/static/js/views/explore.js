@@ -29,7 +29,7 @@ const ExploreView = (() => {
       if (preset.name === activePreset) pill.classList.add("active");
       pill.addEventListener("click", () => {
         Router.go(
-          `#explore?preset=${encodeURIComponent(preset.name)}&view=${encodeURIComponent(currentViewMode)}`
+          `/explore?preset=${encodeURIComponent(preset.name)}&view=${encodeURIComponent(currentViewMode)}`
         );
       });
       container.appendChild(pill);
@@ -95,7 +95,7 @@ const ExploreView = (() => {
       if (mode === activeMode) button.classList.add("active");
       button.addEventListener("click", () => {
         Router.go(
-          `#explore?preset=${encodeURIComponent(presetName)}&view=${encodeURIComponent(mode)}`
+          `/explore?preset=${encodeURIComponent(presetName)}&view=${encodeURIComponent(mode)}`
         );
       });
       toggle.appendChild(button);

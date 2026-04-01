@@ -16,7 +16,7 @@ const IntroView = (() => {
         <div class="card__title">${UI.escapeHtml(UI.labelPreset(preset))}</div>
         <div class="card__desc">${UI.escapeHtml(UI.describePreset(preset))}</div>
       `;
-      const go = () => Router.go(`#explore?preset=${encodeURIComponent(preset.name)}&view=combined`);
+      const go = () => Router.go(`/explore?preset=${encodeURIComponent(preset.name)}&view=combined`);
       card.addEventListener("click", go);
       card.addEventListener("keydown", (e) => {
         if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); }

@@ -1,17 +1,17 @@
 import { expect, test } from "@playwright/test";
 
-test("homepage loads standard run in the classic combined chart view", async ({ page }) => {
+test("homepage redirects to /explore with default scenario", async ({ page }) => {
   await page.goto("/");
   await expect(page).toHaveTitle(/World3 Simulator/);
   await expect(page.locator("nav.site-nav")).toBeVisible();
-  await page.waitForURL(/#explore\?preset=standard-run&view=combined/);
+  await page.waitForURL(/\/explore\?preset=standard-run/);
   await page.waitForSelector("#explore-charts canvas");
   await expect(page.locator("#explore-charts canvas")).toHaveCount(1);
   await expect(page.locator(".chart-panel__title")).toContainText("Classic World3 Overview");
 });
 
 test("explore view supports sector cards and classic combined chart", async ({ page }) => {
-  await page.goto("/#explore?preset=standard-run");
+  await page.goto("/explore?preset=standard-run");
   await page.waitForSelector("#explore-charts canvas");
   await expect(page.locator("#explore-charts canvas")).toHaveCount(4);
 
@@ -22,7 +22,7 @@ test("explore view supports sector cards and classic combined chart", async ({ p
 });
 
 test("compare view renders metrics without a backend", async ({ page }) => {
-  await page.goto("/#compare");
+  await page.goto("/compare");
   await page.waitForFunction(
     () => document.querySelectorAll("#compare-select-a option").length > 0,
   );
@@ -33,10 +33,10 @@ test("compare view renders metrics without a backend", async ({ page }) => {
 });
 
 test("advanced, calibrate, and validate flows render locally", async ({ page }) => {
-  await page.goto("/#advanced");
+  await page.goto("/advanced");
   await page.waitForSelector("#advanced-charts canvas");
 
-  await page.goto("/#calibrate");
+  await page.goto("/calibrate");
   await page.click("#calibrate-run");
   await page.waitForSelector("#calibrate-results table, #calibrate-status .card");
 
@@ -45,7 +45,7 @@ test("advanced, calibrate, and validate flows render locally", async ({ page }) 
 });
 
 test("advanced writes shareable scenario state into the URL", async ({ page }) => {
-  await page.goto("/#advanced");
+  await page.goto("/advanced");
   await page.waitForSelector("#advanced-charts canvas");
 
   const scenarioControls = page.locator("details.accordion").filter({
@@ -61,8 +61,37 @@ test("advanced writes shareable scenario state into the URL", async ({ page }) =
   await pyearInput.fill("2000");
   await pyearInput.dispatchEvent("change");
 
-  await expect(page).toHaveURL(/#advanced\?/);
+  await expect(page).toHaveURL(/\/advanced\?/);
   await expect(page).toHaveURL(/state=/, { timeout: 3000 });
+});
+
+test.describe("dedicated page routing", () => {
+  test("history page loads at /history", async ({ page }) => {
+    await page.goto("/history");
+    await expect(page.locator("#view-history")).toBeVisible();
+    await page.waitForSelector("#history-sections .card");
+    await expect(page.locator("#history-sections .card")).not.toHaveCount(0);
+  });
+
+  test("faq page loads at /faq", async ({ page }) => {
+    await page.goto("/faq");
+    await expect(page.locator("#view-faq")).toBeVisible();
+    await page.waitForSelector("#faq-sections details");
+    await expect(page.locator("#faq-sections details")).not.toHaveCount(0);
+  });
+
+  test("model page loads at /model", async ({ page }) => {
+    await page.goto("/model");
+    await expect(page.locator("#view-model")).toBeVisible();
+    await page.waitForSelector(".model-section");
+    await expect(page.locator(".model-section")).not.toHaveCount(0);
+  });
+
+  test("backwards compat: old hash URLs redirect to path URLs", async ({ page }) => {
+    await page.goto("/#history");
+    await page.waitForURL(/\/history/);
+    await expect(page.locator("#view-history")).toBeVisible();
+  });
 });
 
 test.describe("localization", () => {
@@ -70,7 +99,7 @@ test.describe("localization", () => {
 
   test("uses browser locale by default when supported", async ({ page }) => {
     await page.goto("/");
-    await page.waitForURL(/#explore\?preset=standard-run&view=combined/);
+    await page.waitForURL(/\/explore\?preset=standard-run/);
     await expect(page).toHaveTitle(/World3-Simulator/);
     await expect(page.locator("nav.site-nav")).toContainText("Erkunden");
     await expect(page.locator(".chart-view-toggle")).toContainText("Klassisches Einzeldiagramm");
@@ -82,7 +111,7 @@ test.describe("spanish localization", () => {
 
   test("uses spanish browser locale when supported", async ({ page }) => {
     await page.goto("/");
-    await page.waitForURL(/#explore\?preset=standard-run&view=combined/);
+    await page.waitForURL(/\/explore\?preset=standard-run/);
     await expect(page).toHaveTitle(/Simulador World3/);
     await expect(page.locator("nav.site-nav")).toContainText("Explorar");
     await expect(page.locator(".chart-view-toggle")).toContainText("Gráfico clásico único");
@@ -90,7 +119,9 @@ test.describe("spanish localization", () => {
   });
 
   test("uses spanish browser locale for content as well as chrome", async ({ page }) => {
-    await page.goto("/#intro");
+    await page.goto("/");
+    // Navigate to home via nav link
+    await page.locator("nav a[href='/']").first().click();
     await expect(page).toHaveTitle(/Simulador World3/);
     await expect(page.locator("nav.site-nav")).toContainText("Explorar");
     await expect(page.locator("#view-intro .hero")).toContainText("En 1972, un equipo de investigadores del MIT");
@@ -106,7 +137,7 @@ test("persists a manual language choice across reloads", async ({ page }) => {
   await expect(page.locator("nav.site-nav")).toContainText("探索");
 
   await page.reload();
-  await page.waitForURL(/#explore\?preset=standard-run&view=combined/);
+  await page.waitForURL(/\/explore\?preset=standard-run/);
   await expect(page.locator("#locale-picker")).toHaveValue("ja");
   await expect(page.locator("nav.site-nav")).toContainText("探索");
 });

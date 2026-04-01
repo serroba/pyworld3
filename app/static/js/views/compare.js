@@ -144,7 +144,7 @@ const CompareView = (() => {
         );
         return;
       }
-      Router.go(`#compare?a=${encodeURIComponent(selectA.value)}&b=${encodeURIComponent(selectB.value)}`);
+      Router.go(`/compare?a=${encodeURIComponent(selectA.value)}&b=${encodeURIComponent(selectB.value)}`);
     };
     selectA.onchange = onChange;
     selectB.onchange = onChange;

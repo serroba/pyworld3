@@ -6,37 +6,37 @@
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://limits.world/#history</loc>
+    <loc>https://limits.world/history</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://limits.world/#faq</loc>
+    <loc>https://limits.world/faq</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://limits.world/#model</loc>
+    <loc>https://limits.world/model</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://limits.world/#explore</loc>
+    <loc>https://limits.world/explore</loc>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://limits.world/#compare</loc>
+    <loc>https://limits.world/compare</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://limits.world/#advanced</loc>
+    <loc>https://limits.world/advanced</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://limits.world/#calibrate</loc>
+    <loc>https://limits.world/calibrate</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>

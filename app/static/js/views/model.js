@@ -162,7 +162,7 @@ const ModelView = (() => {
 
     const link = document.createElement("p");
     link.style.cssText = "margin-top:var(--space-sm);font-size:var(--text-xs);";
-    link.innerHTML = `<a href="#advanced">${UI.escapeHtml(I18n.t("action.edit_in_advanced"))} \u2192</a>`;
+    link.innerHTML = `<a href="/advanced">${UI.escapeHtml(I18n.t("action.edit_in_advanced"))} \u2192</a>`;
     inner.appendChild(link);
 
     return inner;
@@ -312,7 +312,7 @@ const ModelView = (() => {
 
       const link = document.createElement("p");
       link.style.cssText = "margin-top:var(--space-sm);font-size:var(--text-sm);";
-      link.innerHTML = `<a href="#advanced">${UI.escapeHtml(I18n.t("action.edit_in_advanced"))} \u2192</a>`;
+      link.innerHTML = `<a href="/advanced">${UI.escapeHtml(I18n.t("action.edit_in_advanced"))} \u2192</a>`;
       body.appendChild(link);
 
       details.appendChild(body);
