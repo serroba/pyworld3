@@ -35,6 +35,7 @@ const IntroView = (() => {
         { url: "https://doi.org/10.1111/jiec.13084", text: "Herrington (2021)", desc: "Update to limits to growth" },
         { url: "https://www.stockholmresilience.org/research/planetary-boundaries.html", text: "Planetary Boundaries", desc: "Stockholm Resilience Centre" },
         { url: "https://open.spotify.com/episode/5Joc87wU9xDznvfuLlkz66", text: "Breaking Down: Collapse", desc: "podcast Ep. 4" },
+        { url: "https://www.youtube.com/watch?v=zCfnKTzx9FA", text: "Dennis Meadows: Limits to Growth turns 50", desc: "The Great Simplification #12 (2022)" },
       ];
       resources.forEach((r) => {
         const li = document.createElement("li");
