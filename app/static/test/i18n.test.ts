@@ -47,7 +47,7 @@ describe("i18n", () => {
     expect(normalizeLocale("  ")).toBe("en");
     expect(buildLocaleFallbackChain("zh-TW")).toEqual(["zh-TW", "zh", "en"]);
     expect(resolveSupportedLocale("de-DE").code).toBe("de");
-    expect(resolveSupportedLocale("zh-TW").code).toBe("zh-CN");
+    expect(resolveSupportedLocale("zh-TW").code).toBe("zh-TW");
     expect(resolveSupportedLocale("zz-ZZ").code).toBe("en");
     expect(resolveSupportedLocale("").code).toBe("en");
   });
