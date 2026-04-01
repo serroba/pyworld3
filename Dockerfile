@@ -2,7 +2,11 @@ FROM node:22-alpine
 
 WORKDIR /app
 
+COPY app/static/package.json app/static/package-lock.json app/static/
+RUN cd app/static && npm ci --ignore-scripts
+
 COPY app/static/ app/static/
+RUN cd app/static && npm run build
 
 EXPOSE 8000
 
