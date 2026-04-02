@@ -359,6 +359,21 @@ export const WORLD3_POPULATION_FLOW_EQUATIONS = [
   }),
 ] as const satisfies readonly World3DerivedEquation[];
 
+export const WORLD3_CAPITAL_LEADING_EQUATIONS = [
+  defineDerivedEquation({
+    key: "cuf",
+    inputs: [],
+    compute: (context) =>
+      context.lookups.CUF(requireWorld3RuntimeValue(context, "lufd")),
+  }),
+  defineDerivedEquation({
+    key: "lf",
+    inputs: ["p2", "p3", "lfpf"],
+    compute: ({ k, buffers, constants }) =>
+      (buffers.p2[k]! + buffers.p3[k]!) * constants.lfpf,
+  }),
+] as const satisfies readonly World3DerivedEquation[];
+
 export const WORLD3_CAPITAL_FLOW_EQUATIONS = [
   defineDerivedEquation({
     key: "icdr",
@@ -384,6 +399,12 @@ export const WORLD3_CAPITAL_FLOW_EQUATIONS = [
     key: "sopc",
     inputs: ["so", "pop"],
     compute: ({ k, buffers }) => buffers.so[k]! / buffers.pop[k]!,
+  }),
+  defineDerivedEquation({
+    key: "pjss",
+    inputs: ["sc", "sopc"],
+    compute: ({ k, buffers, lookups }) =>
+      buffers.sc[k]! * lookups.JPSCU(buffers.sopc[k]!),
   }),
 ] as const satisfies readonly World3DerivedEquation[];
 
@@ -917,8 +938,6 @@ export function computeCapitalStep(
   policyYear: number,
 ): CapitalState {
   const lufd = integrators.smooth_luf.step(k, constants.lufdt);
-  buffers.cuf[k] = lookups.CUF(lufd);
-
   const icor = clip(constants.icor2, constants.icor1, t, policyYear);
   const scor = clip(constants.scor2, constants.scor1, t, policyYear);
   const context: World3DerivedEquationContext = {
@@ -929,12 +948,14 @@ export function computeCapitalStep(
     t,
     policyYear,
     lookups,
+    runtime: { lufd },
   };
+  for (const equation of WORLD3_CAPITAL_LEADING_EQUATIONS) {
+    buffers[equation.key][k] = equation.compute(context);
+  }
   for (const equation of WORLD3_CAPITAL_FLOW_EQUATIONS) {
     buffers[equation.key][k] = equation.compute(context);
   }
-  buffers.pjss[k] = buffers.sc[k]! * lookups.JPSCU(buffers.sopc[k]!);
-  buffers.lf[k] = (buffers.p2[k]! + buffers.p3[k]!) * constants.lfpf;
   return { icor, scor };
 }
 

@@ -37,7 +37,8 @@ export type World3RuntimeValueKey =
   | "lyf"
   | "lymc"
   | "lfrt"
-  | "nruf";
+  | "nruf"
+  | "lufd";
 
 export type World3StockEquationContext = {
   k: number;
