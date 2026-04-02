@@ -12,6 +12,8 @@
  * Variable abbreviations follow the original DYNAMO naming conventions.
  */
 
+import type { World3VariableKey } from "./world3-keys.js";
+
 export type EquationReference = {
   /** DYNAMO equation in the form "VAR.K = expression" */
   dynamo: string;
@@ -21,7 +23,7 @@ export type EquationReference = {
   description: string;
 };
 
-export const WORLD3_EQUATION_REFERENCE: Readonly<Record<string, EquationReference>> = {
+export const WORLD3_EQUATION_REFERENCE: Readonly<Record<World3VariableKey, EquationReference>> = {
   // ── State Stocks ──────────────────────────────────────────────
   p1: {
     dynamo: "P1.K = P1.J + DT * (B.JK - D1.JK - MAT1.JK)",

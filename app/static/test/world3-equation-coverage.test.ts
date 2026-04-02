@@ -106,6 +106,11 @@ describe("equation reference completeness", () => {
     expect(orphaned, "Reference keys with no matching DSL equation").toEqual([]);
   });
 
+  test("every DSL equation key has an equation reference", () => {
+    const missing = [...dslKeys].filter((k) => !referenceKeys.has(k));
+    expect(missing, "DSL equation keys without a reference entry").toEqual([]);
+  });
+
   test("every reference entry has all required fields", () => {
     for (const [key, ref] of Object.entries(WORLD3_EQUATION_REFERENCE)) {
       expect(ref.dynamo, `${key}.dynamo`).toBeTruthy();
