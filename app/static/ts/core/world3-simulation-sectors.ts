@@ -23,6 +23,8 @@ import type {
 
 type LookupFn = (x: number) => number;
 
+export type World3LookupName = keyof World3SimulationLookups;
+
 export type World3SimulationLookups = {
   FPU: LookupFn;
   LMF: LookupFn;

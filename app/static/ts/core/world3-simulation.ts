@@ -24,13 +24,14 @@ import {
   type World3SimulationBuffers,
   type World3SimulationConstants,
   type World3SimulationIntegrators,
+  type World3LookupName,
   type World3SimulationLookups,
 } from "./world3-simulation-sectors.js";
 import { buildWorld3SeriesResult } from "./world3-registry.js";
 
 type LookupFn = (x: number) => number;
 
-function requireLookup(lib: Map<string, LookupInterpolator>, name: string): LookupFn {
+function requireLookup(lib: Map<string, LookupInterpolator>, name: World3LookupName): LookupFn {
   const entry = lib.get(name);
   if (!entry) {
     throw new Error(`Missing lookup table: ${name}`);

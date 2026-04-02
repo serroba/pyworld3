@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 
 import { WORLD3_SERIES_REGISTRY } from "../ts/core/world3-registry.ts";
+import { WORLD3_EQUATION_REFERENCE } from "../ts/core/world3-equation-reference.ts";
 import {
   WORLD3_STATE_STOCK_EQUATIONS,
   WORLD3_DERIVED_STOCK_EQUATIONS,
@@ -87,5 +88,29 @@ describe("DSL equation coverage", () => {
     // flows, depreciation, etc.) that aren't exposed as output variables.
     // This is expected — the DSL is a superset of the public series registry.
     expect(dslKeys.size).toBeGreaterThanOrEqual(registeredKeys.size);
+  });
+});
+
+describe("equation reference completeness", () => {
+  const referenceKeys = new Set(Object.keys(WORLD3_EQUATION_REFERENCE));
+  const dslKeys = collectDslKeys();
+
+  test("every registered output variable has an equation reference", () => {
+    const registeredKeys = WORLD3_SERIES_REGISTRY.map((s) => s.key);
+    const missing = registeredKeys.filter((k) => !referenceKeys.has(k));
+    expect(missing, "Registered variables without an equation reference").toEqual([]);
+  });
+
+  test("every equation reference key exists in the DSL", () => {
+    const orphaned = [...referenceKeys].filter((k) => !dslKeys.has(k));
+    expect(orphaned, "Reference keys with no matching DSL equation").toEqual([]);
+  });
+
+  test("every reference entry has all required fields", () => {
+    for (const [key, ref] of Object.entries(WORLD3_EQUATION_REFERENCE)) {
+      expect(ref.dynamo, `${key}.dynamo`).toBeTruthy();
+      expect(ref.source, `${key}.source`).toBeTruthy();
+      expect(ref.description, `${key}.description`).toBeTruthy();
+    }
   });
 });
