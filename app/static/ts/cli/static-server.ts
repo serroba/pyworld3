@@ -83,16 +83,6 @@ async function loadResponseBody(requestPath: string) {
     targetStat = await stat(targetPath).catch(() => null);
   }
 
-  // Try adding .html extension (e.g. /developers → developers.html)
-  if (!targetStat?.isFile() && !path.extname(targetPath)) {
-    const htmlPath = targetPath + ".html";
-    const htmlStat = await stat(htmlPath).catch(() => null);
-    if (htmlStat?.isFile()) {
-      targetPath = htmlPath;
-      targetStat = htmlStat;
-    }
-  }
-
   if (!targetStat?.isFile()) {
     return null;
   }
