@@ -172,6 +172,35 @@ jobs:
           echo "Sitemap validation: $(grep -c '<loc>' sitemap.xml) URLs checked"
           exit $status
 
+      - name: Verify locale completeness
+        run: |
+          node -e "
+          const fs = require('fs');
+          const dir = 'app/static/data/locales';
+          const files = fs.readdirSync(dir).filter(f => f.endsWith('.json')).sort();
+          const locales = new Map();
+          for (const f of files) {
+            locales.set(f, new Set(Object.keys(JSON.parse(fs.readFileSync(dir + '/' + f, 'utf8')))));
+          }
+          const en = locales.get('en.json');
+          if (!en) { console.error('::error::en.json not found'); process.exit(1); }
+          let status = 0;
+          for (const [file, keys] of locales) {
+            if (file === 'en.json') continue;
+            const missing = [...en].filter(k => !keys.has(k));
+            const extra = [...keys].filter(k => !en.has(k));
+            for (const k of missing) {
+              console.error('::error file=' + dir + '/' + file + '::Missing translation key: ' + k);
+              status = 1;
+            }
+            for (const k of extra) {
+              console.error('::warning file=' + dir + '/' + file + '::Extra key not in en.json: ' + k);
+            }
+          }
+          if (status === 0) { console.log('Locale check: ' + locales.size + ' files, ' + en.size + ' keys each — all complete'); }
+          process.exit(status);
+          "
+
       - name: Verify no console.log left in production code
         run: |
           if grep -rn 'console\.log' app/static/js/ --include='*.js'; then
