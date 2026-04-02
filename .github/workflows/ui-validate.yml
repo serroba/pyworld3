@@ -172,6 +172,10 @@ jobs:
           echo "Sitemap validation: $(grep -c '<loc>' sitemap.xml) URLs checked"
           exit $status
 
+      - name: Verify locale completeness
+        working-directory: app/static
+        run: npm run lint:locales
+
       - name: Verify no console.log left in production code
         run: |
           if grep -rn 'console\.log' app/static/js/ --include='*.js'; then
