@@ -30,7 +30,11 @@
   Router.register("/compare", "view-compare", CompareView.render);
   Router.register("/advanced", "view-advanced", AdvancedView.render);
   Router.register("/calibrate", "view-calibrate", CalibrateView.render);
+  Router.register("/what-is-world3", "view-what-is-world3", WhatIsWorld3View.render);
+  Router.register("/limits-to-growth-model", "view-limits-to-growth", LimitsToGrowthView.render);
+  Router.register("/world3-scenarios", "view-scenarios", ScenariosView.render);
 
+  Router.onNavigate(updateHreflangTags);
   Router.start();
 
   window.addEventListener("world3:localechange", () => {
@@ -73,4 +77,25 @@ function syncLanguagePicker() {
     return;
   }
   picker.value = I18n.getLocale();
+}
+
+function updateHreflangTags() {
+  const container = document.getElementById("hreflang-links");
+  if (!container) return;
+
+  const currentPath = Router.getCurrentPath();
+  const pathSuffix = currentPath === "/" ? "" : currentPath;
+  const BASE = "https://limits.world";
+
+  const localeCodes = [
+    "en", "es", "pt-BR", "pt-PT", "fr", "de", "it", "nl", "hu", "pl", "tr",
+    "ru", "uk", "ar", "hi", "bn", "id", "vi", "th", "ja", "zh-CN", "zh-TW"
+  ];
+
+  let html = '<link rel="alternate" hreflang="x-default" href="' + BASE + pathSuffix + '">';
+  localeCodes.forEach(function (code) {
+    html += '<link rel="alternate" hreflang="' + code + '" href="' + BASE + '/' + code + pathSuffix + '">';
+  });
+
+  container.innerHTML = html;
 }

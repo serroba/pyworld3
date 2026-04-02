@@ -10,7 +10,13 @@
 
 const Router = (() => {
   const routes = [];
+  const listeners = [];
   const DEFAULT_PATH = "/explore?preset=standard-run&view=combined";
+
+  const LOCALE_CODES = new Set([
+    "en", "es", "fr", "de", "it", "nl", "hu", "pl", "tr", "ru", "uk",
+    "ar", "hi", "bn", "id", "vi", "th", "ja", "zh-CN", "zh-TW", "pt-BR", "pt-PT"
+  ]);
 
   function parsePath() {
     let pathname = location.pathname;
@@ -32,6 +38,17 @@ const Router = (() => {
       pathname = pathname.slice(0, -1);
     }
 
+    // Detect optional locale prefix (e.g. /es/what-is-world3 → locale=es)
+    let locale = null;
+    if (pathname.length > 1) {
+      const segments = pathname.substring(1).split("/");
+      const candidate = segments[0];
+      if (LOCALE_CODES.has(candidate)) {
+        locale = candidate;
+        pathname = "/" + segments.slice(1).join("/") || "/";
+      }
+    }
+
     // Root serves the intro/home view (not a redirect)
     if (pathname === "/" || pathname === "") {
       pathname = "/";
@@ -44,11 +61,16 @@ const Router = (() => {
         params[decodeURIComponent(k)] = decodeURIComponent(v || "");
       }
     }
-    return { path: pathname, params };
+    return { path: pathname, params, locale };
   }
 
   function navigate() {
-    const { path, params } = parsePath();
+    const { path, params, locale } = parsePath();
+
+    // Apply forced locale from URL prefix
+    if (locale && typeof I18n !== "undefined") {
+      I18n.setLocale(locale);
+    }
 
     // Hide all views
     document.querySelectorAll(".view").forEach((el) => el.classList.remove("active"));
@@ -71,7 +93,11 @@ const Router = (() => {
       // Unknown path — redirect to default
       history.replaceState(null, "", DEFAULT_PATH);
       navigate();
+      return;
     }
+
+    // Notify navigation listeners
+    listeners.forEach(function (fn) { fn(path); });
   }
 
   // Intercept link clicks for SPA navigation
@@ -95,6 +121,11 @@ const Router = (() => {
       routes.push({ pattern, viewId, render: renderFn });
     },
 
+    /** The current route path (without locale prefix). */
+    getCurrentPath() {
+      return parsePath().path;
+    },
+
     /** Start listening for navigation events. */
     start() {
       window.addEventListener("popstate", navigate);
@@ -115,6 +146,11 @@ const Router = (() => {
     replace(path) {
       history.replaceState(null, "", path);
       navigate();
+    },
+
+    /** Register a callback invoked after every navigation. */
+    onNavigate(fn) {
+      listeners.push(fn);
     },
   };
 })();

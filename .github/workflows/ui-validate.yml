@@ -152,7 +152,7 @@ jobs:
           fi
 
           # Every registered route must be in the sitemap
-          for route in / /history /faq /model /explore /compare /advanced /calibrate; do
+          for route in / /history /faq /model /explore /compare /advanced /calibrate /what-is-world3 /limits-to-growth-model /world3-scenarios; do
             if ! grep -q "limits.world${route}<" sitemap.xml; then
               echo "::error::sitemap.xml missing route: ${route}"
               status=1
