@@ -98,7 +98,16 @@ async function handleSimulate(request: Request, env: Env): Promise<Response> {
     rawTables: tables,
   });
 
-  return jsonResponse(result);
+  // Filter series to requested output_variables (or defaults)
+  const requested = simRequest.output_variables ?? ModelData.defaultVariables;
+  const filtered: typeof result.series = {};
+  for (const key of requested) {
+    if (result.series[key]) {
+      filtered[key] = result.series[key];
+    }
+  }
+
+  return jsonResponse({ ...result, series: filtered });
 }
 
 function handlePresets(): Response {

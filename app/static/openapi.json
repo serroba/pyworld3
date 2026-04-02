@@ -61,7 +61,7 @@
                   }
                 },
                 "custom-range": {
-                  "summary": "Simulate only 2000-2200 with smaller time step",
+                  "summary": "Simulate 1900-2200 with smaller time step and selected outputs",
                   "value": {
                     "year_min": 1900,
                     "year_max": 2200,
@@ -130,10 +130,10 @@
           },
           "year_min": {
             "type": "number",
-            "description": "Simulation start year",
+            "description": "Simulation start year. The engine always computes from 1900 internally; this controls the start of the returned output.",
             "default": 1900,
             "minimum": 1900,
-            "maximum": 2100
+            "maximum": 2300
           },
           "year_max": {
             "type": "number",
@@ -243,6 +243,16 @@
             "description": "Default values for all 73 model constants",
             "additionalProperties": { "type": "number" }
           },
+          "constant_constraints": {
+            "type": "object",
+            "description": "Valid ranges for each constant as [min, max] tuples (null means unbounded)",
+            "additionalProperties": {
+              "type": "array",
+              "items": { "type": ["number", "null"] },
+              "minItems": 2,
+              "maxItems": 2
+            }
+          },
           "constant_meta": {
             "type": "object",
             "description": "Metadata for each constant (full_name, sector, unit)",
@@ -271,6 +281,21 @@
             "type": "array",
             "items": { "type": "string" },
             "description": "Variables included by default when output_variables is omitted"
+          },
+          "scenario_control_defaults": {
+            "type": "object",
+            "description": "Default values for scenario controls (year_min, year_max, dt, pyear, iphst)",
+            "additionalProperties": { "type": "number" }
+          },
+          "scenario_control_constraints": {
+            "type": "object",
+            "description": "Valid ranges for scenario controls as [min, max] tuples",
+            "additionalProperties": {
+              "type": "array",
+              "items": { "type": ["number", "null"] },
+              "minItems": 2,
+              "maxItems": 2
+            }
           }
         }
       },

@@ -54,7 +54,7 @@ function runApiSimulation(body: Record<string, unknown>): SimulationResult {
     ...(simRequest.constants ?? {}),
   };
 
-  return simulateWorld3({
+  const result = simulateWorld3({
     yearMin: simRequest.year_min ?? 1900,
     yearMax: simRequest.year_max ?? 2100,
     dt: simRequest.dt ?? 0.5,
@@ -63,6 +63,17 @@ function runApiSimulation(body: Record<string, unknown>): SimulationResult {
     constants: mergedConstants,
     rawTables: tables,
   });
+
+  // Filter series to requested output_variables (mirrors Worker logic)
+  const requested = simRequest.output_variables ?? ModelData.defaultVariables;
+  const filtered: typeof result.series = {};
+  for (const key of requested) {
+    if (result.series[key]) {
+      filtered[key] = result.series[key];
+    }
+  }
+
+  return { ...result, series: filtered };
 }
 
 describe("Worker API: /api/simulate", () => {
@@ -154,6 +165,20 @@ describe("Worker API: /api/simulate", () => {
     });
     expect(result.series.pop).toBeDefined();
     expect(result.series.le).toBeDefined();
+    // Should only contain the 2 requested series, not the full set
+    const keys = Object.keys(result.series);
+    expect(keys).toHaveLength(2);
+    expect(keys).toContain("pop");
+    expect(keys).toContain("le");
+  });
+
+  test("default output_variables returns ModelData.defaultVariables", () => {
+    const result = runApiSimulation({});
+    const keys = Object.keys(result.series);
+    expect(keys.length).toBe(ModelData.defaultVariables.length);
+    for (const v of ModelData.defaultVariables) {
+      expect(result.series[v], `default variable ${v}`).toBeDefined();
+    }
   });
 
   test("result series values are JSON-serializable numbers", () => {
