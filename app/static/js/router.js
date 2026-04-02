@@ -113,6 +113,8 @@ const Router = (() => {
     if (!href || href.startsWith("http") || href.startsWith("//") || href.startsWith("mailto:") || href.startsWith("#")) return;
     if (link.target === "_blank" || link.hasAttribute("download")) return;
     if (!href.startsWith("/")) return;
+    // Let the browser handle links to static files (e.g. /openapi.json)
+    if (/\.\w+$/.test(href.split("?")[0])) return;
     e.preventDefault();
     history.pushState(null, "", href);
     navigate();
