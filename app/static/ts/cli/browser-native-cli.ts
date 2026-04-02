@@ -170,10 +170,15 @@ async function main() {
     ModelData,
     loadWorld3Tables,
   );
-  const result = await core.simulateStandardRun();
+
+  // Use the local simulation core which supports presets
+  const simCore = core.createLocalSimulationCore();
+  const overrides = options.yearMin != null ? { year_min: options.yearMin } : {};
+  const result = await simCore.simulatePreset(options.preset, overrides);
 
   if (options.summary) {
-    process.stdout.write(`${await core.summarizeStandardRun()}\n`);
+    const { formatSimulationSummary } = await import("../core/simulation-artifacts.js");
+    process.stdout.write(`${formatSimulationSummary(result, ModelData)}\n`);
   }
 
   if (options.json) {
@@ -181,16 +186,19 @@ async function main() {
   }
 
   if (options.plotSvg) {
-    await writeFile(options.plotSvg, await core.renderStandardRunSvg(), "utf8");
+    const { renderSimulationSvg } = await import("../core/simulation-artifacts.js");
+    await writeFile(options.plotSvg, renderSimulationSvg(result), "utf8");
     process.stderr.write(`Plot saved to ${options.plotSvg}\n`);
   }
 
   if (options.plotTerminal) {
+    process.stderr.write(`Preset: ${options.preset}\n`);
     process.stdout.write(renderTerminalChart(result.time, result.series as Record<string, { values: number[] }>));
   }
 
   if (!options.summary && !options.json && !options.plotSvg && !options.plotTerminal) {
-    process.stdout.write(`${await core.summarizeStandardRun()}\n`);
+    const { formatSimulationSummary } = await import("../core/simulation-artifacts.js");
+    process.stdout.write(`${formatSimulationSummary(result, ModelData)}\n`);
   }
 }
 
