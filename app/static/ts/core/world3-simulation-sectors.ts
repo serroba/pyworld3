@@ -163,25 +163,9 @@ export type PopulationLeadingState = {
   diopc: number;
 };
 
-export type CapitalState = {
-  icor: number;
-  scor: number;
-};
 
-export type AgricultureState = {
-  alai: number;
-  lymc: number;
-  lyf: number;
-  lfrt: number;
-};
 
-export type PollutionState = {
-  ppgf: number;
-};
 
-export type ResourceState = {
-  nruf: number;
-};
 
 export type CrossSectorState = {
   pcrum: number;
@@ -807,6 +791,33 @@ export const WORLD3_POPULATION_FEEDBACK_LATE_EQUATIONS = [
 ] as const satisfies readonly World3DerivedEquation[];
 
 export const WORLD3_CROSS_SECTOR_PHASES = [
+  defineRuntimePhase("cross-sector-policy", [
+    defineRuntimeValue({
+      key: "icor",
+      inputs: ["icor1", "icor2"],
+      compute: ({ t, constants, policyYear }) => clip(constants.icor2, constants.icor1, t, policyYear),
+    }),
+    defineRuntimeValue({
+      key: "nruf",
+      inputs: ["nruf1", "nruf2"],
+      compute: ({ t, constants, policyYear }) => clip(constants.nruf2, constants.nruf1, t, policyYear),
+    }),
+    defineRuntimeValue({
+      key: "lyf",
+      inputs: ["lyf1", "lyf2"],
+      compute: ({ t, constants, policyYear }) => clip(constants.lyf2, constants.lyf1, t, policyYear),
+    }),
+    defineRuntimeValue({
+      key: "lymc",
+      inputs: ["aiph"],
+      compute: ({ k, buffers, lookups }) => lookups.LYMC(buffers.aiph[k]!),
+    }),
+    defineRuntimeValue({
+      key: "lfrt",
+      inputs: ["falm"],
+      compute: ({ k, buffers, lookups }) => lookups.LFRT(buffers.falm[k]!),
+    }),
+  ]),
   defineEquationPhase("cross-sector-primary", WORLD3_CROSS_SECTOR_EQUATIONS),
   defineRuntimePhase("cross-sector-runtime", [
     defineRuntimeValue({
@@ -820,6 +831,23 @@ export const WORLD3_CROSS_SECTOR_PHASES = [
 ] as const satisfies readonly World3ExecutionPhase[];
 
 export const WORLD3_POPULATION_FEEDBACK_PHASES = [
+  defineRuntimePhase("population-feedback-policy", [
+    defineRuntimeValue({
+      key: "ppgf",
+      inputs: ["ppgf1", "ppgf2"],
+      compute: ({ t, constants, policyYear }) => clip(constants.ppgf2, constants.ppgf1, t, policyYear),
+    }),
+    defineRuntimeValue({
+      key: "alai",
+      inputs: ["alai1", "alai2"],
+      compute: ({ t, constants, policyYear }) => clip(constants.alai2, constants.alai1, t, policyYear),
+    }),
+    defineRuntimeValue({
+      key: "lymc",
+      inputs: ["aiph"],
+      compute: ({ k, buffers, lookups }) => lookups.LYMC(buffers.aiph[k]!),
+    }),
+  ]),
   defineRuntimePhase("population-feedback-primary-runtime", [
     defineRuntimeValue({
       key: "cmi",
@@ -936,10 +964,8 @@ export function computeCapitalStep(
   lookups: World3SimulationLookups,
   integrators: World3SimulationIntegrators,
   policyYear: number,
-): CapitalState {
+): void {
   const lufd = integrators.smooth_luf.step(k, constants.lufdt);
-  const icor = clip(constants.icor2, constants.icor1, t, policyYear);
-  const scor = clip(constants.scor2, constants.scor1, t, policyYear);
   const context: World3DerivedEquationContext = {
     k,
     dt: 0,
@@ -956,7 +982,6 @@ export function computeCapitalStep(
   for (const equation of WORLD3_CAPITAL_FLOW_EQUATIONS) {
     buffers[equation.key][k] = equation.compute(context);
   }
-  return { icor, scor };
 }
 
 export function computeAgricultureStep(
@@ -967,7 +992,7 @@ export function computeAgricultureStep(
   lookups: World3SimulationLookups,
   integrators: World3SimulationIntegrators,
   policyYear: number,
-): AgricultureState {
+): void {
   const alai = clip(constants.alai2, constants.alai1, t, policyYear);
   const ai = integrators.smooth_cai.step(k, alai);
   const pfr = integrators.smooth_fr.step(k, constants.fspd);
@@ -984,10 +1009,6 @@ export function computeAgricultureStep(
   for (const equation of WORLD3_AGRICULTURE_EQUATIONS) {
     buffers[equation.key][k] = equation.compute(context);
   }
-  const lymc = lookups.LYMC(buffers.aiph[k]!);
-  const lyf = clip(constants.lyf2, constants.lyf1, t, policyYear);
-  const lfrt = lookups.LFRT(buffers.falm[k]!);
-  return { alai, lymc, lyf, lfrt };
 }
 
 export function computePollutionStep(
@@ -998,10 +1019,10 @@ export function computePollutionStep(
   lookups: World3SimulationLookups,
   integrators: World3SimulationIntegrators,
   policyYear: number,
-): PollutionState {
-  const ppgf = clip(constants.ppgf2, constants.ppgf1, t, policyYear);
+): void {
   const pptd = clip(constants.pptd2, constants.pptd1, t, policyYear);
   const ppapr = integrators.delay3_ppgr.step(k, pptd);
+  const ppgf = clip(constants.ppgf2, constants.ppgf1, t, policyYear);
   const context: World3DerivedEquationContext = {
     k,
     dt: 0,
@@ -1015,7 +1036,6 @@ export function computePollutionStep(
   for (const equation of WORLD3_POLLUTION_EQUATIONS) {
     buffers[equation.key][k] = equation.compute(context);
   }
-  return { ppgf };
 }
 
 export function computeResourceStep(
@@ -1025,7 +1045,7 @@ export function computeResourceStep(
   constants: World3SimulationConstants,
   lookups: World3SimulationLookups,
   policyYear: number,
-): ResourceState {
+): void {
   const context: World3DerivedEquationContext = {
     k,
     dt: 0,
@@ -1038,7 +1058,6 @@ export function computeResourceStep(
   for (const equation of WORLD3_RESOURCE_DERIVED_EQUATIONS) {
     buffers[equation.key][k] = equation.compute(context);
   }
-  return { nruf: clip(constants.nruf2, constants.nruf1, t, policyYear) };
 }
 
 export function computeCrossSectorStep(
@@ -1047,9 +1066,6 @@ export function computeCrossSectorStep(
   buffers: World3SimulationBuffers,
   constants: World3SimulationConstants,
   lookups: World3SimulationLookups,
-  capital: CapitalState,
-  agriculture: AgricultureState,
-  resources: ResourceState,
   policyYear: number,
 ): CrossSectorState {
   const context: World3DerivedEquationContext = {
@@ -1060,13 +1076,6 @@ export function computeCrossSectorStep(
     t,
     policyYear,
     lookups,
-    runtime: {
-      icor: capital.icor,
-      lyf: agriculture.lyf,
-      lymc: agriculture.lymc,
-      lfrt: agriculture.lfrt,
-      nruf: resources.nruf,
-    },
   };
   for (const phase of WORLD3_CROSS_SECTOR_PHASES) {
     runWorld3ExecutionPhase(phase, context);
@@ -1081,8 +1090,6 @@ export function computePopulationFeedbackStep(
   constants: World3SimulationConstants,
   lookups: World3SimulationLookups,
   leading: PopulationLeadingState,
-  agriculture: AgricultureState,
-  pollution: PollutionState,
   crossSector: CrossSectorState,
   policyYear: number,
 ): void {
@@ -1096,10 +1103,7 @@ export function computePopulationFeedbackStep(
     lookups,
     runtime: {
       aiopc: leading.aiopc,
-      alai: agriculture.alai,
-      lymc: agriculture.lymc,
       pcrum: crossSector.pcrum,
-      ppgf: pollution.ppgf,
     },
   };
   for (const phase of WORLD3_POPULATION_FEEDBACK_PHASES) {

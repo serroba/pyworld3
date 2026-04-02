@@ -285,37 +285,11 @@ export function simulateWorld3(options: World3SimulationOptions): SimulationResu
       integrators,
       iphst,
     );
-    const capitalState = computeCapitalStep(k, t, buffers, constants, lookups, integrators, pyear);
-    const agricultureState = computeAgricultureStep(
-      k,
-      t,
-      buffers,
-      constants,
-      lookups,
-      integrators,
-      pyear,
-    );
-    const pollutionState = computePollutionStep(
-      k,
-      t,
-      buffers,
-      constants,
-      lookups,
-      integrators,
-      pyear,
-    );
-    const resourceState = computeResourceStep(k, t, buffers, constants, lookups, pyear);
-    const crossSectorState = computeCrossSectorStep(
-      k,
-      t,
-      buffers,
-      constants,
-      lookups,
-      capitalState,
-      agricultureState,
-      resourceState,
-      pyear,
-    );
+    computeCapitalStep(k, t, buffers, constants, lookups, integrators, pyear);
+    computeAgricultureStep(k, t, buffers, constants, lookups, integrators, pyear);
+    computePollutionStep(k, t, buffers, constants, lookups, integrators, pyear);
+    computeResourceStep(k, t, buffers, constants, lookups, pyear);
+    const crossSectorState = computeCrossSectorStep(k, t, buffers, constants, lookups, pyear);
     computePopulationFeedbackStep(
       k,
       t,
@@ -323,8 +297,6 @@ export function simulateWorld3(options: World3SimulationOptions): SimulationResu
       constants,
       lookups,
       populationLeading,
-      agricultureState,
-      pollutionState,
       crossSectorState,
       pyear,
     );

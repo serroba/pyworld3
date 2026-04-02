@@ -175,16 +175,14 @@ describe("world3 simulation sector helpers", () => {
     const integrators = createIntegrators();
 
     buffers.al[0] = 70;
-    const agriculture = computeAgricultureStep(0, 1970, buffers, constants, lookups, integrators, 1975);
-    expect(agriculture.alai).toBe(2);
+    computeAgricultureStep(0, 1970, buffers, constants, lookups, integrators, 1975);
     expect(buffers.ai[0]).toBe(9);
     expect(buffers.pfr[0]).toBe(10);
     expect(buffers.falm[0]).toBe(10);
     expect(buffers.aiph[0]).toBeCloseTo(9 * (1 - 10) / 70);
 
     buffers.ppol[0] = 110;
-    const pollution = computePollutionStep(0, 1970, buffers, constants, lookups, integrators, 1975);
-    expect(pollution.ppgf).toBe(1);
+    computePollutionStep(0, 1970, buffers, constants, lookups, integrators, 1975);
     expect(buffers.ppolx[0]).toBeCloseTo(110 / 25);
     expect(buffers.ppgao[0]).toBeCloseTo(buffers.aiph[0]! * 70 * constants.fipm * constants.amti);
     expect(buffers.ppapr[0]).toBe(11);
@@ -208,18 +206,14 @@ describe("world3 simulation sector helpers", () => {
     buffers.p3[0] = 30;
     buffers.p3[1] = 30;
 
-    const prePolicy = computeCapitalStep(0, 1970, buffers, constants, lookups, integrators, 1975);
-    expect(prePolicy.icor).toBe(3);
-    expect(prePolicy.scor).toBe(1);
+    computeCapitalStep(0, 1970, buffers, constants, lookups, integrators, 1975);
     expect(buffers.cuf[0]).toBe(8);
     expect(buffers.icdr[0]).toBeCloseTo(50 / 14);
     expect(buffers.scdr[0]).toBeCloseTo(60 / 20);
     expect(buffers.so[0]).toBeCloseTo(60 * 8);
     expect(buffers.sopc[0]).toBeCloseTo((60 * 8) / 100);
 
-    const postPolicy = computeCapitalStep(1, 1980, buffers, constants, lookups, integrators, 1975);
-    expect(postPolicy.icor).toBe(4);
-    expect(postPolicy.scor).toBe(2);
+    computeCapitalStep(1, 1980, buffers, constants, lookups, integrators, 1975);
     expect(buffers.icdr[1]).toBeCloseTo(50 / 15);
     expect(buffers.scdr[1]).toBeCloseTo(60 / 21);
     expect(buffers.so[1]).toBeCloseTo((60 * 8) / 2);
@@ -245,6 +239,7 @@ describe("world3 simulation sector helpers", () => {
     buffers.uil[0] = 20;
     buffers.fioaa[0] = 0.1;
     buffers.lf[0] = 50;
+    buffers.falm[0] = 1;
 
     const crossSector = computeCrossSectorStep(
       0,
@@ -252,9 +247,6 @@ describe("world3 simulation sector helpers", () => {
       buffers,
       constants,
       lookups,
-      { icor: 3, scor: 1 },
-      { alai: 2, lymc: 1, lyf: 1, lfrt: 1 },
-      { nruf: 0.5 },
       1975,
     );
 
@@ -308,7 +300,7 @@ describe("world3 simulation sector helpers", () => {
     buffers.ifpc[0] = 5;
     buffers.io[0] = 40;
     buffers.pal[0] = 80;
-    buffers.aiph[0] = 3;
+    buffers.aiph[0] = 1;
     buffers.llmy[0] = 2;
     buffers.ppgao[0] = 7;
     buffers.ppolx[0] = 2;
@@ -321,8 +313,6 @@ describe("world3 simulation sector helpers", () => {
       constants,
       lookups,
       { aiopc: 4, diopc: 6 },
-      { alai: 2, lymc: 1, lyf: 1, lfrt: 1 },
-      { ppgf: 1 },
       { pcrum: 5 },
       1975,
     );
@@ -331,7 +321,7 @@ describe("world3 simulation sector helpers", () => {
     const expectedFpc = expectedF / 100;
     const expectedFioaa = expectedFpc / 5;
     const expectedTai = 40 * expectedFioaa;
-    const expectedMpai = 2 * 10 * 3;
+    const expectedMpai = 2 * 10 * 1;
     const expectedMpld = 10 / ((80 / constants.palt) * constants.sd);
     const expectedFiald = expectedMpld / expectedMpai;
     const expectedLmc = 1 - 5 * 2;

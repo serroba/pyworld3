@@ -239,6 +239,7 @@ describe("World3 stock equation DSL", () => {
 
   test("declares phase-aware execution for cross-sector and population feedback", () => {
     expect(WORLD3_CROSS_SECTOR_PHASES.map((phase) => phase.name)).toEqual([
+      "cross-sector-policy",
       "cross-sector-primary",
       "cross-sector-runtime",
       "cross-sector-allocation",
@@ -246,6 +247,7 @@ describe("World3 stock equation DSL", () => {
     ]);
 
     expect(WORLD3_POPULATION_FEEDBACK_PHASES.map((phase) => phase.name)).toEqual([
+      "population-feedback-policy",
       "population-feedback-primary-runtime",
       "population-feedback-primary",
       "population-feedback-late-runtime",
