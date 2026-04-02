@@ -37,8 +37,8 @@ export class Smooth {
 
   step(k: number, delay: number): number {
     if (k === 0) {
-      this.out[k] = this.input[k] ?? 0;
-      return this.out[k] ?? 0;
+      this.out[k] = this.input[k]!;
+      return this.out[k];
     }
 
     const previous = this.out[k - 1] ?? 0;

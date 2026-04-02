@@ -115,6 +115,10 @@ jobs:
         working-directory: app/static
         run: npx --yes eslint@latest js/
 
+      - name: Lint core TypeScript (strict)
+        working-directory: app/static
+        run: npm run lint:core
+
       - name: Check referenced assets exist
         run: |
           cd app/static

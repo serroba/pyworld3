@@ -109,7 +109,7 @@ const calibrationMappings: CalibrationMapping[] = [
 ];
 
 function formatFourSig(value: number): string {
-  return Number(value).toPrecision(4).replace(/\.0+(?=e|$)/, "");
+  return value.toPrecision(4).replace(/\.0+(?=e|$)/, "");
 }
 
 function applyConstraint(
@@ -189,7 +189,7 @@ export function calibrateFromIndicatorData(
       confidence: mapping.confidence,
       owid_indicator: mapping.owidIndicator,
       description: mapping.description,
-      default_value: modelData.constantDefaults[mapping.world3Param] ?? 0,
+      default_value: modelData.constantDefaults[mapping.world3Param],
     };
   }
 
@@ -203,7 +203,7 @@ export function calibrateFromIndicatorData(
 
 export function createCalibrationCore(
   modelData: Pick<ModelDataPayload, "constantDefaults" | "constantConstraints">,
-) {
+): { calibrate: (data: CalibrationDataResponse, options?: CalibrateOptions) => CalibrationResponse } {
   return {
     calibrate: (data: CalibrationDataResponse, options?: CalibrateOptions) =>
       calibrateFromIndicatorData(modelData, data, options),

@@ -146,7 +146,7 @@ export const WORLD3_AUXILIARY_KEYS = WORLD3_VARIABLE_KEYS.filter(
   (key) =>
     !WORLD3_STOCK_KEYS.includes(key as World3StockKey) &&
     !WORLD3_FLOW_KEYS.includes(key as World3FlowKey),
-) as World3VariableKey[];
+);
 
 export type World3AuxiliaryKey = Exclude<
   World3VariableKey,

@@ -61,7 +61,9 @@ export function formatSimulationSummary(
       continue;
     }
 
-    const meta = modelData.variableMeta[varName];
+    const meta = modelData.variableMeta[varName] as
+      | { sector: string; full_name: string; unit: string }
+      | undefined;
     const sector = meta?.sector ?? "Other";
     const fullName = meta?.full_name ?? varName;
     const first = series.values[0];

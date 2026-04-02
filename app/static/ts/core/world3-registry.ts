@@ -267,8 +267,8 @@ export function buildWorld3ConstantMeta(): Record<
 
 export function buildWorld3SeriesResult(
   buffers: Record<World3VariableKey, Float64Array>,
-): Record<World3VariableKey, TimeSeriesResult<World3VariableKey>> {
-  const series = {} as Record<World3VariableKey, TimeSeriesResult<World3VariableKey>>;
+): Record<World3VariableKey, TimeSeriesResult> {
+  const series = {} as Record<World3VariableKey, TimeSeriesResult>;
   for (const definition of WORLD3_SERIES_REGISTRY) {
     series[definition.key] = {
       name: definition.key,

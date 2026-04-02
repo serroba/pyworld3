@@ -92,10 +92,10 @@ export function hasExplicitOverrides(request?: SimulationRequest): boolean {
     if (Array.isArray(value)) {
       return value.length > 0;
     }
-    if (value && typeof value === "object") {
+    if (typeof value === "object") {
       return Object.keys(value).length > 0;
     }
-    return value !== undefined;
+    return true;
   });
 }
 

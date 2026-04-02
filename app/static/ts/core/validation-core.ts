@@ -347,7 +347,7 @@ export function validateSimulationResult(
 
 export function createValidationCore(
   loadValidationData: (options?: ValidationOptions) => Promise<ValidationDataResponse>,
-) {
+): { validate: (result: SimulationResult, options?: ValidationOptions) => Promise<ValidationResponse> } {
   return {
     async validate(result: SimulationResult, options: ValidationOptions = {}) {
       const validationData = await loadValidationData(options);
