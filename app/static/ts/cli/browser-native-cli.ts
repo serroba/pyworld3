@@ -67,7 +67,11 @@ export function parseArgs(argv: string[]) {
       if (!nextValue) {
         throw new Error("Missing value for '--year-min'");
       }
-      options.yearMin = Number(nextValue);
+      const parsed = Number(nextValue);
+      if (!Number.isFinite(parsed)) {
+        throw new Error(`--year-min value must be a number, got '${nextValue}'`);
+      }
+      options.yearMin = parsed;
       index += 1;
       continue;
     }

@@ -64,6 +64,9 @@ export function simulateWorld3(options: World3SimulationOptions): SimulationResu
   const pyear = options.pyear ?? 1975;
   const iphst = options.iphst ?? 1940;
 
+  // Validate and clamp yearMin
+  const clampedYearMin = Math.max(1900, Math.min(requestedYearMin, yearMax));
+
   // Always simulate from 1900 so initial conditions are properly computed,
   // then trim the output to the requested yearMin.
   const simYearMin = 1900;
@@ -341,7 +344,7 @@ export function simulateWorld3(options: World3SimulationOptions): SimulationResu
   const fullSeries = buildWorld3SeriesResult(buffers);
 
   // Find the first index at or after the requested start year
-  const trimIndex = requestedYearMin <= simYearMin ? 0 : fullTime.findIndex(t => t >= requestedYearMin);
+  const trimIndex = clampedYearMin <= simYearMin ? 0 : fullTime.findIndex(t => t >= clampedYearMin);
   const startIdx = trimIndex >= 0 ? trimIndex : 0;
 
   const trimmedTime = fullTime.slice(startIdx);
@@ -354,7 +357,7 @@ export function simulateWorld3(options: World3SimulationOptions): SimulationResu
   }
 
   return {
-    year_min: requestedYearMin,
+    year_min: clampedYearMin,
     year_max: yearMax,
     dt,
     time: trimmedTime,

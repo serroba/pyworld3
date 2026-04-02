@@ -52,6 +52,10 @@ describe("CLI argument parsing", () => {
     expect(() => parseArgs(["--year-min"])).toThrow("Missing value");
   });
 
+  test("--year-min rejects non-numeric values", () => {
+    expect(() => parseArgs(["--year-min", "foo"])).toThrow("must be a number");
+  });
+
   test("--set parses key=value constant overrides", () => {
     const opts = parseArgs(["--set", "nri=2e12"]);
     expect(opts.constants).toEqual({ nri: 2e12 });
