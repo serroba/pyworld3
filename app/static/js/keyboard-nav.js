@@ -11,14 +11,14 @@
   const modLabel = isMac ? "\u2303" : "Alt"; // ⌃ (Control) on Mac, Alt elsewhere
 
   const shortcuts = {
-    "1": "#intro",
-    "2": "#history",
-    "3": "#faq",
-    "4": "#model",
-    "5": "#explore",
-    "6": "#compare",
-    "7": "#advanced",
-    "8": "#calibrate",
+    "1": "/",
+    "2": "/history",
+    "3": "/faq",
+    "4": "/model",
+    "5": "/explore",
+    "6": "/compare",
+    "7": "/advanced",
+    "8": "/calibrate",
   };
 
   const shortcutDescriptions = [

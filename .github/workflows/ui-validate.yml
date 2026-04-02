@@ -119,7 +119,8 @@ jobs:
         run: |
           cd app/static
           status=0
-          for path in $(grep -oP '(?:src|href)="\K(?!https?:|#)[^"]+' index.html); do
+          for path in $(grep -oP '(?:src|href)="\K(?!https?:|#|/[a-z])[^"]+' index.html); do
+            if [ "$path" = "/" ]; then continue; fi
             if [ ! -f "./${path}" ]; then
               echo "::error::Missing asset referenced in index.html: ${path}"
               status=1

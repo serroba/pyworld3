@@ -101,7 +101,7 @@ const CalibrateView = (() => {
     for (const [name, c] of Object.entries(lastCalibration.constants)) {
       State.calibratedConstants[name] = c.value;
     }
-    Router.go("#advanced");
+    Router.go("/advanced");
   }
 
   // ---------------------------------------------------------------------------

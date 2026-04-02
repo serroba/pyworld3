@@ -42,7 +42,7 @@ describe("scenario state", () => {
       controls: { pyear: 2000 },
     });
 
-    expect(hash).toContain("#advanced?");
+    expect(hash).toContain("/advanced?");
     expect(hash).toContain("preset=standard-run");
     expect(hash).toContain("view=combined");
     expect(hash).toContain("state=");

@@ -99,7 +99,7 @@ export function buildAdvancedScenarioHash(state: SavedScenarioState): string {
     params.set("state", encodeSavedScenarioState(normalized));
   }
   const query = params.toString();
-  return query ? `#advanced?${query}` : "#advanced";
+  return query ? `/advanced?${query}` : "/advanced";
 }
 
 export function savedScenarioStateToRequest(
