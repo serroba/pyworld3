@@ -8,6 +8,7 @@ import type {
 import type {
   World3SimulationBuffers,
   World3SimulationConstants,
+  World3SimulationIntegrators,
   World3SimulationLookups,
 } from "./world3-simulation-sectors.js";
 
@@ -66,6 +67,7 @@ export type World3DerivedEquationContext = World3StockEquationContext & {
   t: number;
   policyYear: number;
   lookups: World3SimulationLookups;
+  integrators?: World3SimulationIntegrators;
   runtime?: Partial<Record<World3RuntimeValueKey, number>>;
 };
 

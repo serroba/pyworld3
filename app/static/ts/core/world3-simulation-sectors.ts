@@ -902,6 +902,78 @@ export const WORLD3_POPULATION_FEEDBACK_PHASES = [
   defineEquationPhase("population-feedback-late", WORLD3_POPULATION_FEEDBACK_LATE_EQUATIONS),
 ] as const satisfies readonly World3ExecutionPhase[];
 
+export const WORLD3_POPULATION_LEADING_INTEGRATOR_PHASE = defineRuntimePhase("population-leading-integrators", [
+  defineRuntimeValue({
+    key: "ehspc",
+    inputs: ["hsid"],
+    compute: (ctx) => ctx.integrators!.smooth_hsapc.step(ctx.k, ctx.constants.hsid),
+  }),
+  defineRuntimeValue({
+    key: "aiopc",
+    inputs: ["ieat"],
+    compute: (ctx) => ctx.integrators!.smooth_iopc.step(ctx.k, ctx.constants.ieat),
+  }),
+  defineRuntimeValue({
+    key: "diopc",
+    inputs: ["sad"],
+    compute: (ctx) => ctx.integrators!.dlinf3_iopc.step(ctx.k, ctx.constants.sad),
+  }),
+  defineRuntimeValue({
+    key: "ple",
+    inputs: ["lpd"],
+    compute: (ctx) => ctx.integrators!.dlinf3_le.step(ctx.k, ctx.constants.lpd),
+  }),
+  defineRuntimeValue({
+    key: "fcfpc",
+    inputs: ["hsid"],
+    compute: (ctx) => ctx.integrators!.dlinf3_fcapc.step(ctx.k, ctx.constants.hsid),
+  }),
+]);
+
+export const WORLD3_CAPITAL_INTEGRATOR_PHASE = defineRuntimePhase("capital-integrators", [
+  defineRuntimeValue({
+    key: "lufd",
+    inputs: ["lufdt"],
+    compute: (ctx) => ctx.integrators!.smooth_luf.step(ctx.k, ctx.constants.lufdt),
+  }),
+]);
+
+export const WORLD3_AGRICULTURE_INTEGRATOR_PHASE = defineRuntimePhase("agriculture-integrators", [
+  defineRuntimeValue({
+    key: "alai",
+    inputs: ["alai1", "alai2"],
+    compute: ({ t, constants, policyYear }) => clip(constants.alai2, constants.alai1, t, policyYear),
+  }),
+  defineRuntimeValue({
+    key: "ai",
+    inputs: [],
+    compute: (ctx) => ctx.integrators!.smooth_cai.step(ctx.k, requireWorld3RuntimeValue(ctx, "alai")),
+  }),
+  defineRuntimeValue({
+    key: "pfr",
+    inputs: ["fspd"],
+    compute: (ctx) => ctx.integrators!.smooth_fr.step(ctx.k, ctx.constants.fspd),
+  }),
+]);
+
+export const WORLD3_POLLUTION_INTEGRATOR_PHASE = defineRuntimePhase("pollution-integrators", [
+  defineRuntimeValue({
+    key: "pptd",
+    inputs: ["pptd1", "pptd2"],
+    compute: ({ t, constants, policyYear }) => clip(constants.pptd2, constants.pptd1, t, policyYear),
+  }),
+  defineRuntimeValue({
+    key: "ppapr",
+    inputs: [],
+    compute: (ctx) => ctx.integrators!.delay3_ppgr.step(ctx.k, requireWorld3RuntimeValue(ctx, "pptd")),
+  }),
+  defineRuntimeValue({
+    key: "ppgf",
+    inputs: ["ppgf1", "ppgf2"],
+    compute: ({ t, constants, policyYear }) => clip(constants.ppgf2, constants.ppgf1, t, policyYear),
+  }),
+]);
+
 export function advanceStateStocks(
   k: number,
   dt: number,
@@ -934,11 +1006,6 @@ export function computePopulationLeadingStep(
   integrators: World3SimulationIntegrators,
   healthPolicyStartYear: number,
 ): PopulationLeadingState {
-  const ehspc = integrators.smooth_hsapc.step(k, constants.hsid);
-  const aiopc = integrators.smooth_iopc.step(k, constants.ieat);
-  const diopc = integrators.dlinf3_iopc.step(k, constants.sad);
-  const ple = integrators.dlinf3_le.step(k, constants.lpd);
-  const fcfpc = integrators.dlinf3_fcapc.step(k, constants.hsid);
   const context: World3DerivedEquationContext = {
     k,
     dt: 0,
@@ -947,13 +1014,17 @@ export function computePopulationLeadingStep(
     t,
     policyYear: healthPolicyStartYear,
     lookups,
-    runtime: { ehspc, diopc, ple, fcfpc },
+    integrators,
   };
+  runWorld3ExecutionPhase(WORLD3_POPULATION_LEADING_INTEGRATOR_PHASE, context);
   for (const equation of WORLD3_POPULATION_LEADING_EQUATIONS) {
     buffers[equation.key][k] = equation.compute(context);
   }
 
-  return { aiopc, diopc };
+  return {
+    aiopc: requireWorld3RuntimeValue(context, "aiopc"),
+    diopc: requireWorld3RuntimeValue(context, "diopc"),
+  };
 }
 
 export function computeCapitalStep(
@@ -965,7 +1036,6 @@ export function computeCapitalStep(
   integrators: World3SimulationIntegrators,
   policyYear: number,
 ): void {
-  const lufd = integrators.smooth_luf.step(k, constants.lufdt);
   const context: World3DerivedEquationContext = {
     k,
     dt: 0,
@@ -974,8 +1044,9 @@ export function computeCapitalStep(
     t,
     policyYear,
     lookups,
-    runtime: { lufd },
+    integrators,
   };
+  runWorld3ExecutionPhase(WORLD3_CAPITAL_INTEGRATOR_PHASE, context);
   for (const equation of WORLD3_CAPITAL_LEADING_EQUATIONS) {
     buffers[equation.key][k] = equation.compute(context);
   }
@@ -993,9 +1064,6 @@ export function computeAgricultureStep(
   integrators: World3SimulationIntegrators,
   policyYear: number,
 ): void {
-  const alai = clip(constants.alai2, constants.alai1, t, policyYear);
-  const ai = integrators.smooth_cai.step(k, alai);
-  const pfr = integrators.smooth_fr.step(k, constants.fspd);
   const context: World3DerivedEquationContext = {
     k,
     dt: 0,
@@ -1004,8 +1072,9 @@ export function computeAgricultureStep(
     t,
     policyYear,
     lookups,
-    runtime: { alai, ai, pfr },
+    integrators,
   };
+  runWorld3ExecutionPhase(WORLD3_AGRICULTURE_INTEGRATOR_PHASE, context);
   for (const equation of WORLD3_AGRICULTURE_EQUATIONS) {
     buffers[equation.key][k] = equation.compute(context);
   }
@@ -1020,9 +1089,6 @@ export function computePollutionStep(
   integrators: World3SimulationIntegrators,
   policyYear: number,
 ): void {
-  const pptd = clip(constants.pptd2, constants.pptd1, t, policyYear);
-  const ppapr = integrators.delay3_ppgr.step(k, pptd);
-  const ppgf = clip(constants.ppgf2, constants.ppgf1, t, policyYear);
   const context: World3DerivedEquationContext = {
     k,
     dt: 0,
@@ -1031,8 +1097,9 @@ export function computePollutionStep(
     t,
     policyYear,
     lookups,
-    runtime: { ppgf, pptd, ppapr },
+    integrators,
   };
+  runWorld3ExecutionPhase(WORLD3_POLLUTION_INTEGRATOR_PHASE, context);
   for (const equation of WORLD3_POLLUTION_EQUATIONS) {
     buffers[equation.key][k] = equation.compute(context);
   }
