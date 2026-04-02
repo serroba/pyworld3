@@ -19,11 +19,15 @@ function parseArgs(argv: string[]) {
     plotTerminal: boolean;
     preset: string;
     yearMin?: number;
+    constants: Record<string, number>;
+    listConstants: boolean;
   } = {
     summary: false,
     json: false,
     plotTerminal: false,
     preset: "standard-run",
+    constants: {},
+    listConstants: false,
   };
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -65,6 +69,21 @@ function parseArgs(argv: string[]) {
       }
       options.yearMin = Number(nextValue);
       index += 1;
+      continue;
+    }
+    if (arg === "--set") {
+      // --set key=value, e.g. --set nri=2e12 --set len=30
+      const nextValue = argv[index + 1];
+      if (!nextValue || !nextValue.includes("=")) {
+        throw new Error("--set requires key=value, e.g. --set nri=2e12");
+      }
+      const [key, val] = nextValue.split("=");
+      options.constants[key!] = Number(val);
+      index += 1;
+      continue;
+    }
+    if (arg === "--list-constants") {
+      options.listConstants = true;
       continue;
     }
     throw new Error(`Unknown argument '${arg}'`);
@@ -171,9 +190,27 @@ async function main() {
     loadWorld3Tables,
   );
 
+  // List available constants and exit
+  if (options.listConstants) {
+    const meta = ModelData.constantMeta;
+    const defaults = ModelData.constantDefaults;
+    process.stdout.write("Available constants (name — description [default]):\n\n");
+    for (const [key, info] of Object.entries(meta)) {
+      const def = defaults[key as keyof typeof defaults] ?? "?";
+      process.stdout.write(`  ${key.padEnd(12)} ${(info as { full_name: string }).full_name} [${def}]\n`);
+    }
+    return;
+  }
+
   // Use the local simulation core which supports presets
   const simCore = core.createLocalSimulationCore();
-  const overrides = options.yearMin != null ? { year_min: options.yearMin } : {};
+  const overrides: Record<string, unknown> = {};
+  if (options.yearMin != null) overrides.year_min = options.yearMin;
+  // Merge user constant overrides
+  if (Object.keys(options.constants).length > 0) {
+    overrides.constants = options.constants;
+    process.stderr.write(`Overrides: ${JSON.stringify(options.constants)}\n`);
+  }
   const result = await simCore.simulatePreset(options.preset, overrides);
 
   if (options.summary) {
