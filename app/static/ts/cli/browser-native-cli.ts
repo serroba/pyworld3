@@ -11,7 +11,7 @@ import type { RawLookupTable } from "../core/index.js";
 
 const TABLES_PATH = new URL("../../data/functions-table-world3.json", import.meta.url);
 
-function parseArgs(argv: string[]) {
+export function parseArgs(argv: string[]) {
   const options: {
     summary: boolean;
     json: boolean;

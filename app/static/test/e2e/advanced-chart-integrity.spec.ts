@@ -6,9 +6,10 @@ test.describe("advanced view chart integrity", () => {
     await page.waitForSelector("#advanced-charts canvas", { timeout: 15000 });
     await page.waitForTimeout(3000);
 
-    // All datasets should have data points with no NaN values
     const result = await page.evaluate(() => {
-      const charts = Object.values(Chart.instances);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const W = window as any;
+      const charts = Object.values(W.Chart.instances) as any[];
       if (!charts.length) return { error: "no charts" };
       return charts[0].data.datasets.map((d: any) => ({
         label: d.label,
@@ -29,12 +30,10 @@ test.describe("advanced view chart integrity", () => {
     await page.waitForSelector("#advanced-charts canvas", { timeout: 15000 });
     await page.waitForTimeout(2000);
 
-    // Open Population accordion and change a constant
     const popAccordion = page.locator("details.accordion summary").filter({ hasText: /Population/i });
     await popAccordion.click();
     await page.waitForTimeout(500);
 
-    // Find first number input in Population section and modify it
     const inputs = page.locator("details.accordion:has(summary:text-is('Population')) input[type=number]");
     const firstInput = inputs.first();
     await firstInput.waitFor({ state: "visible", timeout: 5000 });
@@ -44,9 +43,10 @@ test.describe("advanced view chart integrity", () => {
     await firstInput.dispatchEvent("change");
     await page.waitForTimeout(4000);
 
-    // Chart should still have valid data
     const result = await page.evaluate(() => {
-      const charts = Object.values(Chart.instances);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const W = window as any;
+      const charts = Object.values(W.Chart.instances) as any[];
       if (!charts.length) return { error: "no charts" };
       return charts[0].data.datasets.map((d: any) => ({
         label: d.label,
@@ -67,13 +67,13 @@ test.describe("advanced view chart integrity", () => {
     await page.waitForSelector("#advanced-charts canvas", { timeout: 15000 });
     await page.waitForTimeout(2000);
 
-    // Click compare button
     await page.click("#advanced-compare");
     await page.waitForTimeout(3000);
 
-    // Should have pairs of datasets (standard + advanced)
     const result = await page.evaluate(() => {
-      const charts = Object.values(Chart.instances);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const W = window as any;
+      const charts = Object.values(W.Chart.instances) as any[];
       if (!charts.length) return { error: "no charts" };
       const ds = charts[0].data.datasets;
       return {
@@ -85,8 +85,9 @@ test.describe("advanced view chart integrity", () => {
     });
 
     expect(result).not.toHaveProperty("error");
-    expect((result as any).hasStandard).toBe(true);
-    expect((result as any).hasAdvanced).toBe(true);
-    expect((result as any).allValid).toBe(true);
+    const r = result as any;
+    expect(r.hasStandard).toBe(true);
+    expect(r.hasAdvanced).toBe(true);
+    expect(r.allValid).toBe(true);
   });
 });
