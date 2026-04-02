@@ -7,8 +7,9 @@
 
 import { ModelData } from "../app/static/ts/model-data.js";
 import { buildSimulationRequestFromPreset } from "../app/static/ts/simulation-contracts.js";
-import type { SimulationRequest } from "../app/static/ts/simulation-contracts.js";
-import { simulateWorld3 } from "../app/static/ts/core/world3-simulation.js";
+import type { ConstantMap, SimulationRequest } from "../app/static/ts/simulation-contracts.js";
+import { createWorld3Core } from "../app/static/ts/core/world3-core.js";
+import type { World3VariableKey } from "../app/static/ts/core/world3-keys.js";
 import type { RawLookupTable } from "../app/static/ts/core/world3-tables.js";
 
 type Env = {
@@ -27,18 +28,21 @@ const LINK_HEADER =
   '</openapi.json>; rel="service-desc"; type="application/json", ' +
   '</agent.json>; rel="alternate"; type="application/json"';
 
-let tablesCache: RawLookupTable[] | null = null;
+let coreInstance: ReturnType<typeof createWorld3Core> | null = null;
 
-async function loadTables(env: Env): Promise<RawLookupTable[]> {
-  if (tablesCache) return tablesCache;
-  const res = await env.ASSETS.fetch(
-    new Request("https://placeholder/data/functions-table-world3.json"),
-  );
-  if (!res.ok) {
-    throw new Error(`Failed to load lookup tables: ${res.status}`);
+function getCore(env: Env): ReturnType<typeof createWorld3Core> {
+  if (!coreInstance) {
+    coreInstance = createWorld3Core(ModelData, async () => {
+      const res = await env.ASSETS.fetch(
+        new Request("https://placeholder/data/functions-table-world3.json"),
+      );
+      if (!res.ok) {
+        throw new Error(`Failed to load lookup tables: ${res.status}`);
+      }
+      return (await res.json()) as RawLookupTable[];
+    });
   }
-  tablesCache = (await res.json()) as RawLookupTable[];
-  return tablesCache;
+  return coreInstance;
 }
 
 function jsonResponse(body: unknown, status = 200): Response {
@@ -56,6 +60,19 @@ function errorResponse(message: string, status = 400): Response {
   return jsonResponse({ error: message }, status);
 }
 
+/** Parse a JSON body into a SimulationRequest, omitting undefined keys. */
+function parseSimulationRequest(body: Record<string, unknown>): SimulationRequest {
+  const req: SimulationRequest = {};
+  if (typeof body.year_min === "number") req.year_min = body.year_min;
+  if (typeof body.year_max === "number") req.year_max = body.year_max;
+  if (typeof body.dt === "number") req.dt = body.dt;
+  if (typeof body.pyear === "number") req.pyear = body.pyear;
+  if (typeof body.iphst === "number") req.iphst = body.iphst;
+  if (body.constants) req.constants = body.constants as ConstantMap;
+  if (body.output_variables) req.output_variables = body.output_variables as World3VariableKey[];
+  return req;
+}
+
 async function handleSimulate(request: Request, env: Env): Promise<Response> {
   let body: Record<string, unknown> = {};
   if (request.body) {
@@ -66,15 +83,7 @@ async function handleSimulate(request: Request, env: Env): Promise<Response> {
     }
   }
 
-  // Build request, omitting undefined keys (exactOptionalPropertyTypes)
-  const req: SimulationRequest = {};
-  if (typeof body.year_min === "number") req.year_min = body.year_min;
-  if (typeof body.year_max === "number") req.year_max = body.year_max;
-  if (typeof body.dt === "number") req.dt = body.dt;
-  if (typeof body.pyear === "number") req.pyear = body.pyear;
-  if (typeof body.iphst === "number") req.iphst = body.iphst;
-  if (body.constants) req.constants = body.constants as SimulationRequest["constants"];
-  if (body.output_variables) req.output_variables = body.output_variables as SimulationRequest["output_variables"];
+  const req = parseSimulationRequest(body);
 
   let simRequest: SimulationRequest;
   if (typeof body.preset === "string") {
@@ -89,22 +98,8 @@ async function handleSimulate(request: Request, env: Env): Promise<Response> {
     simRequest = req;
   }
 
-  const tables = await loadTables(env);
-
-  const mergedConstants = {
-    ...ModelData.constantDefaults,
-    ...(simRequest.constants ?? {}),
-  };
-
-  const result = simulateWorld3({
-    yearMin: simRequest.year_min ?? 1900,
-    yearMax: simRequest.year_max ?? 2100,
-    dt: simRequest.dt ?? 0.5,
-    pyear: simRequest.pyear ?? 1975,
-    iphst: simRequest.iphst ?? 1940,
-    constants: mergedConstants,
-    rawTables: tables,
-  });
+  const core = getCore(env);
+  const result = await core.runtime.simulate(simRequest);
 
   // Filter series to requested output_variables (or defaults)
   const requested = simRequest.output_variables ?? ModelData.defaultVariables;
