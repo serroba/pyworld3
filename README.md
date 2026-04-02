@@ -1,10 +1,19 @@
-![World3](./img/world3-wordmark.svg)
+<p align="center">
+  <img src="./app/static/assets/brand/world3-mark.svg" alt="World3" width="120" />
+</p>
 
-> A static World3 explorer powered by a shared TypeScript simulation core
+<p align="center"><b>Explore the Limits to Growth model interactively</b></p>
 
-[Live app](https://limits.world) · [Logo mark](./app/static/assets/brand/world3-mark.svg)
+<p align="center">
+  <a href="https://github.com/serroba/world3/actions/workflows/ui-validate.yml"><img src="https://github.com/serroba/world3/actions/workflows/ui-validate.yml/badge.svg" alt="CI" /></a>
+  <a href="https://github.com/serroba/world3/actions/workflows/container-smoke.yml"><img src="https://github.com/serroba/world3/actions/workflows/container-smoke.yml/badge.svg" alt="E2E" /></a>
+  <a href="https://github.com/serroba/world3/actions/workflows/deploy-pages.yml"><img src="https://github.com/serroba/world3/actions/workflows/deploy-pages.yml/badge.svg" alt="Deploy" /></a>
+  <a href="https://www.gnu.org/licenses/gpl-3.0.html"><img src="https://img.shields.io/badge/licence-GPL%20v3-028181" alt="License: GPL v3" /></a>
+</p>
 
-[![License: GPL v3](https://img.shields.io/badge/licence-GPL%20v3-028181)](https://www.gnu.org/licenses/gpl-3.0.html)
+<p align="center">
+  <a href="https://limits.world">Live app</a> · <a href="./app/static/assets/brand/world3-mark.svg">Logo mark</a>
+</p>
 
 - [What This Repo Is](#what-this-repo-is)
 - [Quick Start](#quick-start)
