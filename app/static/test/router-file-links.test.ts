@@ -11,7 +11,8 @@ import { describe, expect, test } from "vitest";
 const FILE_EXT_PATTERN = /\.\w+$/;
 
 function isStaticFileHref(href: string): boolean {
-  return FILE_EXT_PATTERN.test(href.split("?")[0]);
+  const pathname = href.split("?")[0] ?? href;
+  return FILE_EXT_PATTERN.test(pathname);
 }
 
 describe("router static-file link detection", () => {
