@@ -35,9 +35,9 @@ describe("scenario controls registry", () => {
     });
 
     expect(buildWorld3ScenarioControlConstraints()).toEqual({
-      year_min: [1800, 2300],
-      year_max: [1800, 2300],
-      dt: [0.01, 50],
+      year_min: [1900, 2100],
+      year_max: [1950, 2300],
+      dt: [0.1, 2],
       pyear: [1800, 2300],
       iphst: [1800, 2300],
     });
@@ -49,6 +49,6 @@ describe("scenario controls registry", () => {
       full_name: "Health services impact start year",
       unit: "year",
     });
-    expect(ModelData.scenarioControlConstraints.dt).toEqual([0.01, 50]);
+    expect(ModelData.scenarioControlConstraints.dt).toEqual([0.1, 2]);
   });
 });

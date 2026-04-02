@@ -59,13 +59,15 @@ export type World3SimulationOptions = {
 export function simulateWorld3(options: World3SimulationOptions): SimulationResult {
   /* v8 ignore next 3 -- trivial defaults */
   const requestedYearMin = options.yearMin ?? 1900;
-  const yearMax = options.yearMax ?? 2100;
-  const dt = options.dt ?? 0.5;
+  const requestedYearMax = options.yearMax ?? 2100;
+  const requestedDt = options.dt ?? 0.5;
   const pyear = options.pyear ?? 1975;
   const iphst = options.iphst ?? 1940;
 
-  // Validate and clamp yearMin
-  const clampedYearMin = Math.max(1900, Math.min(requestedYearMin, yearMax));
+  // Validate and clamp inputs to safe ranges
+  const yearMax = Math.max(1950, Math.min(requestedYearMax, 2300));
+  const dt = Math.max(0.1, Math.min(requestedDt, 2));
+  const clampedYearMin = Math.max(1900, Math.min(requestedYearMin, yearMax - dt));
 
   // Always simulate from 1900 so initial conditions are properly computed,
   // then trim the output to the requested yearMin.

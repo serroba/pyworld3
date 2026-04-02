@@ -206,4 +206,50 @@ describe("World3 coupled simulation", () => {
     const modLE = modified.series.le!.values;
     expect(modLE[200]).not.toBeCloseTo(baseLE[200]!, 1);
   });
+
+  test("clamps extreme dt to safe range", () => {
+    const r = simulateWorld3({
+      dt: 50,
+      constants: { ...ModelData.constantDefaults },
+      rawTables: tables,
+    });
+    expect(r.dt).toBe(2);
+    expect(r.time.length).toBeGreaterThan(50);
+  });
+
+  test("clamps yearMin to at most yearMax - dt", () => {
+    const r = simulateWorld3({
+      yearMin: 2200,
+      yearMax: 2200,
+      constants: { ...ModelData.constantDefaults },
+      rawTables: tables,
+    });
+    // yearMin should be clamped below yearMax
+    expect(r.year_min).toBeLessThan(r.year_max);
+    expect(r.time.length).toBeGreaterThan(0);
+  });
+
+  test("clamps yearMax to at least 1950", () => {
+    const r = simulateWorld3({
+      yearMax: 1800,
+      constants: { ...ModelData.constantDefaults },
+      rawTables: tables,
+    });
+    expect(r.year_max).toBe(1950);
+    expect(r.time.length).toBeGreaterThan(0);
+  });
+
+  test("extreme inputs produce valid series with no NaN", () => {
+    const r = simulateWorld3({
+      yearMin: 2100,
+      yearMax: 2200,
+      dt: 0.001,
+      constants: { ...ModelData.constantDefaults },
+      rawTables: tables,
+    });
+    // dt=0.001 should be clamped to 0.1
+    expect(r.dt).toBe(0.1);
+    const pop = r.series.pop!.values;
+    expect(pop.some((v) => isNaN(v) || !isFinite(v))).toBe(false);
+  });
 });
