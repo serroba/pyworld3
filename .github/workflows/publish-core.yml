@@ -41,6 +41,11 @@ jobs:
           fi
           echo "Publishing @world3/core@${PKG_VERSION}"
 
-      - name: Publish to npm (Trusted Publishing via OIDC)
+      - name: Publish to npm
         working-directory: packages/core
         run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          # NPM_TOKEN is a granular access token with bypass-2FA.
+          # --provenance signs the package with OIDC provenance via Sigstore.
+          # Trusted Publishing on npm links this workflow to the package.
