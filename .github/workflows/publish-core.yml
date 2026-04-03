@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: read
+  id-token: write
 
 jobs:
   publish:
@@ -40,8 +41,6 @@ jobs:
           fi
           echo "Publishing @world3/core@${PKG_VERSION}"
 
-      - name: Publish to npm
+      - name: Publish to npm (Trusted Publishing via OIDC)
         working-directory: packages/core
-        run: npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --provenance --access public
