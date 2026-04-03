@@ -164,17 +164,15 @@ jobs:
           done
 
           # Every sitemap URL path must match a registered route in app.js
-          # Strip locale prefixes (e.g. /es/explore → /explore) before checking
-          LOCALE_PATTERN='^\/(en|es|fr|de|it|nl|hu|pl|tr|ru|uk|ar|hi|bn|id|vi|th|ja|zh-CN|zh-TW|pt-BR|pt-PT)'
-          for url in $(grep -oP '<loc>\K[^<]+' sitemap.xml); do
-            path=$(echo "$url" | sed 's|https://limits.world||')
-            if [ "$path" = "/" ]; then continue; fi
-            # Strip locale prefix to get the base route
-            base_path=$(echo "$path" | sed -E "s|${LOCALE_PATTERN}||")
-            if [ -z "$base_path" ]; then base_path="/"; fi
+          # Extract unique base routes from the sitemap (strip domain and locale prefix)
+          sitemap_routes=$(grep '<loc>' sitemap.xml | sed 's|.*<loc>||;s|</loc>.*||' | \
+            sed 's|https://limits.world||' | \
+            sed -E 's|^/[a-z]{2}(-[A-Za-z]{2,})?(/|$)|\2|' | \
+            sort -u)
+          for base_path in $sitemap_routes; do
             if [ "$base_path" = "/" ]; then continue; fi
             if ! grep -q "\"${base_path}\"" js/app.js; then
-              echo "::error::sitemap.xml has URL ${url} with no matching route in app.js"
+              echo "::error::sitemap route ${base_path} has no matching route in app.js"
               status=1
             fi
           done
