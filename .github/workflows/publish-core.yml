@@ -1,4 +1,4 @@
-name: Publish @serroba/world3-core
+name: Publish @world3/core
 
 on:
   push:
@@ -7,7 +7,6 @@ on:
 
 permissions:
   contents: read
-  packages: write
 
 jobs:
   publish:
@@ -20,7 +19,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22"
-          registry-url: "https://npm.pkg.github.com"
+          registry-url: "https://registry.npmjs.org"
 
       - name: Install dependencies
         working-directory: packages/core
@@ -39,10 +38,10 @@ jobs:
             echo "::error::Tag core-v${TAG} does not match package.json version ${PKG_VERSION}"
             exit 1
           fi
-          echo "Publishing version ${PKG_VERSION}"
+          echo "Publishing @world3/core@${PKG_VERSION}"
 
-      - name: Publish to GitHub Packages
+      - name: Publish to npm
         working-directory: packages/core
         run: npm publish
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

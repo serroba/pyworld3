@@ -1,5 +1,5 @@
 /**
- * @serroba/world3-core — World3 system dynamics simulation engine.
+ * @world3/core — World3 system dynamics simulation engine.
  *
  * This is the public API surface. Consumers should only import from
  * this module, not from individual files.

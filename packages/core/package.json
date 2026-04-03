@@ -1,5 +1,5 @@
 {
-  "name": "@serroba/world3-core",
+  "name": "@world3/core",
   "version": "0.1.0",
   "description": "World3 system dynamics simulation engine from The Limits to Growth",
   "type": "module",
@@ -24,7 +24,7 @@
     "directory": "packages/core"
   },
   "publishConfig": {
-    "registry": "https://npm.pkg.github.com"
+    "access": "public"
   },
   "license": "GPL-3.0",
   "keywords": [
