@@ -36,8 +36,8 @@ jobs:
       - name: Run BAU simulation with summary and SVG plot
         run: |
           cd app
-          npm run -s browser-native:cli -- --summary > ../../sim_summary.txt
-          npm run -s browser-native:cli -- --plot-svg ../../world3_bau.svg
+          npm run -s browser-native:cli -- --summary > ../sim_summary.txt
+          npm run -s browser-native:cli -- --plot-svg ../world3_bau.svg
 
       - name: Commit plot to branch
         id: publish_plot
