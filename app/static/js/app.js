@@ -38,10 +38,24 @@
   Router.onNavigate(updateHreflangTags);
   Router.start();
 
-  window.addEventListener("world3:localechange", () => {
+  window.addEventListener("world3:localechange", function() {
     syncLanguagePicker();
     I18n.applyDocument();
-    Router.refresh();
+
+    // Update URL to reflect the locale prefix
+    var locale = I18n.getLocale();
+    var currentPath = Router.getCurrentPath();
+    var search = location.search;
+    var targetUrl;
+    if (locale && locale !== "auto" && locale !== "en") {
+      targetUrl = "/" + locale + currentPath + search;
+    } else {
+      targetUrl = currentPath + search;
+    }
+    // Only update if the URL actually needs to change
+    if (location.pathname + location.search !== targetUrl) {
+      history.replaceState(null, "", targetUrl);
+    }
   });
 })();
 
