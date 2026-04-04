@@ -11,7 +11,6 @@ import type { World3VariableKey } from "./core/world3-keys.js";
 
 // ── External globals (loaded via <script> tags before this module) ──
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 declare const Chart: any;
 declare const I18n: {
   t(key: string, params?: unknown, fallback?: string): string;
@@ -35,7 +34,6 @@ declare const ModelDomain:
       } | null;
     }
   | undefined;
-/* eslint-enable @typescript-eslint/no-explicit-any */
 
 // ── Types ───────────────────────────────────────────────────────────
 
@@ -53,6 +51,8 @@ export type AnnotationConfig = {
 export type AnnotationOptions = {
   policyYear?: number;
   divergeYear?: number;
+  /** Override for testing — defaults to new Date().getFullYear(). */
+  currentYear?: number;
 };
 
 type SeriesMap = SimulationResult["series"];
@@ -133,7 +133,7 @@ function unitLabel(varKeys: string[]): string {
 
 export function buildAnnotations(opts?: AnnotationOptions): AnnotationConfig {
   const lines: AnnotationLine[] = [];
-  const currentYear = new Date().getFullYear();
+  const currentYear = opts?.currentYear ?? new Date().getFullYear();
   const textMuted = cssVar("--color-text-muted") || "#6b7b8d";
   const accent = cssVar("--color-primary") || "#0a7b83";
 
@@ -159,7 +159,6 @@ export function buildAnnotations(opts?: AnnotationOptions): AnnotationConfig {
 
 // ── Chart.js plugins ────────────────────────────────────────────────
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 function nearestPointIndex(dataset: any, year: number): number {
   if (!dataset?.data?.length) return -1;
   let bestIndex = 0;
@@ -312,7 +311,6 @@ const AnnotationLinesPlugin = {
     }
   },
 };
-/* eslint-enable @typescript-eslint/no-explicit-any */
 
 // ── Theme ───────────────────────────────────────────────────────────
 
@@ -386,7 +384,6 @@ function buildScales(varKeys: string[]): { scales: Record<string, unknown>; axis
   return { scales, axisMap };
 }
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 function onHover(_event: unknown, activeElements: any[], chart: any): void {
   if (!activeElements?.length && syncedYear !== null) {
     clearSyncedCrosshair();
@@ -396,7 +393,6 @@ function onHover(_event: unknown, activeElements: any[], chart: any): void {
   const point = chart.data.datasets?.[activeElements[0].datasetIndex]?.data?.[activeElements[0].index];
   if (point && typeof point.x === "number") syncChartsToYear(point.x);
 }
-/* eslint-enable @typescript-eslint/no-explicit-any */
 
 function baseOptions(varKeys: string[], annotations?: AnnotationConfig): Record<string, unknown> & { _axisMap: AxisMap } {
   const { scales, axisMap } = buildScales(varKeys);
@@ -417,15 +413,13 @@ function baseOptions(varKeys: string[], annotations?: AnnotationConfig): Record<
         rtl: isRtl,
         textDirection: isRtl ? "rtl" : "ltr",
         callbacks: {
-          /* eslint-disable @typescript-eslint/no-explicit-any */
-          label(ctx: any) {
+                    label(ctx: any) {
             const meta = State.variableMeta[ctx.dataset.varKey];
             const translated = meta ? translateUnit(meta.unit ?? "") : "";
             const unit = translated ? ` ${translated}` : "";
             return `${ctx.dataset.label}: ${UI.formatNumber(ctx.parsed.y)}${unit}`;
           },
-          /* eslint-enable @typescript-eslint/no-explicit-any */
-        },
+                  },
       },
       annotationLines: annotations ?? buildAnnotations(),
     },
@@ -467,7 +461,7 @@ function destroyIfExists(canvas: HTMLCanvasElement): void {
   if (!canvas.getAttribute("aria-label")) {
     const panel = canvas.closest(".chart-panel");
     const title = panel?.querySelector(".chart-panel__title");
-    canvas.setAttribute("aria-label", title ? title.textContent ?? "Simulation chart" : "Simulation chart");
+    canvas.setAttribute("aria-label", title?.textContent?.trim() || "Simulation chart");
   }
 }
 
@@ -488,8 +482,7 @@ function normalizedOpts(isRtl: boolean, annotations: AnnotationConfig): Record<s
         rtl: isRtl,
         textDirection: isRtl ? "rtl" : "ltr",
         callbacks: {
-          /* eslint-disable @typescript-eslint/no-explicit-any */
-          label(ctx: any) {
+                    label(ctx: any) {
             const ds = ctx.dataset;
             const rawVal = ds._rawData?.[ctx.dataIndex];
             const meta = State.variableMeta[ds.varKey];
@@ -497,8 +490,7 @@ function normalizedOpts(isRtl: boolean, annotations: AnnotationConfig): Record<s
             const unit = translated ? ` ${translated}` : "";
             return `${ds.label}: ${UI.formatNumber(rawVal ?? 0)}${unit}`;
           },
-          /* eslint-enable @typescript-eslint/no-explicit-any */
-        },
+                  },
       },
       syncCrosshair: true,
       annotationLines: annotations,

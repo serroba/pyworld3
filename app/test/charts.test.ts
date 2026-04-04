@@ -82,16 +82,22 @@ describe("charts", () => {
 
   describe("buildAnnotations", () => {
     test("always includes a Now line at the current year", () => {
-      const result = buildAnnotations();
+      const result = buildAnnotations({ currentYear: 2026 });
       expect(result.lines.length).toBeGreaterThanOrEqual(1);
       const nowLine = result.lines.find((l) => l.label === "Now");
       expect(nowLine).toBeDefined();
-      expect(nowLine!.year).toBe(new Date().getFullYear());
+      expect(nowLine!.year).toBe(2026);
       expect(nowLine!.dash).toEqual([3, 3]);
     });
 
+    test("defaults currentYear to system clock", () => {
+      const result = buildAnnotations();
+      const nowLine = result.lines.find((l) => l.label === "Now");
+      expect(nowLine!.year).toBe(new Date().getFullYear());
+    });
+
     test("includes policy line when divergeYear is set", () => {
-      const result = buildAnnotations({ divergeYear: 1972 });
+      const result = buildAnnotations({ divergeYear: 1972, currentYear: 2026 });
       expect(result.lines.length).toBe(2);
       const policyLine = result.lines.find((l) => l.label === "Policy");
       expect(policyLine).toBeDefined();
@@ -113,8 +119,7 @@ describe("charts", () => {
     });
 
     test("does not add policy line when it equals current year", () => {
-      const currentYear = new Date().getFullYear();
-      const result = buildAnnotations({ divergeYear: currentYear });
+      const result = buildAnnotations({ divergeYear: 2026, currentYear: 2026 });
       expect(result.lines.length).toBe(1);
     });
 
