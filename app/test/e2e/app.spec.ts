@@ -133,7 +133,10 @@ test("persists a manual language choice across reloads", async ({ page }) => {
   await expect(page.locator("nav.site-nav")).toContainText("探索");
 
   await page.reload();
-  await page.waitForSelector("#locale-picker");
+  await page.waitForFunction(() => {
+    const picker = document.getElementById("locale-picker");
+    return picker instanceof HTMLSelectElement && picker.options.length > 1 && picker.value !== "";
+  });
   await expect(page.locator("#locale-picker")).toHaveValue("ja");
   await expect(page.locator("nav.site-nav")).toContainText("探索");
 });

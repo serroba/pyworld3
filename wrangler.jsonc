@@ -3,7 +3,7 @@
   "main": "./worker/index.ts",
   "compatibility_date": "2026-03-31",
   "assets": {
-    "directory": "./app/static",
+    "directory": "./app",
     "not_found_handling": "single-page-application",
     "binding": "ASSETS"
   },

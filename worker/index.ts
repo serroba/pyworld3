@@ -5,12 +5,12 @@
  * to static assets for everything else (the SPA).
  */
 
-import { ModelData } from "../app/static/ts/model-data.js";
-import { buildSimulationRequestFromPreset } from "../app/static/ts/simulation-contracts.js";
-import type { ConstantMap, SimulationRequest } from "../app/static/ts/simulation-contracts.js";
-import { createWorld3Core } from "../app/static/ts/core/world3-core.js";
-import type { World3VariableKey } from "../app/static/ts/core/world3-keys.js";
-import type { RawLookupTable } from "../app/static/ts/core/world3-tables.js";
+import { ModelData } from "../app/ts/model-data.js";
+import { buildSimulationRequestFromPreset } from "../app/ts/simulation-contracts.js";
+import type { ConstantMap, SimulationRequest } from "../app/ts/simulation-contracts.js";
+import { createWorld3Core } from "../app/ts/core/world3-core.js";
+import type { World3VariableKey } from "../app/ts/core/world3-keys.js";
+import type { RawLookupTable } from "../app/ts/core/world3-tables.js";
 
 type Env = {
   ASSETS: {

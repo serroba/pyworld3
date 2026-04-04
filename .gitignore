@@ -8,8 +8,8 @@ build/
 # Coverage reports
 .coverage
 htmlcov/
-app/static/coverage/
-app/static/test-results/
+app/coverage/
+app/test-results/
 test-results/
 
 # Cloudflare Workers local dev

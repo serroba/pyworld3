@@ -23,19 +23,19 @@ jobs:
         with:
           node-version: "22"
           cache: "npm"
-          cache-dependency-path: app/static/package-lock.json
+          cache-dependency-path: app/package-lock.json
 
       - name: Install UI dependencies
-        working-directory: app/static
+        working-directory: app
         run: npm ci
 
       - name: Build browser-native CLI assets
-        working-directory: app/static
+        working-directory: app
         run: npm run build
 
       - name: Run BAU simulation with summary and SVG plot
         run: |
-          cd app/static
+          cd app
           npm run -s browser-native:cli -- --summary > ../../sim_summary.txt
           npm run -s browser-native:cli -- --plot-svg ../../world3_bau.svg
 

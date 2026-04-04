@@ -21,16 +21,16 @@ jobs:
         with:
           node-version: "22"
           cache: "npm"
-          cache-dependency-path: app/static/package-lock.json
+          cache-dependency-path: app/package-lock.json
 
       - name: Install UI dependencies
-        working-directory: app/static
+        working-directory: app
         run: npm ci
 
       - name: Install Playwright browser
-        working-directory: app/static
+        working-directory: app
         run: npx playwright install --with-deps chromium
 
       - name: Run browser end-to-end tests
-        working-directory: app/static
+        working-directory: app
         run: npm run test:e2e

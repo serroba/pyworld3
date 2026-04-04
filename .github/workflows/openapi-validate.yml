@@ -4,13 +4,13 @@ on:
   push:
     branches: [main]
     paths:
-      - "app/static/openapi.json"
-      - "app/static/agent.json"
+      - "app/openapi.json"
+      - "app/agent.json"
   pull_request:
     branches: [main]
     paths:
-      - "app/static/openapi.json"
-      - "app/static/agent.json"
+      - "app/openapi.json"
+      - "app/agent.json"
 
 permissions:
   contents: read
@@ -28,7 +28,7 @@ jobs:
           node-version: "22"
 
       - name: Validate OpenAPI spec
-        run: npx --yes @redocly/cli lint app/static/openapi.json --extends minimal
+        run: npx --yes @redocly/cli lint app/openapi.json --extends minimal
 
       - name: Validate agent.json is valid JSON
-        run: node -e "JSON.parse(require('fs').readFileSync('app/static/agent.json','utf8')); console.log('agent.json: valid')"
+        run: node -e "JSON.parse(require('fs').readFileSync('app/agent.json','utf8')); console.log('agent.json: valid')"

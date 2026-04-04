@@ -4,11 +4,11 @@ on:
   push:
     branches: [main]
     paths:
-      - "app/static/**"
+      - "app/**"
   pull_request:
     branches: [main]
     paths:
-      - "app/static/**"
+      - "app/**"
 
 permissions:
   contents: read
@@ -25,18 +25,18 @@ jobs:
         with:
           node-version: "22"
           cache: "npm"
-          cache-dependency-path: app/static/package-lock.json
+          cache-dependency-path: app/package-lock.json
 
       - name: Install UI dependencies
-        working-directory: app/static
+        working-directory: app
         run: npm ci
 
       - name: Type-check TypeScript
-        working-directory: app/static
+        working-directory: app
         run: npm run typecheck
 
       - name: Run TypeScript tests with coverage
-        working-directory: app/static
+        working-directory: app
         run: npm run test:coverage
 
   browser-native-cli:
@@ -50,18 +50,18 @@ jobs:
         with:
           node-version: "22"
           cache: "npm"
-          cache-dependency-path: app/static/package-lock.json
+          cache-dependency-path: app/package-lock.json
 
       - name: Install UI dependencies
-        working-directory: app/static
+        working-directory: app
         run: npm ci
 
       - name: Build browser-native CLI assets
-        working-directory: app/static
+        working-directory: app
         run: npm run build
 
       - name: Run browser-native CLI summary and SVG render
-        working-directory: app/static
+        working-directory: app
         run: |
           npm run browser-native:cli -- --summary --plot-svg /tmp/world3-browser-native.svg
           test -f /tmp/world3-browser-native.svg
@@ -77,14 +77,14 @@ jobs:
         with:
           node-version: "22"
           cache: "npm"
-          cache-dependency-path: app/static/package-lock.json
+          cache-dependency-path: app/package-lock.json
 
       - name: Install UI dependencies
-        working-directory: app/static
+        working-directory: app
         run: npm ci
 
       - name: Verify TypeScript compiles to JS successfully
-        working-directory: app/static
+        working-directory: app
         run: npm run build
 
   static-quality:
@@ -98,30 +98,30 @@ jobs:
         with:
           node-version: "22"
           cache: "npm"
-          cache-dependency-path: app/static/package-lock.json
+          cache-dependency-path: app/package-lock.json
 
       - name: Install UI dependencies
-        working-directory: app/static
+        working-directory: app
         run: npm ci
 
       - name: Build compiled JS from TypeScript
-        working-directory: app/static
+        working-directory: app
         run: npm run build
 
       - name: Validate HTML
-        run: npx --yes htmlhint@latest app/static/index.html
+        run: npx --yes htmlhint@latest app/index.html
 
       - name: Lint JavaScript
-        working-directory: app/static
+        working-directory: app
         run: npx --yes eslint@latest js/
 
       - name: Lint core TypeScript (strict)
-        working-directory: app/static
+        working-directory: app
         run: npm run lint:core
 
       - name: Check referenced assets exist
         run: |
-          cd app/static
+          cd app
           status=0
           for path in $(grep -oP '(?:src|href)="\K(?!https?:|#|/[a-z])[^"]+' index.html); do
             if [ "$path" = "/" ]; then continue; fi
@@ -134,7 +134,7 @@ jobs:
 
       - name: Validate sitemap.xml
         run: |
-          cd app/static
+          cd app
           status=0
 
           # Must be valid XML
@@ -181,11 +181,11 @@ jobs:
           exit $status
 
       - name: Verify locale completeness
-        working-directory: app/static
+        working-directory: app
         run: npm run lint:locales
 
       - name: Verify no console.log left in production code
         run: |
-          if grep -rn 'console\.log' app/static/js/ --include='*.js'; then
+          if grep -rn 'console\.log' app/js/ --include='*.js'; then
             echo "::warning::Found console.log statements in JS files"
           fi
