@@ -5,6 +5,9 @@
   "scripts": {
     "sync:core": "bash ../../scripts/sync-core.sh",
     "prebuild": "npm run sync:core",
+    "pretypecheck": "npm run sync:core",
+    "prelint:core": "npm run sync:core",
+    "pretest": "npm run sync:core",
     "build": "tsc -p tsconfig.build.json && tsc -p tsconfig.cli.json",
     "browser-native:cli": "node js/cli/browser-native-cli.js",
     "serve": "node js/cli/static-server.js",

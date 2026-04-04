@@ -10,8 +10,13 @@ REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 SRC="$REPO_ROOT/packages/core/src"
 DEST="$REPO_ROOT/app/static/ts/core"
 
+[[ "$DEST" == */app/static/ts/core ]] || { echo "sync-core: unexpected DEST: '$DEST'" >&2; exit 1; }
+
 rm -rf "$DEST"
 mkdir -p "$DEST"
 cp "$SRC"/*.ts "$DEST/"
 
-echo "sync-core: copied $(ls "$DEST"/*.ts | wc -l | tr -d ' ') files → app/static/ts/core/"
+shopt -s nullglob
+copied=("$DEST"/*.ts)
+shopt -u nullglob
+echo "sync-core: copied ${#copied[@]} files → app/static/ts/core/"
