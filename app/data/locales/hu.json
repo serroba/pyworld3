@@ -294,5 +294,6 @@
   "preset.recalibration-2023.description": "Nebel et al. 2023 újrakalibrálás — konstansok az 1970–2020-as empirikus adatokhoz igazítva.",
   "compare.year_placeholder": "Év",
   "chart.annotation.now": "Most",
-  "chart.annotation.policy": "Politika"
+  "chart.annotation.policy": "Politika",
+  "compare.diverge_warning": "Divergence has no effect for this pair — their differences are initial conditions set at 1900, not policy changes."
 }

@@ -294,5 +294,6 @@
   "preset.recalibration-2023.description": "Hiệu chuẩn lại của Nebel et al. 2023 — hằng số được điều chỉnh theo dữ liệu thực nghiệm 1970–2020.",
   "compare.year_placeholder": "Năm",
   "chart.annotation.now": "Hiện tại",
-  "chart.annotation.policy": "Chính sách"
+  "chart.annotation.policy": "Chính sách",
+  "compare.diverge_warning": "Divergence has no effect for this pair — their differences are initial conditions set at 1900, not policy changes."
 }

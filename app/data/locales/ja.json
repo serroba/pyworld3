@@ -294,5 +294,6 @@
   "preset.recalibration-2023.description": "Nebel et al. 2023 再較正 — 1970–2020年の実測データに定数を適合。",
   "compare.year_placeholder": "年",
   "chart.annotation.now": "現在",
-  "chart.annotation.policy": "政策"
+  "chart.annotation.policy": "政策",
+  "compare.diverge_warning": "Divergence has no effect for this pair — their differences are initial conditions set at 1900, not policy changes."
 }

@@ -294,5 +294,6 @@
   "preset.recalibration-2023.description": "Herkalibratie van Nebel et al. 2023 — constanten aangepast aan empirische data van 1970–2020.",
   "compare.year_placeholder": "Jaar",
   "chart.annotation.now": "Nu",
-  "chart.annotation.policy": "Beleid"
+  "chart.annotation.policy": "Beleid",
+  "compare.diverge_warning": "Divergence has no effect for this pair — their differences are initial conditions set at 1900, not policy changes."
 }

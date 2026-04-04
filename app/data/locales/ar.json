@@ -294,5 +294,6 @@
   "preset.recalibration-2023.description": "إعادة معايرة Nebel et al. 2023 — ثوابت مطابقة للبيانات التجريبية 1970–2020.",
   "compare.year_placeholder": "سنة",
   "chart.annotation.now": "الآن",
-  "chart.annotation.policy": "سياسة"
+  "chart.annotation.policy": "سياسة",
+  "compare.diverge_warning": "Divergence has no effect for this pair — their differences are initial conditions set at 1900, not policy changes."
 }

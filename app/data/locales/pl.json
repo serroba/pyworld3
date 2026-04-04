@@ -294,5 +294,6 @@
   "preset.recalibration-2023.description": "Rekalibracja Nebel et al. 2023 — stałe dopasowane do danych empirycznych z lat 1970–2020.",
   "compare.year_placeholder": "Rok",
   "chart.annotation.now": "Teraz",
-  "chart.annotation.policy": "Polityka"
+  "chart.annotation.policy": "Polityka",
+  "compare.diverge_warning": "Divergence has no effect for this pair — their differences are initial conditions set at 1900, not policy changes."
 }

@@ -294,5 +294,6 @@
   "preset.recalibration-2023.description": "Nebel et al. 2023 পুনর্মানাঙ্কন — 1970–2020 পরীক্ষামূলক তথ্যে ধ্রুবক সমন্বিত।",
   "compare.year_placeholder": "বছর",
   "chart.annotation.now": "এখন",
-  "chart.annotation.policy": "নীতি"
+  "chart.annotation.policy": "নীতি",
+  "compare.diverge_warning": "Divergence has no effect for this pair — their differences are initial conditions set at 1900, not policy changes."
 }

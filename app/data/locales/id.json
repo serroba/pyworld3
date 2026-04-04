@@ -294,5 +294,6 @@
   "preset.recalibration-2023.description": "Kalibrasi ulang Nebel et al. 2023 — konstanta disesuaikan dengan data empiris 1970–2020.",
   "compare.year_placeholder": "Tahun",
   "chart.annotation.now": "Sekarang",
-  "chart.annotation.policy": "Kebijakan"
+  "chart.annotation.policy": "Kebijakan",
+  "compare.diverge_warning": "Divergence has no effect for this pair — their differences are initial conditions set at 1900, not policy changes."
 }

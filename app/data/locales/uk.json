@@ -294,5 +294,6 @@
   "preset.recalibration-2023.description": "Рекалібрування Nebel et al. 2023 — константи підігнані до емпіричних даних 1970–2020.",
   "compare.year_placeholder": "Рік",
   "chart.annotation.now": "Зараз",
-  "chart.annotation.policy": "Політика"
+  "chart.annotation.policy": "Політика",
+  "compare.diverge_warning": "Divergence has no effect for this pair — their differences are initial conditions set at 1900, not policy changes."
 }

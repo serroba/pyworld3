@@ -294,5 +294,6 @@
   "preset.recalibration-2023.description": "Nebel et al. 2023 重新校准 — 常数拟合至1970–2020年实证数据。",
   "compare.year_placeholder": "年份",
   "chart.annotation.now": "现在",
-  "chart.annotation.policy": "政策"
+  "chart.annotation.policy": "政策",
+  "compare.diverge_warning": "Divergence has no effect for this pair — their differences are initial conditions set at 1900, not policy changes."
 }

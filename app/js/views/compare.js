@@ -5,6 +5,14 @@
 const CompareView = (() => {
   const SHARED_SCENARIO_VALUE = "__shared__";
   let activeDivergeYear = null;
+
+  // Constants that only set initial stock values — changing these mid-run
+  // via divergeYear has no meaningful effect on the simulation.
+  const INITIAL_STOCK_CONSTANTS = new Set([
+    "nri", "p1i", "p2i", "p3i", "p4i", "ici", "sci",
+    "ali", "pali", "uili", "lferti", "ppoli", "io70", "ppol70",
+  ]);
+
   const CHART_GROUPS = [
     { id: "cmp-chart-pop", titleKey: "explore.chart.population_life", vars: ["pop", "le"] },
     { id: "cmp-chart-econ", titleKey: "explore.chart.economy_food", vars: ["iopc", "fpc"] },
@@ -108,6 +116,7 @@ const CompareView = (() => {
 
       if (statusEl) statusEl.innerHTML = "";
       renderMetrics(metricsEl, data.metrics, labelA, labelB);
+      updateDivergeWarning(presetA, presetB);
 
       const annotationOpts = activeDivergeYear !== null ? { divergeYear: activeDivergeYear } : {};
       CHART_GROUPS.forEach((group) => {
@@ -143,6 +152,35 @@ const CompareView = (() => {
     return url;
   }
 
+  /** Check if the difference between two presets is only initial stock constants. */
+  function isDivergeIneffective(presetA, presetB) {
+    const a = State.presets.find((p) => p.name === presetA);
+    const b = State.presets.find((p) => p.name === presetB);
+    if (!a || !b) return false;
+    const constsA = a.constants || {};
+    const constsB = b.constants || {};
+    // Find keys that differ between the two presets
+    const allKeys = new Set([...Object.keys(constsA), ...Object.keys(constsB)]);
+    const diffKeys = [...allKeys].filter((k) => (constsA[k] ?? null) !== (constsB[k] ?? null));
+    if (diffKeys.length === 0) return true; // identical presets
+    return diffKeys.every((k) => INITIAL_STOCK_CONSTANTS.has(k));
+  }
+
+  function updateDivergeWarning(presetA, presetB) {
+    const warningEl = document.getElementById("compare-diverge-warning");
+    if (!warningEl) return;
+    if (activeDivergeYear !== null && isDivergeIneffective(presetA, presetB)) {
+      warningEl.textContent = I18n.t(
+        "compare.diverge_warning",
+        undefined,
+        "Divergence has no effect for this pair — their differences are initial conditions set at 1900, not policy changes.",
+      );
+      warningEl.style.display = "";
+    } else {
+      warningEl.style.display = "none";
+    }
+  }
+
   function updateDivergeUI(year) {
     activeDivergeYear = year;
     const clearBtn = document.getElementById("compare-diverge-clear");
@@ -158,8 +196,8 @@ const CompareView = (() => {
   }
 
   function render(params) {
-    const presetA = params.a || "doubled-resources";
-    const presetB = params.bpreset || params.b || "standard-run";
+    const presetA = params.a || "standard-run";
+    const presetB = params.bpreset || params.b || "optimistic-technology";
     const sharedScenario =
       typeof ScenarioState !== "undefined" && params.bscenario
         ? ScenarioState.decodeSavedScenarioState(params.bscenario)

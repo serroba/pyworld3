@@ -294,5 +294,6 @@
   "preset.recalibration-2023.description": "Nebel et al. 2023 yeniden kalibrasyonu — sabitler 1970–2020 ampirik verilerine uyarlanmış.",
   "compare.year_placeholder": "Yıl",
   "chart.annotation.now": "Şimdi",
-  "chart.annotation.policy": "Politika"
+  "chart.annotation.policy": "Politika",
+  "compare.diverge_warning": "Divergence has no effect for this pair — their differences are initial conditions set at 1900, not policy changes."
 }

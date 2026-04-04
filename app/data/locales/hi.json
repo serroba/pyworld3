@@ -294,5 +294,6 @@
   "preset.recalibration-2023.description": "Nebel et al. 2023 पुनर्अंशांकन — 1970–2020 अनुभवजन्य डेटा से समायोजित स्थिरांक।",
   "compare.year_placeholder": "वर्ष",
   "chart.annotation.now": "अभी",
-  "chart.annotation.policy": "नीति"
+  "chart.annotation.policy": "नीति",
+  "compare.diverge_warning": "Divergence has no effect for this pair — their differences are initial conditions set at 1900, not policy changes."
 }
