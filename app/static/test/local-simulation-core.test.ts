@@ -164,7 +164,8 @@ describe("local simulation core", () => {
     );
 
     expect(runtime.simulate).toHaveBeenCalledTimes(2);
-    const requestB = runtime.simulate.mock.calls[1]![0];
+    const calls = runtime.simulate.mock.calls as unknown[][];
+    const requestB = calls[1]![0] as Record<string, unknown>;
     expect(requestB.diverge_year).toBe(2024);
     expect(requestB.base_constants).toBeDefined();
   });
