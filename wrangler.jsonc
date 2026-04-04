@@ -3,9 +3,25 @@
   "main": "./worker/index.ts",
   "compatibility_date": "2026-03-31",
   "assets": {
-    "directory": "./app/static",
+    "directory": "./app",
     "not_found_handling": "single-page-application",
-    "binding": "ASSETS"
+    "binding": "ASSETS",
+    "exclude": [
+      "ts",
+      "test",
+      "scripts",
+      "node_modules",
+      "coverage",
+      "test-results",
+      "*.ts",
+      "*.mjs",
+      "package.json",
+      "package-lock.json",
+      "tsconfig*.json",
+      "vitest.config.ts",
+      "playwright.config.ts",
+      "eslint.config.mjs"
+    ]
   },
   "observability": {
     "enabled": false,

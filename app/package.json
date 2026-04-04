@@ -3,7 +3,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "sync:core": "sh ../../scripts/sync-core.sh",
+    "sync:core": "sh ../scripts/sync-core.sh",
     "prebuild": "npm run sync:core",
     "pretypecheck": "npm run sync:core",
     "prelint:core": "npm run sync:core",

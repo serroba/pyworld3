@@ -26,20 +26,20 @@ jobs:
         with:
           node-version: "22"
           cache: "npm"
-          cache-dependency-path: app/static/package-lock.json
+          cache-dependency-path: app/package-lock.json
 
       - name: Install UI dependencies
-        working-directory: app/static
+        working-directory: app
         run: npm ci
 
       - name: Build static assets
-        working-directory: app/static
+        working-directory: app
         run: npm run build
 
       - name: Prepare Pages artifact
         run: |
           mkdir -p /tmp/world3-pages
-          cp -R app/static/. /tmp/world3-pages/
+          cp -R app/. /tmp/world3-pages/
           touch /tmp/world3-pages/.nojekyll
 
       - name: Setup Pages
