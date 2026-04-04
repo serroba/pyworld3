@@ -131,6 +131,7 @@
   "compare.diverge_2024": "2024 — Latest research",
   "compare.diverge_or": "or",
   "compare.diverge_clear": "Clear",
+  "compare.year_placeholder": "Year",
   "advanced.title": "Advanced: edit constants",
   "advanced.subtitle": "Adjust any of the World3 model constants below. The simulation updates automatically as you change values. Each constant controls a specific aspect of the model.",
   "advanced.compare_with_standard": "Compare with Standard Run",

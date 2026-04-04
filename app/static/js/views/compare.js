@@ -154,10 +154,8 @@ const CompareView = (() => {
       btn.classList.toggle("btn-active", btnYear === year);
     });
     if (clearBtn) clearBtn.style.display = year !== null ? "" : "none";
-    if (customInput && year !== null && ![1972, 2004, 2024].includes(year)) {
-      customInput.value = year;
-    } else if (customInput && year === null) {
-      customInput.value = "";
+    if (customInput) {
+      customInput.value = year !== null ? String(year) : "";
     }
   }
 
