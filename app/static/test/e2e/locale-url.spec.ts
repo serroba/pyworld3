@@ -6,19 +6,16 @@ test("URL updates with locale prefix when language is changed", async ({ page })
 
   // Switch to Spanish
   await page.selectOption("#locale-picker", "es");
-  await page.waitForTimeout(300);
   await expect(page).toHaveURL(/\/es\/explore/);
 
   // Switch to French
   await page.selectOption("#locale-picker", "fr");
-  await page.waitForTimeout(300);
   await expect(page).toHaveURL(/\/fr\/explore/);
 
   // Switch back to English — locale prefix removed
   await page.selectOption("#locale-picker", "en");
-  await page.waitForTimeout(300);
-  await expect(page).toHaveURL(/\/explore/);
-  expect(page.url()).not.toMatch(/\/en\//);
+  await expect(page).toHaveURL(/^http:\/\/[^/]+\/explore/);
+  expect(page.url()).not.toMatch(/\/(es|fr)\//);
 });
 
 test("URL updates with locale prefix on the home page", async ({ page }) => {
@@ -26,7 +23,6 @@ test("URL updates with locale prefix on the home page", async ({ page }) => {
   await page.waitForSelector("#locale-picker");
 
   await page.selectOption("#locale-picker", "ja");
-  await page.waitForTimeout(300);
   await expect(page).toHaveURL(/\/ja\//);
 });
 
@@ -36,11 +32,9 @@ test("switching back to English removes locale prefix", async ({ page }) => {
 
   // Switch to Spanish first
   await page.selectOption("#locale-picker", "es");
-  await page.waitForTimeout(300);
   await expect(page).toHaveURL(/\/es\//);
 
   // Switch back to English
   await page.selectOption("#locale-picker", "en");
-  await page.waitForTimeout(300);
-  expect(page.url()).not.toMatch(/\/es\//);
+  await expect(page).toHaveURL(/^http:\/\/[^/]+\/$/);
 });
