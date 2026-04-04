@@ -83,8 +83,44 @@ const Charts = (() => {
     },
   };
 
+  const AnnotationLinesPlugin = {
+    id: "annotationLines",
+    afterDatasetsDraw(chart) {
+      const annotations = chart.options?.plugins?.annotationLines?.lines;
+      if (!annotations || !annotations.length) return;
+      const xScale = chart.scales.x;
+      if (!xScale) return;
+      const { top, bottom } = chart.chartArea;
+      const ctx = chart.ctx;
+
+      for (const ann of annotations) {
+        const x = xScale.getPixelForValue(ann.year);
+        if (x < chart.chartArea.left || x > chart.chartArea.right) continue;
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(x, top);
+        ctx.lineTo(x, bottom);
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = ann.color || "#888888";
+        ctx.setLineDash(ann.dash || [4, 4]);
+        ctx.stroke();
+
+        if (ann.label) {
+          ctx.font = "10px sans-serif";
+          ctx.fillStyle = ann.color || "#888888";
+          ctx.textAlign = "center";
+          ctx.fillText(ann.label, x, top - 4);
+        }
+
+        ctx.restore();
+      }
+    },
+  };
+
   if (typeof Chart !== "undefined") {
     Chart.register(SyncCrosshairPlugin);
+    Chart.register(AnnotationLinesPlugin);
   }
 
   /** Destroy any existing chart on a canvas. */
@@ -284,8 +320,41 @@ const Charts = (() => {
     return units.join(", ");
   }
 
+  /**
+   * Build annotation lines for the current year and an optional policy/diverge year.
+   * @param {Object} [opts] - Optional overrides.
+   * @param {number} [opts.policyYear] - The policy implementation year to annotate.
+   * @param {number} [opts.divergeYear] - The divergence year to annotate (compare view).
+   * @returns {{ lines: Array }} Plugin config for annotationLines.
+   */
+  function buildAnnotations(opts) {
+    const lines = [];
+    const currentYear = new Date().getFullYear();
+    const textMuted = cssVar("--color-text-muted") || "#6b7b8d";
+    const accent = cssVar("--color-primary") || "#0a7b83";
+
+    lines.push({
+      year: currentYear,
+      label: I18n.t("chart.annotation.now", undefined, "Now"),
+      color: textMuted,
+      dash: [3, 3],
+    });
+
+    const policyYear = opts?.divergeYear || opts?.policyYear;
+    if (policyYear && policyYear !== currentYear) {
+      lines.push({
+        year: policyYear,
+        label: I18n.t("chart.annotation.policy", undefined, "Policy"),
+        color: accent,
+        dash: [6, 3],
+      });
+    }
+
+    return { lines };
+  }
+
   /** Base chart options. */
-  function baseOptions(varKeys) {
+  function baseOptions(varKeys, annotations) {
     const { scales, axisMap } = buildScales(varKeys);
     const isRtl = I18n.getDirection() === "rtl";
     return {
@@ -312,6 +381,7 @@ const Charts = (() => {
             },
           },
         },
+        annotationLines: annotations || buildAnnotations(),
       },
       onHover(_event, activeElements, chart) {
         if (!activeElements?.length && syncedYear !== null) {
@@ -364,9 +434,10 @@ const Charts = (() => {
      * Render a chart panel with one or more variables from a single simulation.
      * Uses dual y-axes when variables have different units.
      */
-    renderSingle(canvas, time, series, varKeys) {
+    renderSingle(canvas, time, series, varKeys, annotationOpts) {
       destroyIfExists(canvas);
-      const opts = baseOptions(varKeys);
+      const annotations = buildAnnotations(annotationOpts);
+      const opts = baseOptions(varKeys, annotations);
       const axisMap = opts._axisMap;
       delete opts._axisMap;
       const datasets = varKeys.map((key, i) =>
@@ -379,9 +450,10 @@ const Charts = (() => {
      * Render a comparison chart with two scenarios overlaid.
      * Uses dual y-axes when variables have different units.
      */
-    renderCompare(canvas, resultA, resultB, varKeys, labelA, labelB) {
+    renderCompare(canvas, resultA, resultB, varKeys, labelA, labelB, annotationOpts) {
       destroyIfExists(canvas);
-      const opts = baseOptions(varKeys);
+      const annotations = buildAnnotations(annotationOpts);
+      const opts = baseOptions(varKeys, annotations);
       const axisMap = opts._axisMap;
       delete opts._axisMap;
       const datasets = [];
@@ -402,9 +474,10 @@ const Charts = (() => {
      * Used for the classic combined overview where variables have vastly
      * different magnitudes. Tooltips still show actual values with units.
      */
-    renderNormalized(canvas, time, series, varKeys) {
+    renderNormalized(canvas, time, series, varKeys, annotationOpts) {
       destroyIfExists(canvas);
       const isRtl = I18n.getDirection() === "rtl";
+      const annotations = buildAnnotations(annotationOpts);
       const datasets = varKeys.map((key, i) => {
         const meta = State.variableMeta[key] || {};
         const raw = series[key]?.values || [];
@@ -452,6 +525,7 @@ const Charts = (() => {
             },
           },
           syncCrosshair: true,
+          annotationLines: annotations,
         },
         onHover(_event, activeElements, chart) {
           if (!activeElements?.length && syncedYear !== null) {
@@ -482,9 +556,10 @@ const Charts = (() => {
      * Render a normalized comparison chart (two scenarios, each series scaled
      * by the same max so shapes are visually comparable).
      */
-    renderNormalizedCompare(canvas, resultA, resultB, varKeys, labelA, labelB) {
+    renderNormalizedCompare(canvas, resultA, resultB, varKeys, labelA, labelB, annotationOpts) {
       destroyIfExists(canvas);
       const isRtl = I18n.getDirection() === "rtl";
+      const annotations = buildAnnotations(annotationOpts);
       const datasets = [];
       varKeys.forEach((key, i) => {
         const meta = State.variableMeta[key] || {};
@@ -553,6 +628,7 @@ const Charts = (() => {
             },
           },
           syncCrosshair: true,
+          annotationLines: annotations,
         },
         onHover(_event, activeElements, chart) {
           if (!activeElements?.length && syncedYear !== null) {

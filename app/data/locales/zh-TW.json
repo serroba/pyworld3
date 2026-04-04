@@ -292,5 +292,7 @@
   "compare.diverge_clear": "清除",
   "preset.recalibration-2023.name": "2023年重新校準",
   "preset.recalibration-2023.description": "Nebel et al. 2023 重新校準 — 常數擬合至1970–2020年實證資料。",
-  "compare.year_placeholder": "年份"
+  "compare.year_placeholder": "年份",
+  "chart.annotation.now": "現在",
+  "chart.annotation.policy": "政策"
 }

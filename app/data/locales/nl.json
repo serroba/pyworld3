@@ -292,5 +292,7 @@
   "compare.diverge_clear": "Wissen",
   "preset.recalibration-2023.name": "Herkalibratie 2023",
   "preset.recalibration-2023.description": "Herkalibratie van Nebel et al. 2023 — constanten aangepast aan empirische data van 1970–2020.",
-  "compare.year_placeholder": "Jaar"
+  "compare.year_placeholder": "Jaar",
+  "chart.annotation.now": "Nu",
+  "chart.annotation.policy": "Beleid"
 }

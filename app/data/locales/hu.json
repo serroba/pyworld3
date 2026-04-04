@@ -292,5 +292,7 @@
   "compare.diverge_clear": "Törlés",
   "preset.recalibration-2023.name": "Újrakalibrálás 2023",
   "preset.recalibration-2023.description": "Nebel et al. 2023 újrakalibrálás — konstansok az 1970–2020-as empirikus adatokhoz igazítva.",
-  "compare.year_placeholder": "Év"
+  "compare.year_placeholder": "Év",
+  "chart.annotation.now": "Most",
+  "chart.annotation.policy": "Politika"
 }

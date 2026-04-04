@@ -292,5 +292,7 @@
   "compare.diverge_clear": "Очистити",
   "preset.recalibration-2023.name": "Рекалібрування 2023",
   "preset.recalibration-2023.description": "Рекалібрування Nebel et al. 2023 — константи підігнані до емпіричних даних 1970–2020.",
-  "compare.year_placeholder": "Рік"
+  "compare.year_placeholder": "Рік",
+  "chart.annotation.now": "Зараз",
+  "chart.annotation.policy": "Політика"
 }

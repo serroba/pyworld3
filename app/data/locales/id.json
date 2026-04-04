@@ -292,5 +292,7 @@
   "compare.diverge_clear": "Hapus",
   "preset.recalibration-2023.name": "Kalibrasi Ulang 2023",
   "preset.recalibration-2023.description": "Kalibrasi ulang Nebel et al. 2023 — konstanta disesuaikan dengan data empiris 1970–2020.",
-  "compare.year_placeholder": "Tahun"
+  "compare.year_placeholder": "Tahun",
+  "chart.annotation.now": "Sekarang",
+  "chart.annotation.policy": "Kebijakan"
 }

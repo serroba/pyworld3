@@ -109,12 +109,13 @@ const CompareView = (() => {
       if (statusEl) statusEl.innerHTML = "";
       renderMetrics(metricsEl, data.metrics, labelA, labelB);
 
+      const annotationOpts = activeDivergeYear !== null ? { divergeYear: activeDivergeYear } : {};
       CHART_GROUPS.forEach((group) => {
         const canvas = document.getElementById(group.id);
         if (canvas) {
           Charts.renderCompare(
             canvas, data.results_a, data.results_b,
-            group.vars, labelA, labelB
+            group.vars, labelA, labelB, annotationOpts
           );
         }
       });

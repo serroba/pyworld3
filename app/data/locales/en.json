@@ -186,6 +186,8 @@
   "errors.init_failed_title": "Failed to initialize the browser-native app.",
   "errors.init_failed_body": "Reload the page and check that static data assets are available.",
   "chart.axis.year": "Year",
+  "chart.annotation.now": "Now",
+  "chart.annotation.policy": "Policy",
   "chart.explainer.how": "How does this work?",
   "chart.explainer.equations": "See the equations",
   "table.key": "Key",

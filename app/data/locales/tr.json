@@ -292,5 +292,7 @@
   "compare.diverge_clear": "Temizle",
   "preset.recalibration-2023.name": "Yeniden Kalibrasyon 2023",
   "preset.recalibration-2023.description": "Nebel et al. 2023 yeniden kalibrasyonu — sabitler 1970–2020 ampirik verilerine uyarlanmış.",
-  "compare.year_placeholder": "Yıl"
+  "compare.year_placeholder": "Yıl",
+  "chart.annotation.now": "Şimdi",
+  "chart.annotation.policy": "Politika"
 }

@@ -292,5 +292,7 @@
   "compare.diverge_clear": "ล้าง",
   "preset.recalibration-2023.name": "การปรับเทียบใหม่ 2023",
   "preset.recalibration-2023.description": "การปรับเทียบใหม่ของ Nebel et al. 2023 — ค่าคงที่ปรับให้เข้ากับข้อมูลเชิงประจักษ์ 1970–2020",
-  "compare.year_placeholder": "ปี"
+  "compare.year_placeholder": "ปี",
+  "chart.annotation.now": "ตอนนี้",
+  "chart.annotation.policy": "นโยบาย"
 }

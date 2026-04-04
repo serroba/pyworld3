@@ -292,5 +292,7 @@
   "compare.diverge_clear": "クリア",
   "preset.recalibration-2023.name": "再較正 2023",
   "preset.recalibration-2023.description": "Nebel et al. 2023 再較正 — 1970–2020年の実測データに定数を適合。",
-  "compare.year_placeholder": "年"
+  "compare.year_placeholder": "年",
+  "chart.annotation.now": "現在",
+  "chart.annotation.policy": "政策"
 }

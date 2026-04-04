@@ -292,5 +292,7 @@
   "compare.diverge_clear": "Borrar",
   "preset.recalibration-2023.name": "Recalibración 2023",
   "preset.recalibration-2023.description": "Recalibración de Nebel et al. 2023 — constantes ajustadas a datos empíricos de 1970–2020.",
-  "compare.year_placeholder": "Año"
+  "compare.year_placeholder": "Año",
+  "chart.annotation.now": "Ahora",
+  "chart.annotation.policy": "Política"
 }

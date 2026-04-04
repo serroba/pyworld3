@@ -292,5 +292,7 @@
   "compare.diverge_clear": "مسح",
   "preset.recalibration-2023.name": "إعادة المعايرة 2023",
   "preset.recalibration-2023.description": "إعادة معايرة Nebel et al. 2023 — ثوابت مطابقة للبيانات التجريبية 1970–2020.",
-  "compare.year_placeholder": "سنة"
+  "compare.year_placeholder": "سنة",
+  "chart.annotation.now": "الآن",
+  "chart.annotation.policy": "سياسة"
 }

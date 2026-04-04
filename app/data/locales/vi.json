@@ -292,5 +292,7 @@
   "compare.diverge_clear": "Xóa",
   "preset.recalibration-2023.name": "Hiệu chuẩn lại 2023",
   "preset.recalibration-2023.description": "Hiệu chuẩn lại của Nebel et al. 2023 — hằng số được điều chỉnh theo dữ liệu thực nghiệm 1970–2020.",
-  "compare.year_placeholder": "Năm"
+  "compare.year_placeholder": "Năm",
+  "chart.annotation.now": "Hiện tại",
+  "chart.annotation.policy": "Chính sách"
 }
