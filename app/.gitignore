@@ -5,6 +5,7 @@ ts/core/
 # Only files with a corresponding .ts source in ts/ are ignored here.
 # Hand-written JS files (views, app.js, charts.js, etc.) are tracked normally.
 js/browser-native.js
+js/charts.js
 js/i18n.js
 js/model-data.js
 js/model-domain.js
