@@ -295,5 +295,6 @@
   "compare.year_placeholder": "年份",
   "chart.annotation.now": "现在",
   "chart.annotation.policy": "政策",
-  "compare.diverge_warning": "Divergence has no effect for this pair — their differences are initial conditions set at 1900, not policy changes."
+  "compare.diverge_warning": "Divergence has no effect for this pair — their differences are initial conditions set at 1900, not policy changes.",
+  "footer.license_html": "Licensed under <a href=\"https://www.gnu.org/licenses/gpl-3.0.html\" target=\"_blank\" rel=\"noopener\">GPL v3</a>"
 }

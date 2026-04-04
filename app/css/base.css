@@ -409,6 +409,36 @@ html[dir="rtl"] .tooltip-trigger {
   margin-right: var(--space-xs);
 }
 
+/* Site footer */
+.site-footer {
+  border-top: 1px solid var(--color-border);
+  padding: var(--space-md) 0;
+  margin-top: var(--space-2xl);
+}
+
+.site-footer__inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.site-footer__link {
+  color: var(--color-text-muted);
+}
+
+.site-footer__link:hover,
+.site-footer__link:focus-visible {
+  color: var(--color-primary);
+}
+
+.site-footer__sep {
+  color: var(--color-border);
+}
+
 /* Utility */
 .text-center {
   text-align: center;
