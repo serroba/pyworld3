@@ -5,7 +5,6 @@ export default [
   {
     files: [
       "js/app.js",
-      "js/charts.js",
       "js/math-explainers.js",
       "js/model-sections.js",
       "js/router.js",
@@ -55,6 +54,7 @@ export default [
   {
     files: [
       "js/browser-native.js",
+      "js/charts.js",
       "js/model-data.js",
       "js/simulation-contracts.js",
       "js/simulation-provider.js",
