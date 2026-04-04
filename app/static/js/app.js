@@ -42,20 +42,14 @@
     syncLanguagePicker();
     I18n.applyDocument();
 
-    // Update URL to reflect the locale prefix before refreshing
-    // the router (refresh reads the URL and would re-detect the
-    // old locale prefix otherwise).
-    const locale = I18n.getLocale();
-    const currentPath = Router.getCurrentPath();
-    const search = location.search;
-    let targetUrl;
-    if (locale && locale !== "auto" && locale !== "en") {
-      targetUrl = "/" + locale + currentPath + search;
-    } else {
-      targetUrl = currentPath + search;
-    }
-    if (location.pathname + location.search !== targetUrl) {
-      history.replaceState(null, "", targetUrl + location.hash);
+    const targetUrl = LocaleUrl.buildLocaleUrl(
+      I18n.getLocale(),
+      Router.getCurrentPath(),
+      location.search,
+      location.hash,
+    );
+    if (LocaleUrl.needsUpdate(location.pathname, location.search, targetUrl)) {
+      history.replaceState(null, "", targetUrl);
     }
   });
 })();
