@@ -55,7 +55,7 @@
       targetUrl = currentPath + search;
     }
     if (location.pathname + location.search !== targetUrl) {
-      history.replaceState(null, "", targetUrl);
+      history.replaceState(null, "", targetUrl + location.hash);
     }
   });
 })();
