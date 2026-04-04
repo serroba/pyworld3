@@ -430,7 +430,8 @@ html[dir="rtl"] .tooltip-trigger {
   color: var(--color-text-muted);
 }
 
-.site-footer__link:hover {
+.site-footer__link:hover,
+.site-footer__link:focus-visible {
   color: var(--color-primary);
 }
 
