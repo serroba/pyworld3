@@ -270,6 +270,17 @@
           <select id="compare-select-b"></select>
         </div>
       </div>
+      <div class="compare-diverge mb-md">
+        <label class="text-muted" style="font-size:var(--text-sm);" data-i18n="compare.diverge_from">Diverge from</label>
+        <div class="compare-diverge__controls">
+          <button class="btn btn-outline btn-sm diverge-btn" data-year="1972" data-i18n="compare.diverge_1972">1972 — Limits to Growth</button>
+          <button class="btn btn-outline btn-sm diverge-btn" data-year="2004" data-i18n="compare.diverge_2004">2004 — 30-Year Update</button>
+          <button class="btn btn-outline btn-sm diverge-btn" data-year="2024" data-i18n="compare.diverge_2024">2024 — Latest research</button>
+          <span class="text-muted" style="font-size:var(--text-sm);" data-i18n="compare.diverge_or">or</span>
+          <input id="compare-diverge-custom" type="number" min="1900" max="2100" step="1" placeholder="Year" class="input-sm" style="width:5em;">
+          <button id="compare-diverge-clear" class="btn btn-outline btn-sm" data-i18n="compare.diverge_clear" style="display:none;">Clear</button>
+        </div>
+      </div>
       <div id="compare-status" aria-live="polite"></div>
       <div id="compare-metrics" class="card mb-lg"></div>
       <div id="compare-charts" class="grid-2"></div>

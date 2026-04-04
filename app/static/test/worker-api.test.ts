@@ -179,7 +179,7 @@ describe("Worker API: /api/simulate", () => {
 
 describe("Worker API: /api/presets", () => {
   test("ModelData exposes expected preset list", () => {
-    expect(ModelData.presets.length).toBe(5);
+    expect(ModelData.presets.length).toBe(6);
     const names = ModelData.presets.map((p) => p.name);
     expect(names).toContain("standard-run");
     expect(names).toContain("comprehensive-policy");
@@ -211,6 +211,6 @@ describe("Worker API: /api/presets", () => {
     };
     const json = JSON.stringify(response);
     const parsed = JSON.parse(json);
-    expect(parsed.presets.length).toBe(5);
+    expect(parsed.presets.length).toBe(6);
   });
 });
