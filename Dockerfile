@@ -5,6 +5,8 @@ WORKDIR /app
 COPY app/static/package.json app/static/package-lock.json app/static/
 RUN cd app/static && npm ci --ignore-scripts
 
+COPY packages/core/src/ packages/core/src/
+COPY scripts/sync-core.sh scripts/
 COPY app/static/ app/static/
 RUN cd app/static && npm run build
 

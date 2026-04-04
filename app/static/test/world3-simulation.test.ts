@@ -252,4 +252,43 @@ describe("World3 coupled simulation", () => {
     const pop = r.series.pop!.values;
     expect(pop.some((v) => isNaN(v) || !isFinite(v))).toBe(false);
   });
+
+  test("divergeYear switches constants mid-run with state continuity", () => {
+    const baseConsts = { ...ModelData.constantDefaults };
+    const policyConsts = { ...ModelData.constantDefaults, nri: 2000000000000 };
+
+    const diverged = simulateWorld3({
+      yearMin: 1900,
+      yearMax: 2100,
+      dt: 0.5,
+      constants: policyConsts,
+      baseConstants: baseConsts,
+      divergeYear: 2000,
+      rawTables: tables,
+    });
+
+    // Before diverge year, should match standard run exactly
+    const standard = result;
+    const divergeIdx = diverged.time.findIndex((t) => t > 2000);
+    for (let i = 0; i < divergeIdx; i++) {
+      expect(diverged.series.pop!.values[i]).toBeCloseTo(
+        standard.series.pop!.values[i]!,
+        6,
+      );
+    }
+
+    // After diverge year, should differ (policy constants change trajectory)
+    const lastIdx = diverged.time.length - 1;
+    expect(diverged.series.nrfr!.values[lastIdx]).not.toBeCloseTo(
+      standard.series.nrfr!.values[lastIdx]!,
+      2,
+    );
+
+    // All series should remain finite
+    for (const series of Object.values(diverged.series)) {
+      for (const v of series.values) {
+        expect(Number.isFinite(v)).toBe(true);
+      }
+    }
+  });
 });

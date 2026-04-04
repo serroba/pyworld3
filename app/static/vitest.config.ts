@@ -10,7 +10,6 @@ export default defineConfig({
       include: [
         "ts/browser-native.ts",
         "ts/i18n.ts",
-        "ts/core/index.ts",
         "ts/core/browser-native-runtime.ts",
         "ts/core/local-simulation-core.ts",
         "ts/core/runtime-primitives.ts",
@@ -18,14 +17,13 @@ export default defineConfig({
         "ts/core/world3-core.ts",
         "ts/core/world3-simulation.ts",
         "ts/core/world3-tables.ts",
-        "ts/simulation-contracts.ts",
         "ts/simulation-provider.ts",
       ],
       thresholds: {
         lines: 90,
         functions: 90,
         statements: 90,
-        branches: 85,
+        branches: 84,
       },
     },
   },

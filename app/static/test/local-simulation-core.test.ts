@@ -138,4 +138,35 @@ describe("local simulation core", () => {
 
     expect(runtime.simulate).toHaveBeenCalledTimes(4);
   });
+
+  test("compare with divergeYear passes base_constants to scenario B", async () => {
+    const compareFixture: SimulationResult = {
+      ...fixture,
+      series: {
+        pop: { name: "pop", values: [1, 2] },
+        iopc: { name: "iopc", values: [3, 4] },
+        fpc: { name: "fpc", values: [5, 6] },
+        ppolx: { name: "ppolx", values: [7, 8] },
+        nrfr: { name: "nrfr", values: [9, 10] },
+        le: { name: "le", values: [11, 12] },
+      },
+    };
+    const runtime = {
+      simulate: vi.fn(async () => compareFixture),
+      simulateStandardRun: vi.fn(),
+    };
+    const core = createRuntimeBackedLocalSimulationCore(ModelData, runtime);
+
+    await core.compare(
+      { preset: "standard-run" },
+      { preset: "comprehensive-policy" },
+      2024,
+    );
+
+    expect(runtime.simulate).toHaveBeenCalledTimes(2);
+    const calls = runtime.simulate.mock.calls as unknown[][];
+    const requestB = calls[1]![0] as Record<string, unknown>;
+    expect(requestB.diverge_year).toBe(2024);
+    expect(requestB.base_constants).toBeDefined();
+  });
 });
