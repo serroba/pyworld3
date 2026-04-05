@@ -5,12 +5,12 @@
  * to static assets for everything else (the SPA).
  */
 
-import { ModelData } from "../app/ts/model-data.js";
-import { buildSimulationRequestFromPreset } from "../app/ts/simulation-contracts.js";
-import type { ConstantMap, SimulationRequest } from "../app/ts/simulation-contracts.js";
-import { createWorld3Core } from "../app/ts/core/world3-core.js";
-import type { World3VariableKey } from "../app/ts/core/world3-keys.js";
-import type { RawLookupTable } from "../app/ts/core/world3-tables.js";
+import { ModelData } from "./model-data.js";
+import { buildSimulationRequestFromPreset } from "./simulation-contracts.js";
+import type { ConstantMap, SimulationRequest } from "./simulation-contracts.js";
+import { createWorld3Core } from "./core/world3-core.js";
+import type { World3VariableKey } from "./core/world3-keys.js";
+import type { RawLookupTable } from "./core/world3-tables.js";
 
 type Env = {
   ASSETS: {
@@ -65,7 +65,7 @@ function errorResponse(message: string, status = 400): Response {
  * Validate that a value is a plain object with all-numeric values.
  * Throws a descriptive Error if the shape is invalid.
  */
-function validateConstantMap(value: unknown, fieldName: string): ConstantMap {
+export function validateConstantMap(value: unknown, fieldName: string): ConstantMap {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
     throw new Error(`"${fieldName}" must be an object`);
   }
@@ -78,7 +78,7 @@ function validateConstantMap(value: unknown, fieldName: string): ConstantMap {
 }
 
 /** Parse a JSON body into a SimulationRequest, omitting undefined keys. */
-function parseSimulationRequest(body: Record<string, unknown>): SimulationRequest {
+export function parseSimulationRequest(body: Record<string, unknown>): SimulationRequest {
   const req: SimulationRequest = {};
   if (typeof body.year_min === "number") req.year_min = body.year_min;
   if (typeof body.year_max === "number") req.year_max = body.year_max;

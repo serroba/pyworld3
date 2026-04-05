@@ -1,6 +1,6 @@
 {
   "name": "world3",
-  "main": "./worker/index.ts",
+  "main": "./app/ts/worker.ts",
   "compatibility_date": "2026-03-31",
   "assets": {
     "directory": "./app",

@@ -21,7 +21,7 @@ An interactive World3 system dynamics simulator at [limits.world](https://limits
 - `app/ts/` — app-level TypeScript (browser-native bootstrap, charts, i18n, simulation provider)
 - `app/js/` — hand-written JS (views, router, state, UI) + compiled TS output (gitignored)
 - `app/js/views/` — 11 view modules that consume globals (`Charts`, `State`, `UI`, `I18n`, `SimulationProvider`)
-- `worker/index.ts` — Cloudflare Worker serving API + SPA
+- `app/ts/worker.ts` — Cloudflare Worker serving API + SPA (entry point in wrangler.jsonc)
 - `app/test/` — vitest unit tests + Playwright E2E
 
 ## Critical patterns

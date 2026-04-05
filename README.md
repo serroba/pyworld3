@@ -175,7 +175,7 @@ world3/
 │   ├── package.json              Published as @world3/core
 │   └── README.md                 Model math & DSL documentation
 │
-├── worker/                       Cloudflare Worker
+│   │   └── worker.ts             Cloudflare Worker entry point
 │   └── index.ts                  Serves /api/* + static SPA fallback
 │
 ├── scripts/
@@ -211,7 +211,7 @@ All three adapters consume the same core. TypeScript is compiled to ES modules f
 
 ## Cloudflare Workers
 
-The root [wrangler.jsonc](./wrangler.jsonc) deploys the app as a Worker with static assets. The Worker ([`worker/index.ts`](./worker/index.ts)) handles `/api/*` routes and falls through to static assets for the SPA.
+The root [wrangler.jsonc](./wrangler.jsonc) deploys the app as a Worker with static assets. The Worker ([`app/ts/worker.ts`](./app/ts/worker.ts)) handles `/api/*` routes and falls through to static assets for the SPA.
 
 **Build command** (Cloudflare dashboard): `cd app && npm ci && npm run build`
 

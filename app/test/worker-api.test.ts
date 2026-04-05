@@ -3,17 +3,17 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 import { ModelData } from "../ts/model-data.ts";
-import type { ConstantMap, SimulationRequest, SimulationResult } from "../ts/simulation-contracts.ts";
+import type { SimulationRequest, SimulationResult } from "../ts/simulation-contracts.ts";
 import { buildSimulationRequestFromPreset } from "../ts/simulation-contracts.ts";
 import { createWorld3Core } from "../ts/core/world3-core.ts";
-import type { World3VariableKey } from "../ts/core/world3-keys.ts";
 import type { RawLookupTable } from "../ts/core/world3-tables.ts";
+import { parseSimulationRequest } from "../ts/worker.ts";
 
 /**
  * Tests for the Worker API handler logic.
  *
- * Uses createWorld3Core() — the same entry point the Worker uses — to
- * verify preset resolution, simulation execution, and response shaping.
+ * Imports parseSimulationRequest directly from the Worker module to
+ * ensure tests exercise the actual request parsing, not a duplicate.
  */
 
 function loadTables(): RawLookupTable[] {
@@ -27,24 +27,9 @@ function loadTables(): RawLookupTable[] {
 const tables = loadTables();
 const core = createWorld3Core(ModelData, async () => tables);
 
-/** Build a SimulationRequest from a raw JSON body, omitting undefined keys. */
-function requestFromBody(body: Record<string, unknown>): SimulationRequest {
-  const req: SimulationRequest = {};
-  if (typeof body.year_min === "number") req.year_min = body.year_min;
-  if (typeof body.year_max === "number") req.year_max = body.year_max;
-  if (typeof body.dt === "number") req.dt = body.dt;
-  if (typeof body.pyear === "number") req.pyear = body.pyear;
-  if (typeof body.iphst === "number") req.iphst = body.iphst;
-  if (body.constants) req.constants = body.constants as ConstantMap;
-  if (body.output_variables) req.output_variables = body.output_variables as World3VariableKey[];
-  if (typeof body.diverge_year === "number") req.diverge_year = body.diverge_year;
-  if (body.base_constants) req.base_constants = body.base_constants as ConstantMap;
-  return req;
-}
-
 /** Mirrors the Worker's handleSimulate logic using the core runtime. */
 async function runApiSimulation(body: Record<string, unknown>): Promise<SimulationResult> {
-  const req = requestFromBody(body);
+  const req = parseSimulationRequest(body);
 
   let simRequest: SimulationRequest;
   if (typeof body.preset === "string") {
