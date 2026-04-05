@@ -26,13 +26,27 @@
   "publishConfig": {
     "access": "public"
   },
+  "author": "Sebastian Machuca",
   "license": "GPL-3.0",
+  "homepage": "https://limits.world",
+  "bugs": {
+    "url": "https://github.com/serroba/world3/issues"
+  },
+  "sideEffects": false,
+  "engines": {
+    "node": ">=18"
+  },
   "keywords": [
     "world3",
     "limits-to-growth",
     "system-dynamics",
     "simulation",
-    "club-of-rome"
+    "club-of-rome",
+    "sustainability",
+    "population",
+    "ecology",
+    "modeling",
+    "meadows"
   ],
   "devDependencies": {
     "typescript": "^6.0.2"
