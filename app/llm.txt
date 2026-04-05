@@ -31,7 +31,7 @@ Example — standard run:
 
 Example — "what if we halved birth rates starting in 2026?":
 ```json
-{"constants": {"dcfsn": 1.9}, "diverge_year": 2026, "output_variables": ["pop", "le", "iopc", "fpc", "ppolx", "nrfr"]}
+{"base_constants": {}, "constants": {"dcfsn": 1.9}, "diverge_year": 2026, "output_variables": ["pop", "le", "iopc", "fpc", "ppolx", "nrfr"]}
 ```
 
 Example — custom scenario:
