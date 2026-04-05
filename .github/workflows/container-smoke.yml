@@ -45,6 +45,16 @@ jobs:
           curl -sf http://localhost:8000/css/variables.css > /dev/null
           curl -sf http://localhost:8000/data/functions-table-world3.json > /dev/null
 
+      - name: Verify API specs are valid JSON
+        run: |
+          curl -sf http://localhost:8000/openapi.json | node -e "JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')); console.log('openapi.json: valid')"
+          curl -sf http://localhost:8000/agent.json | node -e "JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')); console.log('agent.json: valid')"
+
+      - name: Verify developer docs page loads
+        run: |
+          body=$(curl -sf http://localhost:8000/developers/)
+          echo "$body" | grep -qi "redoc"
+
       - name: Container logs on failure
         if: failure()
         run: docker logs w3 2>/dev/null || true
