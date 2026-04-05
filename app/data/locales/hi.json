@@ -297,14 +297,14 @@
   "chart.annotation.policy": "नीति",
   "compare.diverge_warning": "Divergence has no effect for this pair — their differences are initial conditions set at 1900, not policy changes.",
   "footer.license_html": "Licensed under <a href=\"https://www.gnu.org/licenses/gpl-3.0.html\" target=\"_blank\" rel=\"noopener\">GPL v3</a>",
-  "intro.ai_prompt_title": "Explore with your favorite AI",
+  "intro.ai_prompt_title": "अपने पसंदीदा AI से खोजें",
   "intro.ai_prompt_desc": "Copy any of the prompts below into ChatGPT, Claude, or any AI assistant. The AI can call the World3 API at limits.world to run simulations and answer your questions.",
-  "intro.ai_prompt_1_label": "What if we halved birth rates?",
-  "intro.ai_prompt_1": "Use the World3 simulator API at https://limits.world (see /llm.txt for instructions). What would happen to world population, life expectancy, and resources if global birth rates dropped to half their current level starting in 2026? Compare with the standard business-as-usual scenario.",
-  "intro.ai_prompt_2_label": "What if we doubled resource efficiency?",
-  "intro.ai_prompt_2": "Use the World3 simulator API at https://limits.world (see /llm.txt for instructions). What would happen if resource extraction efficiency doubled and pollution was cut in half through technology, starting from 2026? Show me population, industrial output, and pollution trends compared to business as usual.",
-  "intro.ai_prompt_3_label": "Create your own scenario",
-  "intro.ai_prompt_3": "Use the World3 simulator API at https://limits.world (see /llm.txt for instructions). I want to explore a custom scenario: [describe your what-if question here]. Run the simulation and explain what happens to civilization by 2100.",
-  "action.copy": "Copy",
-  "action.copied": "Copied!"
+  "intro.ai_prompt_1_label": "अगर जन्म दर आधी हो जाए तो?",
+  "intro.ai_prompt_1": "https://limits.world पर World3 सिमुलेटर API का उपयोग करें (निर्देशों के लिए /llm.txt देखें)। अगर 2026 से वैश्विक जन्म दर आधी हो जाए तो विश्व जनसंख्या, जीवन प्रत्याशा और संसाधनों पर क्या प्रभाव पड़ेगा? मानक परिदृश्य से तुलना करें।",
+  "intro.ai_prompt_2_label": "अगर संसाधन दक्षता दोगुनी हो जाए तो?",
+  "intro.ai_prompt_2": "https://limits.world पर World3 सिमुलेटर API का उपयोग करें (निर्देशों के लिए /llm.txt देखें)। अगर 2026 से संसाधन निष्कर्षण दक्षता दोगुनी हो जाए और प्रौद्योगिकी से प्रदूषण आधा हो जाए तो क्या होगा? जनसंख्या, औद्योगिक उत्पादन और प्रदूषण के रुझान मानक परिदृश्य की तुलना में दिखाएं।",
+  "intro.ai_prompt_3_label": "अपना परिदृश्य बनाएं",
+  "intro.ai_prompt_3": "https://limits.world पर World3 सिमुलेटर API का उपयोग करें (निर्देशों के लिए /llm.txt देखें)। मैं एक कस्टम परिदृश्य का पता लगाना चाहता हूं: [अपना प्रश्न यहां बताएं]। सिमुलेशन चलाएं और बताएं कि 2100 तक सभ्यता का क्या होगा।",
+  "action.copy": "कॉपी",
+  "action.copied": "कॉपी हो गया!"
 }

@@ -297,14 +297,14 @@
   "chart.annotation.policy": "سياسة",
   "compare.diverge_warning": "Divergence has no effect for this pair — their differences are initial conditions set at 1900, not policy changes.",
   "footer.license_html": "Licensed under <a href=\"https://www.gnu.org/licenses/gpl-3.0.html\" target=\"_blank\" rel=\"noopener\">GPL v3</a>",
-  "intro.ai_prompt_title": "Explore with your favorite AI",
+  "intro.ai_prompt_title": "استكشف مع مساعدك الذكي المفضل",
   "intro.ai_prompt_desc": "Copy any of the prompts below into ChatGPT, Claude, or any AI assistant. The AI can call the World3 API at limits.world to run simulations and answer your questions.",
-  "intro.ai_prompt_1_label": "What if we halved birth rates?",
-  "intro.ai_prompt_1": "Use the World3 simulator API at https://limits.world (see /llm.txt for instructions). What would happen to world population, life expectancy, and resources if global birth rates dropped to half their current level starting in 2026? Compare with the standard business-as-usual scenario.",
-  "intro.ai_prompt_2_label": "What if we doubled resource efficiency?",
-  "intro.ai_prompt_2": "Use the World3 simulator API at https://limits.world (see /llm.txt for instructions). What would happen if resource extraction efficiency doubled and pollution was cut in half through technology, starting from 2026? Show me population, industrial output, and pollution trends compared to business as usual.",
-  "intro.ai_prompt_3_label": "Create your own scenario",
-  "intro.ai_prompt_3": "Use the World3 simulator API at https://limits.world (see /llm.txt for instructions). I want to explore a custom scenario: [describe your what-if question here]. Run the simulation and explain what happens to civilization by 2100.",
-  "action.copy": "Copy",
-  "action.copied": "Copied!"
+  "intro.ai_prompt_1_label": "ماذا لو انخفضت معدلات الولادة إلى النصف؟",
+  "intro.ai_prompt_1": "استخدم واجهة برمجة تطبيقات محاكي World3 على https://limits.world (انظر /llm.txt للتعليمات). ماذا سيحدث لسكان العالم ومتوسط العمر المتوقع والموارد إذا انخفضت معدلات الولادة العالمية إلى النصف بدءاً من 2026؟ قارن مع السيناريو القياسي.",
+  "intro.ai_prompt_2_label": "ماذا لو تضاعفت كفاءة الموارد؟",
+  "intro.ai_prompt_2": "استخدم واجهة برمجة تطبيقات محاكي World3 على https://limits.world (انظر /llm.txt للتعليمات). ماذا سيحدث إذا تضاعفت كفاءة استخراج الموارد وانخفض التلوث إلى النصف بفضل التكنولوجيا، بدءاً من 2026؟ اعرض اتجاهات السكان والإنتاج الصناعي والتلوث مقارنة بالسيناريو القياسي.",
+  "intro.ai_prompt_3_label": "أنشئ السيناريو الخاص بك",
+  "intro.ai_prompt_3": "استخدم واجهة برمجة تطبيقات محاكي World3 على https://limits.world (انظر /llm.txt للتعليمات). أريد استكشاف سيناريو مخصص: [صف سؤالك هنا]. شغّل المحاكاة واشرح ماذا سيحدث للحضارة بحلول عام 2100.",
+  "action.copy": "نسخ",
+  "action.copied": "تم النسخ!"
 }

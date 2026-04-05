@@ -297,14 +297,14 @@
   "chart.annotation.policy": "Політика",
   "compare.diverge_warning": "Divergence has no effect for this pair — their differences are initial conditions set at 1900, not policy changes.",
   "footer.license_html": "Licensed under <a href=\"https://www.gnu.org/licenses/gpl-3.0.html\" target=\"_blank\" rel=\"noopener\">GPL v3</a>",
-  "intro.ai_prompt_title": "Explore with your favorite AI",
+  "intro.ai_prompt_title": "Досліджуйте з вашим улюбленим ШІ",
   "intro.ai_prompt_desc": "Copy any of the prompts below into ChatGPT, Claude, or any AI assistant. The AI can call the World3 API at limits.world to run simulations and answer your questions.",
-  "intro.ai_prompt_1_label": "What if we halved birth rates?",
-  "intro.ai_prompt_1": "Use the World3 simulator API at https://limits.world (see /llm.txt for instructions). What would happen to world population, life expectancy, and resources if global birth rates dropped to half their current level starting in 2026? Compare with the standard business-as-usual scenario.",
-  "intro.ai_prompt_2_label": "What if we doubled resource efficiency?",
-  "intro.ai_prompt_2": "Use the World3 simulator API at https://limits.world (see /llm.txt for instructions). What would happen if resource extraction efficiency doubled and pollution was cut in half through technology, starting from 2026? Show me population, industrial output, and pollution trends compared to business as usual.",
-  "intro.ai_prompt_3_label": "Create your own scenario",
-  "intro.ai_prompt_3": "Use the World3 simulator API at https://limits.world (see /llm.txt for instructions). I want to explore a custom scenario: [describe your what-if question here]. Run the simulation and explain what happens to civilization by 2100.",
-  "action.copy": "Copy",
-  "action.copied": "Copied!"
+  "intro.ai_prompt_1_label": "Що якщо народжуваність скоротиться вдвічі?",
+  "intro.ai_prompt_1": "Використовуй API симулятора World3 на https://limits.world (див. /llm.txt для інструкцій). Що станеться зі світовим населенням, тривалістю життя та ресурсами, якщо глобальна народжуваність скоротиться вдвічі починаючи з 2026 року? Порівняй зі стандартним сценарієм.",
+  "intro.ai_prompt_2_label": "Що якщо ефективність ресурсів подвоїться?",
+  "intro.ai_prompt_2": "Використовуй API симулятора World3 на https://limits.world (див. /llm.txt для інструкцій). Що станеться, якщо ефективність видобутку ресурсів подвоїться, а забруднення скоротиться вдвічі завдяки технологіям, починаючи з 2026 року? Покажи тенденції населення, промислового виробництва та забруднення порівняно зі стандартним сценарієм.",
+  "intro.ai_prompt_3_label": "Створіть свій сценарій",
+  "intro.ai_prompt_3": "Використовуй API симулятора World3 на https://limits.world (див. /llm.txt для інструкцій). Я хочу дослідити свій сценарій: [опиши своє питання тут]. Запусти симуляцію та поясни, що станеться з цивілізацією до 2100 року.",
+  "action.copy": "Копіювати",
+  "action.copied": "Скопійовано!"
 }
