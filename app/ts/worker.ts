@@ -97,6 +97,39 @@ export function parseSimulationRequest(body: Record<string, unknown>): Simulatio
   return req;
 }
 
+/**
+ * Resolve a raw API body into a SimulationRequest, handling presets and diverge_year.
+ * Exported for testing — this is the single source of truth for request resolution.
+ */
+export function resolveApiRequest(body: Record<string, unknown>): SimulationRequest {
+  const req = parseSimulationRequest(body);
+
+  if (typeof body.preset === "string") {
+    if (req.diverge_year !== undefined) {
+      // When diverging with a preset: the preset runs until diverge_year,
+      // then user's constant overrides kick in.
+      const presetOnly: SimulationRequest = { ...req };
+      delete presetOnly.constants;
+      delete (presetOnly as Record<string, unknown>).diverge_year;
+      delete (presetOnly as Record<string, unknown>).base_constants;
+      const simRequest = buildSimulationRequestFromPreset(ModelData, body.preset, presetOnly);
+      const presetInfo = ModelData.presets.find((p) => p.name === body.preset);
+      // "after" constants = preset constants + user overrides
+      simRequest.constants = { ...presetInfo?.constants, ...req.constants };
+      // "before" constants = preset constants (or explicit base_constants)
+      if (req.base_constants !== undefined) {
+        simRequest.base_constants = req.base_constants;
+      } else {
+        simRequest.base_constants = presetInfo?.constants ?? {};
+      }
+      simRequest.diverge_year = req.diverge_year;
+      return simRequest;
+    }
+    return buildSimulationRequestFromPreset(ModelData, body.preset, req);
+  }
+  return req;
+}
+
 async function handleSimulate(request: Request, env: Env): Promise<Response> {
   let body: Record<string, unknown> = {};
   if (request.body) {
@@ -107,24 +140,11 @@ async function handleSimulate(request: Request, env: Env): Promise<Response> {
     }
   }
 
-  let req: SimulationRequest;
+  let simRequest: SimulationRequest;
   try {
-    req = parseSimulationRequest(body);
+    simRequest = resolveApiRequest(body);
   } catch (err) {
     return errorResponse(err instanceof Error ? err.message : String(err));
-  }
-
-  let simRequest: SimulationRequest;
-  if (typeof body.preset === "string") {
-    try {
-      simRequest = buildSimulationRequestFromPreset(ModelData, body.preset, req);
-    } catch (err) {
-      return errorResponse(
-        err instanceof Error ? err.message : "Invalid preset",
-      );
-    }
-  } else {
-    simRequest = req;
   }
 
   const core = getCore(env);

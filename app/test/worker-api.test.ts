@@ -3,17 +3,16 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 import { ModelData } from "../ts/model-data.ts";
-import type { SimulationRequest, SimulationResult } from "../ts/simulation-contracts.ts";
-import { buildSimulationRequestFromPreset } from "../ts/simulation-contracts.ts";
+import type { SimulationResult } from "../ts/simulation-contracts.ts";
 import { createWorld3Core } from "../ts/core/world3-core.ts";
 import type { RawLookupTable } from "../ts/core/world3-tables.ts";
-import { parseSimulationRequest } from "../ts/worker.ts";
+import { resolveApiRequest } from "../ts/worker.ts";
 
 /**
  * Tests for the Worker API handler logic.
  *
- * Imports parseSimulationRequest directly from the Worker module to
- * ensure tests exercise the actual request parsing, not a duplicate.
+ * Imports resolveApiRequest directly from the Worker module to
+ * ensure tests exercise the actual request resolution, not a duplicate.
  */
 
 function loadTables(): RawLookupTable[] {
@@ -29,14 +28,7 @@ const core = createWorld3Core(ModelData, async () => tables);
 
 /** Mirrors the Worker's handleSimulate logic using the core runtime. */
 async function runApiSimulation(body: Record<string, unknown>): Promise<SimulationResult> {
-  const req = parseSimulationRequest(body);
-
-  let simRequest: SimulationRequest;
-  if (typeof body.preset === "string") {
-    simRequest = buildSimulationRequestFromPreset(ModelData, body.preset, req);
-  } else {
-    simRequest = req;
-  }
+  const simRequest = resolveApiRequest(body);
 
   const result = await core.runtime.simulate(simRequest);
 
@@ -150,6 +142,33 @@ describe("Worker API: /api/simulate", () => {
     for (const v of ModelData.defaultVariables) {
       expect(result.series[v], `default variable ${v}`).toBeDefined();
     }
+  });
+
+  test("preset + diverge_year works together", async () => {
+    const standard = await runApiSimulation({
+      preset: "standard-run",
+      output_variables: ["pop"],
+    });
+    const diverged = await runApiSimulation({
+      preset: "standard-run",
+      constants: { dcfsn: 1.9 },
+      diverge_year: 2024,
+      output_variables: ["pop"],
+    });
+
+    // Before diverge year, population should match
+    const idx2000 = standard.time.indexOf(2000);
+    expect(diverged.series.pop!.values[idx2000]).toBeCloseTo(
+      standard.series.pop!.values[idx2000]!,
+      0,
+    );
+
+    // After diverge year, population should differ
+    const idxEnd = standard.time.length - 1;
+    expect(diverged.series.pop!.values[idxEnd]).not.toBeCloseTo(
+      standard.series.pop!.values[idxEnd]!,
+      0,
+    );
   });
 
   test("diverge_year switches constants mid-run", async () => {

@@ -31,10 +31,11 @@ Example — standard run:
 
 Example — "what if we halved birth rates starting in 2026?":
 ```json
-{"base_constants": {}, "constants": {"dcfsn": 1.9}, "diverge_year": 2026, "output_variables": ["pop", "le", "iopc", "fpc", "ppolx", "nrfr"]}
+{"preset": "standard-run", "constants": {"dcfsn": 1.9}, "diverge_year": 2026, "output_variables": ["pop", "le", "iopc", "fpc", "ppolx", "nrfr"]}
 ```
+Note: preset + diverge_year work together. The simulation runs with the preset's defaults until diverge_year, then switches to the override constants. No need to specify base_constants — the preset's constants are used automatically before the diverge point.
 
-Example — custom scenario:
+Example — custom scenario (no diverge):
 ```json
 {"constants": {"dcfsn": 2.0, "nruf2": 0.5}, "output_variables": ["pop", "le", "iopc", "fpc", "ppolx", "nrfr"]}
 ```
