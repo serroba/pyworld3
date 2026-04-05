@@ -143,7 +143,11 @@ export default {
       return handlePresets();
     }
 
-    // Fall through to static assets
-    return env.ASSETS.fetch(request);
+    // Fall through to static assets — add discovery headers for agents
+    const response = await env.ASSETS.fetch(request);
+    const headers = new Headers(response.headers);
+    headers.append("Link", '</llm.txt>; rel="help"; title="LLM agent instructions"');
+    headers.append("Link", '</openapi.json>; rel="service-desc"; type="application/json"');
+    return new Response(response.body, { status: response.status, headers });
   },
 };
