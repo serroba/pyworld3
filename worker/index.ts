@@ -61,6 +61,22 @@ function errorResponse(message: string, status = 400): Response {
   return jsonResponse({ error: message }, status);
 }
 
+/**
+ * Validate that a value is a plain object with all-numeric values.
+ * Throws a descriptive Error if the shape is invalid.
+ */
+function validateConstantMap(value: unknown, fieldName: string): ConstantMap {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    throw new Error(`"${fieldName}" must be an object`);
+  }
+  for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+    if (typeof v !== "number") {
+      throw new Error(`"${fieldName}.${k}" must be a number`);
+    }
+  }
+  return value as ConstantMap;
+}
+
 /** Parse a JSON body into a SimulationRequest, omitting undefined keys. */
 function parseSimulationRequest(body: Record<string, unknown>): SimulationRequest {
   const req: SimulationRequest = {};
@@ -69,10 +85,15 @@ function parseSimulationRequest(body: Record<string, unknown>): SimulationReques
   if (typeof body.dt === "number") req.dt = body.dt;
   if (typeof body.pyear === "number") req.pyear = body.pyear;
   if (typeof body.iphst === "number") req.iphst = body.iphst;
-  if (body.constants) req.constants = body.constants as ConstantMap;
+  if (body.constants !== undefined) req.constants = validateConstantMap(body.constants, "constants");
   if (body.output_variables) req.output_variables = body.output_variables as World3VariableKey[];
   if (typeof body.diverge_year === "number") req.diverge_year = body.diverge_year;
-  if (body.base_constants) req.base_constants = body.base_constants as ConstantMap;
+  if (body.base_constants !== undefined) {
+    req.base_constants = validateConstantMap(body.base_constants, "base_constants");
+  } else if (req.diverge_year !== undefined) {
+    // Default to empty map so the engine enables divergence (base = model defaults).
+    req.base_constants = {};
+  }
   return req;
 }
 
@@ -86,7 +107,12 @@ async function handleSimulate(request: Request, env: Env): Promise<Response> {
     }
   }
 
-  const req = parseSimulationRequest(body);
+  let req: SimulationRequest;
+  try {
+    req = parseSimulationRequest(body);
+  } catch (err) {
+    return errorResponse(err instanceof Error ? err.message : "Invalid request");
+  }
 
   let simRequest: SimulationRequest;
   if (typeof body.preset === "string") {
