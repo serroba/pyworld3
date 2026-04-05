@@ -111,7 +111,7 @@ async function handleSimulate(request: Request, env: Env): Promise<Response> {
   try {
     req = parseSimulationRequest(body);
   } catch (err) {
-    return errorResponse(err instanceof Error ? err.message : "Invalid request");
+    return errorResponse(err instanceof Error ? err.message : String(err));
   }
 
   let simRequest: SimulationRequest;
