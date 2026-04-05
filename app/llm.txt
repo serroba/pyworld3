@@ -1,0 +1,109 @@
+# World3 Simulator — Agent Instructions
+
+You have access to the World3 system dynamics simulation API at https://limits.world.
+This model simulates global civilization from 1900 to 2100 across five sectors:
+population, industrial capital, agriculture, nonrenewable resources, and pollution.
+
+## How to run a simulation
+
+POST https://limits.world/api/simulate
+Content-Type: application/json
+
+Send a JSON body with any of these optional fields:
+- "preset": named scenario (see below)
+- "year_min", "year_max": simulation range (default 1900–2100)
+- "dt": time step in years (default 0.5)
+- "constants": object of constant overrides (see below)
+- "output_variables": array of variable keys to return (returns all if omitted)
+
+Example — standard run:
+```json
+{"preset": "standard-run"}
+```
+
+Example — custom scenario:
+```json
+{"constants": {"dcfsn": 2.0, "nruf2": 0.5}, "output_variables": ["pop", "le", "iopc", "fpc", "ppolx", "nrfr"]}
+```
+
+## Available presets
+
+| Preset | Description |
+|--------|-------------|
+| standard-run | Business as usual — all defaults, no policy changes |
+| doubled-resources | Initial nonrenewable resources doubled (nri=2e12) |
+| optimistic-technology | Technology halves pollution and doubles resource efficiency |
+| population-stability | Desired family size drops, population stabilizes earlier |
+| comprehensive-policy | Combined technology + population + agriculture improvements |
+| recalibration-2023 | Nebel et al. 2023 — constants fitted to 1970–2020 data |
+
+## Translating questions to constants
+
+When a user asks a natural-language question, map it to constant overrides:
+
+### Population & fertility
+- "What if birth rates halved?" → `{"dcfsn": 1.9}` (desired family size, default 3.8)
+- "What if population stabilized at 8 billion?" → `{"dcfsn": 2.0, "pet": 2025, "zpgt": 2025}`
+- "What if people lived longer?" → `{"len": 35}` (life expectancy normal, default 28)
+- "What if fertility control was perfect?" → use preset "population-stability"
+
+### Resources
+- "What if we found double the resources?" → `{"nri": 2000000000000}` (default 1e12)
+- "What if resource extraction was more efficient?" → `{"nruf2": 0.5}` (usage factor, default 1)
+- "What if we ran out of resources faster?" → `{"nri": 500000000000}`
+
+### Technology & industry
+- "What if technology doubled industrial efficiency?" → `{"icor2": 1.5}` (capital-output ratio, default 3)
+- "What if industrial output was cleaner?" → `{"imef": 0.05}` (emission factor, default 0.1)
+- "What if we invested more in services?" → `{"fioac1": 0.3}` (fraction to consumption, default 0.43)
+
+### Pollution
+- "What if pollution was halved?" → `{"ppgf2": 0.5}` (pollution generation factor, default 1)
+- "What if pollution broke down faster?" → `{"pptd1": 10}` (transmission delay, default 20 years)
+- "What if agriculture polluted less?" → `{"fipm": 0.0005}` (agricultural pollution, default 0.001)
+
+### Agriculture & food
+- "What if food production doubled?" → `{"lyf2": 2.0}` (land yield factor, default 1)
+- "What if agricultural land expanded?" → `{"palt": 4000000000}` (potentially arable land, default 3.2e9)
+- "What if we needed less food per person?" → `{"sfpc": 180}` (subsistence food/capita, default 230)
+
+### Policy timing
+- "What if we acted in 2030?" → `{"pyear": 2030}` (policy implementation year, default 1975)
+- The pyear controls when *2 constants activate (e.g., icor2, nruf2, ppgf2 replace icor1, nruf1, ppgf1)
+
+## Key output variables
+
+| Variable | Description | Unit |
+|----------|-------------|------|
+| pop | Total population | people |
+| le | Life expectancy | years |
+| iopc | Industrial output per capita | $/person/yr |
+| fpc | Food per capita | kg/person/yr |
+| ppolx | Persistent pollution index | dimensionless |
+| nrfr | Nonrenewable resource fraction remaining | 0–1 |
+| nr | Nonrenewable resources remaining | resource units |
+| al | Arable land | hectares |
+| f | Total food production | kg/yr |
+
+## Interpreting results
+
+The response contains `time` (array of years) and `series` (keyed by variable name, each with a `values` array aligned to `time`).
+
+To answer the user's question:
+1. Run the simulation with the mapped constants
+2. Compare key variables (pop, le, iopc, fpc, ppolx, nrfr) at year 2050 and 2100
+3. Describe the trajectory: does population peak then decline? When? Does industrial output collapse?
+4. Compare with the standard run if helpful
+
+## Getting metadata
+
+GET https://limits.world/api/presets
+
+Returns all preset definitions, constant defaults, constraints, and variable metadata.
+Use this to look up any constant's default value or valid range.
+
+## Tips
+- Combine multiple constant overrides in a single request for complex scenarios
+- Use output_variables to reduce response size when you only need specific variables
+- The model always simulates from 1900 for initialization, even if year_min is later
+- Constants ending in "1" apply before pyear; constants ending in "2" apply after pyear

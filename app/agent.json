@@ -6,6 +6,7 @@
     "type": "openapi",
     "url": "https://limits.world/openapi.json"
   },
+  "instructions_url": "https://limits.world/llm.txt",
   "capabilities": [
     {
       "name": "simulate",
@@ -18,7 +19,7 @@
     },
     {
       "name": "presets",
-      "description": "Retrieve available named scenarios (standard-run, doubled-resources, optimistic-technology, population-stability, comprehensive-policy) and model metadata.",
+      "description": "Retrieve available named scenarios and model metadata including constant defaults, constraints, and variable descriptions.",
       "endpoint": {
         "method": "GET",
         "path": "/api/presets"
@@ -35,7 +36,8 @@
     "doubled-resources",
     "optimistic-technology",
     "population-stability",
-    "comprehensive-policy"
+    "comprehensive-policy",
+    "recalibration-2023"
   ],
   "contact": "https://github.com/serroba/world3"
 }
