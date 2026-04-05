@@ -22,6 +22,23 @@ const ExploreView = (() => {
   let currentPreset = null;
   let currentViewMode = VIEW_MODES.split;
 
+  /** Known constant keys that switch at pyear via clip(). */
+  const POLICY_SWITCH_KEYS = new Set([
+    "icor2", "nruf2", "lyf2", "ppgf2", "alai2", "pptd2",
+    "alic2", "alsc2", "scor2", "fioac2",
+    "dcfsn", "pet", "zpgt",
+  ]);
+
+  function annotationOptsForPreset(presetName) {
+    const preset = State.presets.find((p) => p.name === presetName);
+    if (!preset) return {};
+    const keys = Object.keys(preset.constants || {});
+    if (keys.some((k) => POLICY_SWITCH_KEYS.has(k))) {
+      return { policyYear: 1975 };
+    }
+    return {};
+  }
+
   function renderPills(container, activePreset) {
     container.innerHTML = "";
     State.presets.forEach((preset) => {
@@ -138,13 +155,14 @@ const ExploreView = (() => {
       currentViewMode = viewMode;
       if (statusEl) statusEl.innerHTML = "";
 
+      const annotationOpts = annotationOptsForPreset(presetName);
       chartGroups.forEach((group) => {
         const canvas = document.getElementById(group.id);
         if (!canvas) return;
         if (viewMode === VIEW_MODES.combined) {
-          Charts.renderNormalized(canvas, result.time, result.series, group.vars);
+          Charts.renderNormalized(canvas, result.time, result.series, group.vars, annotationOpts);
         } else {
-          Charts.renderSingle(canvas, result.time, result.series, group.vars);
+          Charts.renderSingle(canvas, result.time, result.series, group.vars, annotationOpts);
         }
       });
     } catch (err) {
