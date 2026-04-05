@@ -15,7 +15,7 @@ const Router = (() => {
 
   const LOCALE_CODES = new Set([
     "en", "es", "fr", "de", "it", "nl", "hu", "pl", "tr", "ru", "uk",
-    "ar", "hi", "bn", "id", "vi", "th", "ja", "zh-CN", "zh-TW", "pt-BR", "pt-PT"
+    "ar", "fa", "hi", "bn", "id", "vi", "th", "ja", "zh-CN", "zh-TW", "pt-BR", "pt-PT"
   ]);
 
   function parsePath() {

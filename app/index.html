@@ -175,6 +175,30 @@
       <div id="intro-presets" class="grid-2"></div>
       <p class="text-muted" data-i18n="intro.scenario_context_html" data-i18n-html="true" style="margin-top:var(--space-md);"></p>
 
+      <details class="card mb-lg" style="margin-top:var(--space-2xl);">
+        <summary class="card__title" style="cursor:pointer;" data-i18n="intro.ai_prompt_title">Explore with your favorite AI</summary>
+        <p class="text-muted" style="margin-top:var(--space-md);" data-i18n="intro.ai_prompt_desc">
+          Copy any of the prompts below into ChatGPT, Claude, or any AI assistant. The AI can call the World3 API at limits.world to run simulations and answer your questions.
+        </p>
+        <div style="margin-top:var(--space-md);display:flex;flex-direction:column;gap:var(--space-md);">
+          <div class="ai-prompt-card">
+            <p class="ai-prompt-card__label" data-i18n="intro.ai_prompt_1_label">What if we halved birth rates?</p>
+            <pre class="ai-prompt-card__code"><code data-i18n="intro.ai_prompt_1">Use the World3 simulator API at https://limits.world (see /llm.txt for instructions). What would happen to world population, life expectancy, and resources if global birth rates dropped to half their current level starting in 2026? Compare with the standard business-as-usual scenario.</code></pre>
+            <button class="btn btn-outline btn-sm ai-prompt-card__copy" data-i18n="action.copy">Copy</button>
+          </div>
+          <div class="ai-prompt-card">
+            <p class="ai-prompt-card__label" data-i18n="intro.ai_prompt_2_label">What if we doubled resource efficiency?</p>
+            <pre class="ai-prompt-card__code"><code data-i18n="intro.ai_prompt_2">Use the World3 simulator API at https://limits.world (see /llm.txt for instructions). What would happen if resource extraction efficiency doubled and pollution was cut in half through technology, starting from 2026? Show me population, industrial output, and pollution trends compared to business as usual.</code></pre>
+            <button class="btn btn-outline btn-sm ai-prompt-card__copy" data-i18n="action.copy">Copy</button>
+          </div>
+          <div class="ai-prompt-card">
+            <p class="ai-prompt-card__label" data-i18n="intro.ai_prompt_3_label">Create your own scenario</p>
+            <pre class="ai-prompt-card__code"><code data-i18n="intro.ai_prompt_3">Use the World3 simulator API at https://limits.world (see /llm.txt for instructions). I want to explore a custom scenario: [describe your what-if question here]. Run the simulation and explain what happens to civilization by 2100.</code></pre>
+            <button class="btn btn-outline btn-sm ai-prompt-card__copy" data-i18n="action.copy">Copy</button>
+          </div>
+        </div>
+      </details>
+
       <div id="intro-resources" style="margin-top:var(--space-2xl);">
         <h2 class="section-title" data-i18n="intro.resources_title">Go Deeper</h2>
         <ul class="ack__list" id="intro-resources-list"></ul>

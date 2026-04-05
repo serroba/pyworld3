@@ -62,6 +62,7 @@ export const SUPPORTED_LOCALES: readonly SupportedLocale[] = [
   { code: "ru", nativeLabel: "Русский", direction: "ltr" },
   { code: "uk", nativeLabel: "Українська", direction: "ltr" },
   { code: "ar", nativeLabel: "العربية", direction: "rtl" },
+  { code: "fa", nativeLabel: "فارسی", direction: "rtl" },
   { code: "hi", nativeLabel: "हिन्दी", direction: "ltr" },
   { code: "bn", nativeLabel: "বাংলা", direction: "ltr" },
   { code: "id", nativeLabel: "Bahasa Indonesia", direction: "ltr" },

@@ -99,7 +99,7 @@ function updateHreflangTags() {
 
   const localeCodes = [
     "en", "es", "pt-BR", "pt-PT", "fr", "de", "it", "nl", "hu", "pl", "tr",
-    "ru", "uk", "ar", "hi", "bn", "id", "vi", "th", "ja", "zh-CN", "zh-TW"
+    "ru", "uk", "ar", "fa", "hi", "bn", "id", "vi", "th", "ja", "zh-CN", "zh-TW"
   ];
 
   let html = '<link rel="alternate" hreflang="x-default" href="' + BASE + pathSuffix + '">';
@@ -109,3 +109,17 @@ function updateHreflangTags() {
 
   container.innerHTML = html;
 }
+
+// Copy-to-clipboard for AI prompt cards
+document.addEventListener("click", function (e) {
+  const btn = e.target.closest(".ai-prompt-card__copy");
+  if (!btn) return;
+  const card = btn.closest(".ai-prompt-card");
+  const code = card && card.querySelector("code");
+  if (!code) return;
+  navigator.clipboard.writeText(code.textContent || "").then(function () {
+    const original = btn.textContent;
+    btn.textContent = I18n.t("action.copied", undefined, "Copied!");
+    setTimeout(function () { btn.textContent = original; }, 1500);
+  });
+});
