@@ -144,4 +144,53 @@ describe("charts", () => {
       expect(nowLine!.color).not.toBe(policyLine!.color);
     });
   });
+
+  describe("preset policy detection", () => {
+    // Mirror of the POLICY_SWITCH_KEYS set used in explore.js
+    const POLICY_SWITCH_KEYS = new Set([
+      "icor2", "nruf2", "lyf2", "ppgf2", "alai2", "pptd2",
+      "alic2", "alsc2", "scor2", "fioac2",
+      "dcfsn", "pet", "zpgt",
+    ]);
+
+    function hasPolicySwitch(constants: Record<string, unknown>): boolean {
+      return Object.keys(constants).some((k) => POLICY_SWITCH_KEYS.has(k));
+    }
+
+    test("comprehensive-policy has policy-switch constants", async () => {
+      const { ModelData } = await import("../ts/core/model-data.ts");
+      const preset = ModelData.presets.find((p: { name: string }) => p.name === "comprehensive-policy");
+      expect(hasPolicySwitch(preset!.constants)).toBe(true);
+    });
+
+    test("optimistic-technology has policy-switch constants", async () => {
+      const { ModelData } = await import("../ts/core/model-data.ts");
+      const preset = ModelData.presets.find((p: { name: string }) => p.name === "optimistic-technology");
+      expect(hasPolicySwitch(preset!.constants)).toBe(true);
+    });
+
+    test("population-stability has policy-switch constants", async () => {
+      const { ModelData } = await import("../ts/core/model-data.ts");
+      const preset = ModelData.presets.find((p: { name: string }) => p.name === "population-stability");
+      expect(hasPolicySwitch(preset!.constants)).toBe(true);
+    });
+
+    test("standard-run has no policy-switch constants", async () => {
+      const { ModelData } = await import("../ts/core/model-data.ts");
+      const preset = ModelData.presets.find((p: { name: string }) => p.name === "standard-run");
+      expect(hasPolicySwitch(preset!.constants)).toBe(false);
+    });
+
+    test("doubled-resources has no policy-switch constants", async () => {
+      const { ModelData } = await import("../ts/core/model-data.ts");
+      const preset = ModelData.presets.find((p: { name: string }) => p.name === "doubled-resources");
+      expect(hasPolicySwitch(preset!.constants)).toBe(false);
+    });
+
+    test("recalibration-2023 has no policy-switch constants", async () => {
+      const { ModelData } = await import("../ts/core/model-data.ts");
+      const preset = ModelData.presets.find((p: { name: string }) => p.name === "recalibration-2023");
+      expect(hasPolicySwitch(preset!.constants)).toBe(false);
+    });
+  });
 });
