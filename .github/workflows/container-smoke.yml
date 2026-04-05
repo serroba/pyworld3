@@ -50,9 +50,9 @@ jobs:
           curl -sf http://localhost:8000/openapi.json | node -e "JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')); console.log('openapi.json: valid')"
           curl -sf http://localhost:8000/agent.json | node -e "JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')); console.log('agent.json: valid')"
 
-      - name: Verify developer docs page loads
+      - name: Verify API docs page loads
         run: |
-          body=$(curl -sf http://localhost:8000/developers/)
+          body=$(curl -sf http://localhost:8000/api-docs/)
           echo "$body" | grep -qi "redoc"
 
       - name: Container logs on failure
