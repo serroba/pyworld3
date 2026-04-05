@@ -21,7 +21,7 @@ describe("locale completeness", () => {
   });
 
   test("all locales have the same number of files", () => {
-    expect(files.length).toBe(22);
+    expect(files.length).toBe(23);
   });
 
   for (const file of files) {
