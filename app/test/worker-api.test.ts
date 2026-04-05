@@ -37,6 +37,8 @@ function requestFromBody(body: Record<string, unknown>): SimulationRequest {
   if (typeof body.iphst === "number") req.iphst = body.iphst;
   if (body.constants) req.constants = body.constants as ConstantMap;
   if (body.output_variables) req.output_variables = body.output_variables as World3VariableKey[];
+  if (typeof body.diverge_year === "number") req.diverge_year = body.diverge_year;
+  if (body.base_constants) req.base_constants = body.base_constants as ConstantMap;
   return req;
 }
 
@@ -163,6 +165,32 @@ describe("Worker API: /api/simulate", () => {
     for (const v of ModelData.defaultVariables) {
       expect(result.series[v], `default variable ${v}`).toBeDefined();
     }
+  });
+
+  test("diverge_year switches constants mid-run", async () => {
+    const standard = await runApiSimulation({
+      output_variables: ["pop"],
+    });
+    // No base_constants — runtime should default to model defaults before diverge_year
+    const diverged = await runApiSimulation({
+      constants: { dcfsn: 1.9 },
+      diverge_year: 2024,
+      output_variables: ["pop"],
+    });
+
+    // Before diverge year, population should match
+    const idx1970 = standard.time.indexOf(1970);
+    expect(diverged.series.pop!.values[idx1970]).toBeCloseTo(
+      standard.series.pop!.values[idx1970]!,
+      0,
+    );
+
+    // After diverge year, population should differ
+    const idxEnd = standard.time.length - 1;
+    expect(diverged.series.pop!.values[idxEnd]).not.toBeCloseTo(
+      standard.series.pop!.values[idxEnd]!,
+      0,
+    );
   });
 
   test("result series values are JSON-serializable numbers", async () => {

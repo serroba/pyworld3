@@ -1,5 +1,9 @@
 # World3 Simulator — Agent Instructions
 
+> IMPORTANT: Use the HTTP API described below to answer questions about
+> the World3 model. Do NOT try to run the simulation locally or explore
+> source code — the API at https://limits.world handles everything.
+
 You have access to the World3 system dynamics simulation API at https://limits.world.
 This model simulates global civilization from 1900 to 2100 across five sectors:
 population, industrial capital, agriculture, nonrenewable resources, and pollution.
@@ -17,10 +21,17 @@ Send a JSON body with any of these optional fields:
 - "iphst": health services impact start year (default 1940)
 - "constants": object of constant overrides (see below)
 - "output_variables": array of variable keys to return (returns a default subset of key indicators if omitted)
+- "diverge_year": run with base_constants until this year, then switch to constants (for "what if we changed course at year X?" questions)
+- "base_constants": constants to use before diverge_year (defaults are used if omitted)
 
 Example — standard run:
 ```json
 {"preset": "standard-run"}
+```
+
+Example — "what if we halved birth rates starting in 2026?":
+```json
+{"base_constants": {}, "constants": {"dcfsn": 1.9}, "diverge_year": 2026, "output_variables": ["pop", "le", "iopc", "fpc", "ppolx", "nrfr"]}
 ```
 
 Example — custom scenario:

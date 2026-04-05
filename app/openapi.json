@@ -176,6 +176,19 @@
             "items": {
               "type": "string"
             }
+          },
+          "diverge_year": {
+            "type": "number",
+            "description": "Run with base_constants until this year, then switch to constants. Enables 'what if we changed course at year X?' scenarios. All model state carries over at the transition.",
+            "minimum": 1900,
+            "maximum": 2300
+          },
+          "base_constants": {
+            "type": "object",
+            "description": "Constants to use before diverge_year. If omitted with diverge_year set, model defaults are used before the transition. Keys are the same as constants.",
+            "additionalProperties": {
+              "type": "number"
+            }
           }
         }
       },
