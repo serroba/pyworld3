@@ -51,7 +51,7 @@ export function createSimulationRuntime(
       constants: mergedConstants,
       rawTables: tables,
     };
-    if (request.diverge_year !== undefined && request.base_constants) {
+    if (request.diverge_year !== undefined) {
       simOptions.divergeYear = request.diverge_year;
       simOptions.baseConstants = {
         ...modelData.constantDefaults,
