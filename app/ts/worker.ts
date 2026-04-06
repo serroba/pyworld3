@@ -144,7 +144,8 @@ async function handleSimulate(request: Request, env: Env): Promise<Response> {
   try {
     simRequest = resolveApiRequest(body);
   } catch (err) {
-    return errorResponse(err instanceof Error ? err.message : String(err));
+    console.error("Failed to resolve API request", err);
+    return errorResponse("Invalid simulation request");
   }
 
   const core = getCore(env);
