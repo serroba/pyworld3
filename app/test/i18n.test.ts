@@ -186,6 +186,23 @@ describe("i18n", () => {
     );
   });
 
+  test("renders br tags in localized html content", async () => {
+    document.body.innerHTML = '<p data-i18n="intro.body_html" data-i18n-html="true"></p>';
+    const i18n = createI18n({
+      storage: makeStorage(),
+      getNavigatorLanguages: () => ["en"],
+      catalogLoader: async () => ({
+        "meta.title": "World3",
+        "intro.body_html": "Line one<br>Line two",
+      }),
+    });
+
+    await i18n.init();
+
+    const paragraph = document.querySelector("[data-i18n='intro.body_html']") as HTMLParagraphElement;
+    expect(paragraph.innerHTML).toBe("Line one<br>Line two");
+  });
+
   test("returns fallback keys for missing message helpers", async () => {
     const i18n = createI18n({
       storage: makeStorage(),

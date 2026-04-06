@@ -139,6 +139,92 @@ describe("local simulation core", () => {
     expect(runtime.simulate).toHaveBeenCalledTimes(4);
   });
 
+  test("compare omits metrics when a series is missing in one result", async () => {
+    const fixtureWithAllSeries: SimulationResult = {
+      ...fixture,
+      series: {
+        pop: { name: "pop", values: [1, 2] },
+        iopc: { name: "iopc", values: [3, 4] },
+        fpc: { name: "fpc", values: [5, 6] },
+        ppolx: { name: "ppolx", values: [7, 8] },
+        nrfr: { name: "nrfr", values: [9, 10] },
+        le: { name: "le", values: [11, 12] },
+      },
+    };
+    // fixtureB is missing iopc — that metric should be skipped
+    const fixtureB: SimulationResult = {
+      ...fixtureWithAllSeries,
+      series: {
+        pop: { name: "pop", values: [2, 4] },
+        fpc: { name: "fpc", values: [5, 6] },
+        ppolx: { name: "ppolx", values: [7, 8] },
+        nrfr: { name: "nrfr", values: [9, 10] },
+        le: { name: "le", values: [11, 12] },
+      },
+    };
+    const runtime = {
+      simulate: vi.fn()
+        .mockResolvedValueOnce(fixtureWithAllSeries)
+        .mockResolvedValueOnce(fixtureB),
+      simulateStandardRun: vi.fn(),
+    };
+    const core = createRuntimeBackedLocalSimulationCore(ModelData, runtime);
+
+    const result = await core.compare({ preset: "standard-run" }, { preset: "doubled-resources" });
+
+    const variables = result.metrics.map((m) => m.variable);
+    expect(variables).not.toContain("iopc");
+    expect(variables).toContain("pop");
+  });
+
+  test("compare reports null delta_pct when the base value is zero", async () => {
+    const fixtureWithZero: SimulationResult = {
+      ...fixture,
+      series: {
+        pop: { name: "pop", values: [0, 0] },
+        iopc: { name: "iopc", values: [3, 4] },
+        fpc: { name: "fpc", values: [5, 6] },
+        ppolx: { name: "ppolx", values: [7, 8] },
+        nrfr: { name: "nrfr", values: [9, 10] },
+        le: { name: "le", values: [11, 12] },
+      },
+    };
+    const runtime = {
+      simulate: vi.fn(async () => fixtureWithZero),
+      simulateStandardRun: vi.fn(),
+    };
+    const core = createRuntimeBackedLocalSimulationCore(ModelData, runtime);
+
+    const result = await core.compare({ preset: "standard-run" }, { preset: "doubled-resources" });
+
+    const popMetric = result.metrics.find((m) => m.variable === "pop");
+    expect(popMetric).toBeDefined();
+    expect(popMetric?.delta_pct).toBeNull();
+  });
+
+  test("compare uses Standard Run as default scenario_b label when no scenarioB is given", async () => {
+    const fixtureWithSeries: SimulationResult = {
+      ...fixture,
+      series: {
+        pop: { name: "pop", values: [1, 2] },
+        iopc: { name: "iopc", values: [3, 4] },
+        fpc: { name: "fpc", values: [5, 6] },
+        ppolx: { name: "ppolx", values: [7, 8] },
+        nrfr: { name: "nrfr", values: [9, 10] },
+        le: { name: "le", values: [11, 12] },
+      },
+    };
+    const runtime = {
+      simulate: vi.fn(async () => fixtureWithSeries),
+      simulateStandardRun: vi.fn(),
+    };
+    const core = createRuntimeBackedLocalSimulationCore(ModelData, runtime);
+
+    const result = await core.compare({ preset: "standard-run" });
+
+    expect(result.scenario_b).toBe("Standard Run");
+  });
+
   test("compare with divergeYear passes base_constants to scenario B", async () => {
     const compareFixture: SimulationResult = {
       ...fixture,

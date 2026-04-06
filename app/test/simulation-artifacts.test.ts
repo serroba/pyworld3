@@ -115,4 +115,19 @@ describe("simulation artifacts", () => {
     expect(svg).not.toContain("Resources");
     expect(svg).not.toContain("Industrial output/cap");
   });
+
+  test("reports stable trend when all values are zero (zero middleAverage)", () => {
+    const summary = formatSimulationSummary(
+      {
+        ...fixture,
+        series: {
+          pop: { name: "pop", values: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
+        },
+      } as unknown as SimulationResult,
+      ModelData,
+    );
+
+    expect(summary).toContain("pop");
+    expect(summary).toContain("stable");
+  });
 });

@@ -13,6 +13,7 @@ js/scenario-controls.js
 js/scenario-state.js
 js/simulation-contracts.js
 js/simulation-provider.js
+js/worker.js
 js/core/
 js/cli/
 

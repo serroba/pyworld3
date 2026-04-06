@@ -139,4 +139,33 @@ describe("simulation provider", () => {
     const result = await (window as TestWindow).SimulationProvider?.simulatePreset("standard-run");
     expect(result?.series.pop).toBeDefined();
   });
+
+  test("throws and does not cache when the tables fetch returns a non-ok response", async () => {
+    vi.mocked(globalThis.fetch).mockResolvedValue({
+      ok: false,
+      status: 503,
+    } as Response);
+
+    const { ModelData, createSimulationProvider } = await loadProviderSuite();
+    const simulationProvider = createSimulationProvider(ModelData);
+
+    await expect(simulationProvider.simulatePreset("standard-run")).rejects.toThrow(
+      "Failed to load World3 tables (503)",
+    );
+  });
+
+  test("resets the tables cache after a fetch failure so a retry can succeed", async () => {
+    vi.mocked(globalThis.fetch).mockRejectedValueOnce(new Error("network error"));
+    const { ModelData, createSimulationProvider } = await loadProviderSuite();
+    const failingProvider = createSimulationProvider(ModelData);
+
+    await expect(failingProvider.simulatePreset("standard-run")).rejects.toThrow("network error");
+
+    // After a failed load, fetch is called again on the next provider instance
+    mockLocalFetch();
+    const { ModelData: ModelData2, createSimulationProvider: create2 } = await loadProviderSuite();
+    const retryProvider = create2(ModelData2);
+    const result = await retryProvider.simulatePreset("standard-run");
+    expect(result.series.pop).toBeDefined();
+  });
 });

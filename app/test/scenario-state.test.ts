@@ -86,4 +86,52 @@ describe("scenario state", () => {
       constants: { len: 32 },
     });
   });
+
+  test("filters out non-finite constant values when normalizing state", () => {
+    const normalized = normalizeSavedScenarioState({
+      constants: {
+        len: 32,
+        dcfsn: Number.NaN,
+        ler: Infinity,
+        amti: -Infinity,
+      },
+    });
+
+    expect(normalized.constants).toEqual({ len: 32 });
+  });
+
+  test("strips proto-pollution keys when normalizing state", () => {
+    const normalized = normalizeSavedScenarioState({
+      constants: {
+        len: 32,
+        __proto__: 1,
+        constructor: 2,
+        prototype: 3,
+      } as Record<string, number>,
+    });
+
+    expect(normalized.constants).toEqual({ len: 32 });
+    expect(Object.prototype.hasOwnProperty.call(normalized.constants, "__proto__")).toBe(false);
+  });
+
+  test("returns null from decodeSavedScenarioState for invalid base64 or JSON", () => {
+    expect(decodeSavedScenarioState("!!!not-valid-base64!!!")).toBeNull();
+    expect(decodeSavedScenarioState("")).toBeNull();
+
+    // Valid base64 but not valid JSON
+    const invalidJson = btoa("not json").replace(/=/g, "");
+    expect(decodeSavedScenarioState(invalidJson)).toBeNull();
+  });
+
+  test("builds a compare hash without a right state", () => {
+    const hash = buildCompareScenarioHash({
+      leftPreset: "standard-run",
+      rightPreset: "doubled-resources",
+    });
+
+    expect(hash).toContain("#compare?");
+    expect(hash).toContain("a=standard-run");
+    expect(hash).toContain("b=doubled-resources");
+    expect(hash).not.toContain("bscenario=");
+  });
 });
