@@ -486,9 +486,9 @@ export const WORLD3_EQUATION_REFERENCE: Readonly<Record<World3VariableKey, Equat
     description: "AI output in $/yr, proportional to industrial output from 2020 onward",
   },
   aipi: {
-    dynamo: "AIPI.K = (AICO2E20 * (1 + EXP(-BAIE * (1 - MAX(0, TIME-2020) * AIESR))) * MAX(0, TIME-2020) + IF THEN ELSE(TIME<2070, AIWEI20*(1-AIEWR*MAX(0,TIME-2020)), 2e-5)) * CO2TOPER",
+    dynamo: "AIPI.K = (AICO2E20 * (1 + EXP(-BAIE * (1 - MAX(0, TIME-2020) * AIESR))) * MAX(0, TIME-2020) + MAX(2e-5, AIWEI20*(1-AIEWR*MAX(0,TIME-2020)))) * CO2TOPER",
     source: "Guliyeva et al. 2025, Table 7",
-    description: "AI pollution intensity in pollution units per $: combined CO₂ and e-waste footprint, declining over time",
+    description: "AI pollution intensity in pollution units per $: CO₂ component grows after 2020; e-waste component declines from circularity improvements (floored at 2e-5 to prevent negative values); both scaled by co2toper",
   },
   aiptcm: {
     dynamo: "AIPTCM.K = MIN(5, MAX(0.7 * PPGF1, 0.3 * (1 + 0.1 * (TIME - 2020))))",

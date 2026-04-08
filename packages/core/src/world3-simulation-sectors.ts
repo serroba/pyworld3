@@ -798,9 +798,7 @@ export const WORLD3_POPULATION_FEEDBACK_LATE_EQUATIONS = [
       const co2Component = constants.aico2e20
         * (1 + Math.exp(-constants.baie * (1 - dt * constants.aiesr)))
         * dt;
-      const ewasteComponent = t < 2070
-        ? constants.aiwei20 * (1 - constants.aiewr * dt)
-        : 2e-5;
+      const ewasteComponent = Math.max(2e-5, constants.aiwei20 * (1 - constants.aiewr * dt));
       return (co2Component + ewasteComponent) * constants.co2toper;
     },
   }),

@@ -100,7 +100,7 @@ export const WORLD3_SERIES_REGISTRY = [
 
 export const WORLD3_CONSTANT_REGISTRY = [
   { key: "ahl70", fullName: "Assimilation half-life in 1970", sector: "Pollution", unit: "years" },
-  { key: "aico2e20", fullName: "AI CO₂ emissions intensity 2020", sector: "Pollution", unit: "-" },
+  { key: "aico2e20", fullName: "AI CO₂ intensity coefficient (2020 reference)", sector: "Pollution", unit: "-" },
   { key: "aiesr", fullName: "AI efficiency slowdown rate", sector: "Pollution", unit: "1/yr" },
   { key: "aiewr", fullName: "AI e-waste improvement rate", sector: "Pollution", unit: "1/yr" },
   { key: "aiio20", fullName: "AI fraction of industrial output 2020", sector: "Pollution", unit: "-" },
