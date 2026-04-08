@@ -306,5 +306,9 @@
   "intro.ai_prompt_3_label": "Crea il tuo scenario",
   "intro.ai_prompt_3": "Usa l'API del simulatore World3 su https://limits.world (vedi /llm.txt per le istruzioni). Voglio esplorare uno scenario personalizzato: [descrivi la tua domanda qui]. Esegui la simulazione e spiega cosa succede alla civiltà entro il 2100.",
   "action.copy": "Copia",
-  "action.copied": "Copiato!"
+  "action.copied": "Copiato!",
+  "intro.ack.item_9_html": "Guliyeva, N., Bhardwaj, E. & Becker, C. — <a href=\"https://arxiv.org/abs/2510.07634\" target=\"_blank\" rel=\"noopener\"><em>Exploring the Viability of the Updated World3 Model for Examining the Impact of Computing on Planetary Boundaries</em></a> (2025)",
+  "preset.ai-scaling.name": "AI scaling",
+  "preset.ai-scaling.description": "AI-augmented scenario (Guliyeva et al. 2025) — data-center CO₂ and e-waste added to persistent pollution.",
+  "model.references.items.7": "Guliyeva, N., Bhardwaj, E. & Becker, C. — Exploring the Viability of the Updated World3 Model for Examining the Impact of Computing on Planetary Boundaries (2025)"
 }

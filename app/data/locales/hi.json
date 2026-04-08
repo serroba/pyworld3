@@ -306,5 +306,9 @@
   "intro.ai_prompt_3_label": "अपना परिदृश्य बनाएं",
   "intro.ai_prompt_3": "https://limits.world पर World3 सिमुलेटर API का उपयोग करें (निर्देशों के लिए /llm.txt देखें)। मैं एक कस्टम परिदृश्य का पता लगाना चाहता हूं: [अपना प्रश्न यहां बताएं]। सिमुलेशन चलाएं और बताएं कि 2100 तक सभ्यता का क्या होगा।",
   "action.copy": "कॉपी",
-  "action.copied": "कॉपी हो गया!"
+  "action.copied": "कॉपी हो गया!",
+  "intro.ack.item_9_html": "Guliyeva, N., Bhardwaj, E. & Becker, C. — <a href=\"https://arxiv.org/abs/2510.07634\" target=\"_blank\" rel=\"noopener\"><em>Exploring the Viability of the Updated World3 Model for Examining the Impact of Computing on Planetary Boundaries</em></a> (2025)",
+  "preset.ai-scaling.name": "AI scaling",
+  "preset.ai-scaling.description": "AI-augmented scenario (Guliyeva et al. 2025) — data-center CO₂ and e-waste added to persistent pollution.",
+  "model.references.items.7": "Guliyeva, N., Bhardwaj, E. & Becker, C. — Exploring the Viability of the Updated World3 Model for Examining the Impact of Computing on Planetary Boundaries (2025)"
 }

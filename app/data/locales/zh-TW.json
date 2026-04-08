@@ -306,5 +306,9 @@
   "intro.ai_prompt_3_label": "建立你自己的情境",
   "intro.ai_prompt_3": "請使用 https://limits.world 的World3模擬器API（參見 /llm.txt 了解說明）。我想探索一個自訂情境：[在此描述你的假設問題]。執行模擬並解釋到2100年文明會發生什麼。",
   "action.copy": "複製",
-  "action.copied": "已複製！"
+  "action.copied": "已複製！",
+  "intro.ack.item_9_html": "Guliyeva, N., Bhardwaj, E. & Becker, C. — <a href=\"https://arxiv.org/abs/2510.07634\" target=\"_blank\" rel=\"noopener\"><em>Exploring the Viability of the Updated World3 Model for Examining the Impact of Computing on Planetary Boundaries</em></a> (2025)",
+  "preset.ai-scaling.name": "AI scaling",
+  "preset.ai-scaling.description": "AI-augmented scenario (Guliyeva et al. 2025) — data-center CO₂ and e-waste added to persistent pollution.",
+  "model.references.items.7": "Guliyeva, N., Bhardwaj, E. & Becker, C. — Exploring the Viability of the Updated World3 Model for Examining the Impact of Computing on Planetary Boundaries (2025)"
 }

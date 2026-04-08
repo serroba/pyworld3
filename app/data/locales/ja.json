@@ -306,5 +306,9 @@
   "intro.ai_prompt_3_label": "独自のシナリオを作成",
   "intro.ai_prompt_3": "https://limits.world のWorld3シミュレーターAPIを使ってください（手順は /llm.txt を参照）。カスタムシナリオを探りたいです：[ここにあなたの質問を記述]。シミュレーションを実行し、2100年までに文明がどうなるか説明してください。",
   "action.copy": "コピー",
-  "action.copied": "コピーしました！"
+  "action.copied": "コピーしました！",
+  "intro.ack.item_9_html": "Guliyeva, N., Bhardwaj, E. & Becker, C. — <a href=\"https://arxiv.org/abs/2510.07634\" target=\"_blank\" rel=\"noopener\"><em>Exploring the Viability of the Updated World3 Model for Examining the Impact of Computing on Planetary Boundaries</em></a> (2025)",
+  "preset.ai-scaling.name": "AI scaling",
+  "preset.ai-scaling.description": "AI-augmented scenario (Guliyeva et al. 2025) — data-center CO₂ and e-waste added to persistent pollution.",
+  "model.references.items.7": "Guliyeva, N., Bhardwaj, E. & Becker, C. — Exploring the Viability of the Updated World3 Model for Examining the Impact of Computing on Planetary Boundaries (2025)"
 }

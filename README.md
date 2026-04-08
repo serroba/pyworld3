@@ -128,7 +128,7 @@ curl -X POST https://limits.world/api/simulate \
 
 # Features
 
-- **6 preset scenarios**: Standard run, Optimistic technology, Comprehensive policy, Doubled resources, Population stability, Recalibration 2023
+- **7 preset scenarios**: Standard run, Optimistic technology, Comprehensive policy, Doubled resources, Population stability, Recalibration 2023, AI scaling (Guliyeva et al. 2025)
 - **Scenario comparison**: Overlay two scenarios with divergence year selection (1972, 2004, 2024, or custom) to visualize "what if we changed course at year X?"
 - **Interactive parameter editor**: Adjust any of 60+ model constants with sliders and see results in real time
 - **Calibration & validation**: Fit constants to Our World in Data observations and validate against real-world time series
@@ -237,6 +237,7 @@ Deployed via `.github/workflows/deploy-pages.yml`.
 - [Turner, G. (2008)](https://www.sciencedirect.com/science/article/abs/pii/S0959378008000435) — A comparison of *The Limits to Growth* with 30 years of reality
 - [Herrington, G. (2021)](https://doi.org/10.1111/jiec.13084) — Update to limits to growth
 - Nebel, A., Kling, A., Willamowski, R. & Schell, T. (2024) — PyWorld3-03 recalibration. *Journal of Industrial Ecology*, 28, 87-99.
+- Guliyeva, N., Bhardwaj, E. & Becker, C. (2025) — [Exploring the Viability of the Updated World3 Model for Examining the Impact of Computing on Planetary Boundaries](https://arxiv.org/abs/2510.07634). LIMITS '25.
 - Vanwynsberghe, C. (2021) — Original open-source World3 implementation: [hal-03414394](https://hal.archives-ouvertes.fr/hal-03414394)
 
 # Licence

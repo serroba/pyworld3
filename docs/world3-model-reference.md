@@ -22,6 +22,12 @@ An important open-source implementation lineage for this project comes from **Ch
 
 > Vanwynsberghe, C. (2021). Open-source World3 implementation lineage referenced by this project. [hal-03414394](https://hal.archives-ouvertes.fr/hal-03414394)
 
+### AI Pollution Sector (Guliyeva et al., 2025)
+
+The AI-augmented pollution sector equations and parameters come from:
+
+> Guliyeva, N., Bhardwaj, E. & Becker, C. (2025). *Exploring the Viability of the Updated World3 Model for Examining the Impact of Computing on Planetary Boundaries.* LIMITS '25, Online. [arXiv:2510.07634](https://arxiv.org/abs/2510.07634)
+
 ### Recalibration (Nebel et al., 2024)
 
 The recalibration data and methodology referenced in this document come from:
@@ -362,7 +368,80 @@ Nebel et al. (2024) recalibrated 35 parameters against empirical data (1970-2020
 
 ---
 
-## 8. Validation Methodology
+## 8. AI Pollution Sector (Guliyeva et al. 2025)
+
+This sector extends the persistent pollution sector to simulate the environmental footprint of AI scaling — CO₂ emissions and e-waste from hyperscale data-centre development. It was introduced as a proof-of-concept in:
+
+> Guliyeva, N., Bhardwaj, E. & Becker, C. (2025). *Exploring the Viability of the Updated World3 Model for Examining the Impact of Computing on Planetary Boundaries.* LIMITS '25. [arXiv:2510.07634](https://arxiv.org/abs/2510.07634)
+
+### 8.1 New Variables
+
+Five new variables are inserted into `WORLD3_POPULATION_FEEDBACK_LATE_EQUATIONS` immediately before `PPGR`. A new inflow $PPGAI$ is added to the existing generation-rate equation.
+
+**AI fraction of industrial output** ($AIOFRAC$) — S-curve from 2020 base to 2050 saturation:
+
+$$AIOFRAC(t) = AIIO_{20} + \frac{AIIO_{50} - AIIO_{20}}{1 + e^{-(t - 2035)/5}}$$
+
+**AI output** ($AIOUT$, \$/yr):
+
+$$AIOUT(t) = \begin{cases} AIOFRAC(t) \cdot IO(t) & t \geq 2020 \\ 0 & t < 2020 \end{cases}$$
+
+**AI pollution intensity** ($AIPI$, pollution units/\$) — combined CO₂ and e-waste footprint, declining over time:
+
+$$AIPI(t) = \Bigl(AICO2E_{20} \cdot \bigl(1 + e^{-BAIE \cdot (1 - \max(0,\, t-2020) \cdot AIESR)}\bigr) \cdot \max(0, t-2020) + EW(t)\Bigr) \cdot CO2TOPER$$
+
+where the e-waste component $EW(t)$ is:
+
+$$EW(t) = \begin{cases} AIWEI_{20} \cdot \bigl(1 - AIEWR \cdot \max(0,\, t-2020)\bigr) & t < 2070 \\ 2 \times 10^{-5} & t \geq 2070 \end{cases}$$
+
+**AI pollution tech-change multiplier** ($AIPTCM$) — AI inherits the same planetary clean-tech progress floor as the industrial sector:
+
+$$AIPTCM(t) = \min\bigl(5,\; \max(0.7 \cdot PPGF_1,\; 0.3 \cdot (1 + 0.1 \cdot (t - 2020)))\bigr)$$
+
+**Persistent pollution generation by AI** ($PPGAI$, pollution units/yr):
+
+$$PPGAI(t) = \begin{cases} \dfrac{AIOUT(t) \cdot AIPI(t)}{AIPTCM(t)} & 2020 \leq t \leq 2100 \\ 0 & \text{otherwise} \end{cases}$$
+
+### 8.2 Modified $PPGR$ Equation
+
+The existing persistent pollution generation rate gains a third term:
+
+$$PPGR = (PPGIO + PPGAO + PPGAI) \cdot PPGF$$
+
+where $PPGIO = IO \cdot IMTI \cdot IMEF \cdot FRPM$ is unchanged.
+
+### 8.3 New Constants
+
+All constants default to **0**, so the AI sector has zero effect in every existing preset. The `ai-scaling` preset sets all constants to the paper values.
+
+| Constant | Default | `ai-scaling` value | Unit | Description |
+|---|---|---|---|---|
+| `co2toper` | $0$ | $2.3 \times 10^{-4}$ | — | Fraction of a CO₂ pulse that persists long enough to contribute to the LtG pollution stock |
+| `aico2e20` | $0$ | $1.5 \times 10^{-1}$ | — | Direct operational CO₂ per 2020-\$ of AI output |
+| `aiwei20` | $0$ | $3.5 \times 10^{-4}$ | — | Lifecycle e-waste CO₂-eq per 2020-\$ of AI hardware |
+| `aiio20` | $0$ | $1.3 \times 10^{-2}$ | — | AI share of global industrial output in 2020 |
+| `aiio50` | $0$ | $6.0 \times 10^{-2}$ | — | Target AI share of global industrial output in 2050 |
+| `baie` | $0$ | $2.5 \times 10^{-1}$ | — | Base annual fractional improvement in compute efficiency |
+| `aiesr` | $0$ | $4.0 \times 10^{-2}$ | 1/yr | Decay rate of the efficiency improvement (slowdown rate) |
+| `aiewr` | $0$ | $3.0 \times 10^{-2}$ | 1/yr | Annual reduction in e-waste intensity from circularity and reuse |
+
+### 8.4 Results
+
+Compared with the standard BAU run (reproducing Table 8 of Guliyeva et al. 2025):
+
+| Year | $PPOL$ AI-augmented | $PPOL$ BAU | % above BAU |
+|---|---|---|---|
+| 2020 | $9.76 \times 10^8$ | $9.67 \times 10^8$ | +0.9% |
+| 2040 | $1.51 \times 10^9$ | $1.45 \times 10^9$ | +3.8% |
+| 2060 | $9.11 \times 10^8$ | $7.48 \times 10^8$ | +21.7% |
+| 2080 | $3.86 \times 10^8$ | $2.81 \times 10^8$ | +37.3% |
+| 2100 | $1.48 \times 10^8$ | $1.02 \times 10^8$ | +45.4% |
+
+The AI-augmented scenario deepens and prolongs overshoot: the pollution peak arrives later but higher, and the collapse remains — deepened by the additional pollution load.
+
+---
+
+## 9. Validation Methodology
 
 ### NRMSD (Normalized Root Mean Square Deviation)
 
@@ -406,7 +485,7 @@ Compare model and empirical change rates rather than absolute values.
 
 ---
 
-## 9. Numerical Integration
+## 10. Numerical Integration
 
 - **Method**: Backward Euler (implicit, stable for stiff systems)
 - **Default timestep**: $\Delta t = 0.5$ years
@@ -420,7 +499,7 @@ The integration loop updates all sector variables at each timestep, respecting d
 
 ---
 
-## 10. Scenario Definitions
+## 11. Scenario Definitions
 
 | Scenario | $NR_I$ | Key Differences |
 |---|---|---|
@@ -429,3 +508,4 @@ The integration loop updates all sector variables at each timestep, respecting d
 | **CT** | — | Comprehensive technology; reduced pollution, higher yields |
 | **SW** | — | Stabilized world; only scenario without overshoot & collapse |
 | **Recalibration23** | $1.3 \times 10^{12}$ | Updated params; collapse from resources, peaks shifted later/higher |
+| **AI scaling** | $1.0 \times 10^{12}$ | AI pollution sector added; persistent pollution ~45% higher by 2100 |

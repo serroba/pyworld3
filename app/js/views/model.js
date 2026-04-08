@@ -340,6 +340,7 @@ const ModelView = (() => {
       { text: I18n.t("model.references.items.4", undefined, "Nebel, A., Kling, A., Willamowski, R. & Schell, T. \u2014 PyWorld3-03 recalibration (2024)"), url: "https://doi.org/10.1111/jiec.13442" },
       { text: I18n.t("model.references.items.5", undefined, "Our World in Data \u2014 validation proxies"), url: "https://ourworldindata.org" },
       { text: I18n.t("model.references.items.6", undefined, "serroba/world3 \u2014 this project"), url: "https://github.com/serroba/world3" },
+      { text: I18n.t("model.references.items.7", undefined, "Guliyeva, N., Bhardwaj, E. & Becker, C. \u2014 Exploring the Viability of the Updated World3 Model for Examining the Impact of Computing on Planetary Boundaries (2025)"), url: "https://arxiv.org/abs/2510.07634" },
     ];
 
     refs.forEach((ref) => {
