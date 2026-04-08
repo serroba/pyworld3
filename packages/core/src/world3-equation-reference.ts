@@ -469,8 +469,35 @@ export const WORLD3_EQUATION_REFERENCE: Readonly<Record<World3VariableKey, Equat
     description: "Persistent pollution assimilation rate",
   },
   ppgr: {
-    dynamo: "PPGR.K = (PPGIO.K + PPGAO.K) * PPGF",
-    source: "DGFW Ch. 5",
-    description: "Persistent pollution generation rate, industrial plus agricultural, times policy factor",
+    dynamo: "PPGR.K = (PPGIO.K + PPGAO.K + PPGAI.K) * PPGF",
+    source: "DGFW Ch. 5 + Guliyeva et al. 2025",
+    description: "Persistent pollution generation rate, industrial plus agricultural plus AI, times policy factor",
+  },
+
+  // ── AI pollution sector (Guliyeva et al. 2025) ───────────────
+  aiofrac: {
+    dynamo: "AIOFRAC.K = AIIO20 + (AIIO50 - AIIO20) / (1 + EXP(-(TIME - 2035) / 5))",
+    source: "Guliyeva et al. 2025, Table 7",
+    description: "Fraction of industrial output allocated to AI (S-curve interpolating 2020 to 2050 share)",
+  },
+  aiout: {
+    dynamo: "AIOUT.K = IF THEN ELSE(TIME >= 2020, AIOFRAC.K * IO.K, 0)",
+    source: "Guliyeva et al. 2025, Table 7",
+    description: "AI output in $/yr, proportional to industrial output from 2020 onward",
+  },
+  aipi: {
+    dynamo: "AIPI.K = (AICO2E20 * (1 + EXP(-BAIE * (1 - MAX(0, TIME-2020) * AIESR))) * MAX(0, TIME-2020) + IF THEN ELSE(TIME<2070, AIWEI20*(1-AIEWR*MAX(0,TIME-2020)), 2e-5)) * CO2TOPER",
+    source: "Guliyeva et al. 2025, Table 7",
+    description: "AI pollution intensity in pollution units per $: combined CO₂ and e-waste footprint, declining over time",
+  },
+  aiptcm: {
+    dynamo: "AIPTCM.K = MIN(5, MAX(0.7 * PPGF1, 0.3 * (1 + 0.1 * (TIME - 2020))))",
+    source: "Guliyeva et al. 2025, Table 7",
+    description: "AI pollution tech-change multiplier — AI inherits the same planetary clean-tech progress floor as the industrial sector",
+  },
+  ppgai: {
+    dynamo: "PPGAI.K = IF THEN ELSE(TIME<2020 :OR: TIME>2100, 0, AIOUT.K * AIPI.K / AIPTCM.K)",
+    source: "Guliyeva et al. 2025, Table 7",
+    description: "Persistent pollution generation by AI data centers, active 2020–2100",
   },
 };

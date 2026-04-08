@@ -20,6 +20,14 @@ import {
 export const ModelData: ModelDataPayload = {
   constantDefaults: {
     ahl70: 1.5,
+    aico2e20: 0,
+    aiesr: 0,
+    aiewr: 0,
+    aiio20: 0,
+    aiio50: 0,
+    aiwei20: 0,
+    baie: 0,
+    co2toper: 0,
     alai1: 2,
     alai2: 2,
     ali: 900000000.0,
@@ -88,6 +96,14 @@ export const ModelData: ModelDataPayload = {
 
   constantConstraints: {
     ahl70: [0, null],
+    aico2e20: [0, null],
+    aiesr: [0, null],
+    aiewr: [0, null],
+    aiio20: [0, 1],
+    aiio50: [0, 1],
+    aiwei20: [0, null],
+    baie: [0, null],
+    co2toper: [0, null],
     alai1: [0, null],
     alai2: [0, null],
     ali: [0, null],
@@ -230,6 +246,20 @@ export const ModelData: ModelDataPayload = {
         sad: 13.38,
         fspd: 0.61,
         uildt: 0.53,
+      },
+    },
+    {
+      name: "ai-scaling",
+      description: "AI-augmented scenario (Guliyeva et al. 2025) — data-center CO₂ and e-waste added to the persistent pollution sector.",
+      constants: {
+        aico2e20: 0.15,
+        aiesr: 0.04,
+        aiewr: 0.03,
+        aiio20: 0.013,
+        aiio50: 0.06,
+        aiwei20: 3.5e-4,
+        baie: 0.25,
+        co2toper: 2.3e-4,
       },
     },
     {

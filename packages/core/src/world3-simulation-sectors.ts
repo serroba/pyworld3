@@ -140,6 +140,15 @@ export type World3SimulationConstants = {
   lyf1: number;
   lyf2: number;
   uildt: number;
+  // AI pollution sector (Guliyeva et al. 2025)
+  aico2e20: number;
+  aiesr: number;
+  aiewr: number;
+  aiio20: number;
+  aiio50: number;
+  aiwei20: number;
+  baie: number;
+  co2toper: number;
 };
 
 type World3SeriesBufferMap<K extends string> = Record<K, Float64Array>;
@@ -768,16 +777,57 @@ export const WORLD3_POPULATION_FEEDBACK_LATE_EQUATIONS = [
     inputs: ["al", "llmy", "alln"],
     compute: ({ k, buffers, constants }) => buffers.al[k]! / (constants.alln * buffers.llmy[k]!),
   }),
+  // ── AI pollution sector (Guliyeva et al. 2025) ───────────────
+  defineDerivedEquation({
+    key: "aiofrac",
+    inputs: ["aiio20", "aiio50"],
+    compute: ({ t, constants }) =>
+      constants.aiio20 + (constants.aiio50 - constants.aiio20) / (1 + Math.exp(-(t - 2035) / 5)),
+  }),
+  defineDerivedEquation({
+    key: "aiout",
+    inputs: ["io", "aiofrac"],
+    compute: ({ k, t, buffers }) =>
+      t >= 2020 ? buffers.aiofrac[k]! * buffers.io[k]! : 0,
+  }),
+  defineDerivedEquation({
+    key: "aipi",
+    inputs: ["aico2e20", "baie", "aiesr", "aiwei20", "aiewr", "co2toper"],
+    compute: ({ t, constants }) => {
+      const dt = Math.max(0, t - 2020);
+      const co2Component = constants.aico2e20
+        * (1 + Math.exp(-constants.baie * (1 - dt * constants.aiesr)))
+        * dt;
+      const ewasteComponent = t < 2070
+        ? constants.aiwei20 * (1 - constants.aiewr * dt)
+        : 2e-5;
+      return (co2Component + ewasteComponent) * constants.co2toper;
+    },
+  }),
+  defineDerivedEquation({
+    key: "aiptcm",
+    inputs: ["ppgf1"],
+    compute: ({ t, constants }) =>
+      Math.min(5, Math.max(0.7 * constants.ppgf1, 0.3 * (1 + 0.1 * (t - 2020)))),
+  }),
+  defineDerivedEquation({
+    key: "ppgai",
+    inputs: ["aiout", "aipi", "aiptcm"],
+    compute: ({ k, t, buffers }) =>
+      t < 2020 || t > 2100 ? 0 : buffers.aiout[k]! * buffers.aipi[k]! / buffers.aiptcm[k]!,
+  }),
+  // ─────────────────────────────────────────────────────────────
   defineDerivedEquation({
     key: "ppgr",
-    inputs: ["pop", "ppgao", "frpm", "imef", "imti"],
+    inputs: ["pop", "ppgao", "ppgai", "frpm", "imef", "imti"],
     compute: (context) =>
       (requireWorld3RuntimeValue(context, "pcrum") *
         context.buffers.pop[context.k]! *
         context.constants.frpm *
         context.constants.imef *
         context.constants.imti +
-        context.buffers.ppgao[context.k]!) *
+        context.buffers.ppgao[context.k]! +
+        context.buffers.ppgai[context.k]!) *
       requireWorld3RuntimeValue(context, "ppgf"),
   }),
   defineDerivedEquation({

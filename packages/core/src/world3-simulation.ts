@@ -197,6 +197,14 @@ export function simulateWorld3(options: World3SimulationOptions): SimulationResu
       lyf1: c(consts, "lyf1"),
       lyf2: c(consts, "lyf2"),
       uildt: c(consts, "uildt"),
+      aico2e20: c(consts, "aico2e20"),
+      aiesr: c(consts, "aiesr"),
+      aiewr: c(consts, "aiewr"),
+      aiio20: c(consts, "aiio20"),
+      aiio50: c(consts, "aiio50"),
+      aiwei20: c(consts, "aiwei20"),
+      baie: c(consts, "baie"),
+      co2toper: c(consts, "co2toper"),
     };
   }
 
@@ -252,6 +260,9 @@ export function simulateWorld3(options: World3SimulationOptions): SimulationResu
   const b = createSeriesBuffer(N), fioai = createSeriesBuffer(N);
   const icir = createSeriesBuffer(N), pfr = createSeriesBuffer(N);
   const ai = createSeriesBuffer(N), mtf = createSeriesBuffer(N);
+  const aiofrac = createSeriesBuffer(N), aiout = createSeriesBuffer(N);
+  const aipi = createSeriesBuffer(N), aiptcm = createSeriesBuffer(N);
+  const ppgai = createSeriesBuffer(N);
 
   const buffers: World3SimulationBuffers = {
     p1, p2, p3, p4, pop, fpu, lmhs, d, cdr, sfsn, cmple, fce, cbr, cuf: cuf_arr,
@@ -260,6 +271,7 @@ export function simulateWorld3(options: World3SimulationOptions): SimulationResu
     fioac, fioas, scir, pjis, pjas, j, luf, ifpc, lymap, lfd, ly, llmy, lrui, lfr,
     nrur, lmc, dcfs, dtf, f, fpc, fioaa, tai, ldr, cai, fr, ler, ppgr, le, m1, m2,
     m3, m4, mat1, mat2, mat3, d1, d2, d3, d4, fcapc, tf, b, fioai, icir, pfr, ai, mtf,
+    aiofrac, aiout, aipi, aiptcm, ppgai,
   };
 
   // Smooth/Delay objects

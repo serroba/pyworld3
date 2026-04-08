@@ -31,6 +31,7 @@ function createBuffers(length = 2): World3SimulationBuffers {
     ler: make(), ppgr: make(), le: make(), m1: make(), m2: make(), m3: make(), m4: make(), mat1: make(),
     mat2: make(), mat3: make(), d1: make(), d2: make(), d3: make(), d4: make(), fcapc: make(), tf: make(),
     b: make(), fioai: make(), icir: make(), pfr: make(), ai: make(), mtf: make(),
+    aiofrac: make(), aiout: make(), aipi: make(), aiptcm: make(), ppgai: make(),
   };
 }
 
@@ -47,6 +48,7 @@ function createConstants(): World3SimulationConstants {
     hsid: 20, ieat: 3, lpd: 20, sad: 20, lufdt: 2, fspd: 2, dcfsn: 4, zpgt: 4000, mtfn: 12,
     rlt: 30, pet: 4000, len: 28, lfh: 1, pl: 0, sfpc: 230, sd: 0.07, ilf: 600, alln: 6000,
     frpm: 0.02, imef: 0.1, imti: 10, io70: 790000000000, lyf1: 1, lyf2: 1, uildt: 10,
+    aico2e20: 0, aiesr: 0, aiewr: 0, aiio20: 0, aiio50: 0, aiwei20: 0, baie: 0, co2toper: 0,
   };
 }
 

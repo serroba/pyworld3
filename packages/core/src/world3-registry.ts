@@ -91,10 +91,23 @@ export const WORLD3_SERIES_REGISTRY = [
   { key: "lrui", fullName: "Land removal for urban-industrial use", sector: "Agriculture", unit: "ha/yr", kind: "flow" },
   { key: "ppapr", fullName: "Persistent pollution appearance rate", sector: "Pollution", unit: "pollution units/yr", kind: "flow" },
   { key: "ppasr", fullName: "Persistent pollution assimilation rate", sector: "Pollution", unit: "pollution units/yr", kind: "flow" },
+  { key: "ppgai", fullName: "Persistent pollution generation by AI", sector: "Pollution", unit: "pollution units/yr", kind: "flow" },
+  { key: "aiofrac", fullName: "AI fraction of industrial output", sector: "Pollution", unit: "-", kind: "auxiliary" },
+  { key: "aiout", fullName: "AI output", sector: "Pollution", unit: "$/yr", kind: "flow" },
+  { key: "aipi", fullName: "AI pollution intensity", sector: "Pollution", unit: "pollution units/$", kind: "auxiliary" },
+  { key: "aiptcm", fullName: "AI pollution tech-change multiplier", sector: "Pollution", unit: "-", kind: "auxiliary" },
 ] as const satisfies readonly World3SeriesDefinition[];
 
 export const WORLD3_CONSTANT_REGISTRY = [
   { key: "ahl70", fullName: "Assimilation half-life in 1970", sector: "Pollution", unit: "years" },
+  { key: "aico2e20", fullName: "AI CO₂ emissions intensity 2020", sector: "Pollution", unit: "-" },
+  { key: "aiesr", fullName: "AI efficiency slowdown rate", sector: "Pollution", unit: "1/yr" },
+  { key: "aiewr", fullName: "AI e-waste improvement rate", sector: "Pollution", unit: "1/yr" },
+  { key: "aiio20", fullName: "AI fraction of industrial output 2020", sector: "Pollution", unit: "-" },
+  { key: "aiio50", fullName: "AI fraction of industrial output 2050", sector: "Pollution", unit: "-" },
+  { key: "aiwei20", fullName: "AI e-waste intensity 2020", sector: "Pollution", unit: "-" },
+  { key: "baie", fullName: "Base AI efficiency improvement", sector: "Pollution", unit: "-" },
+  { key: "co2toper", fullName: "CO₂ to persistent pollution conversion", sector: "Pollution", unit: "-" },
   { key: "alai1", fullName: "Avg lifetime agricultural input 1", sector: "Agriculture", unit: "years" },
   { key: "alai2", fullName: "Avg lifetime agricultural input 2", sector: "Agriculture", unit: "years" },
   { key: "ali", fullName: "Initial arable land", sector: "Agriculture", unit: "ha" },

@@ -231,7 +231,8 @@ describe("World3 stock equation DSL", () => {
     expect(WORLD3_POPULATION_FEEDBACK_LATE_EQUATIONS).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ kind: "derived-equation", key: "ldr", inputs: ["tai", "pal", "palt"] }),
-        expect.objectContaining({ kind: "derived-equation", key: "ppgr", inputs: ["pop", "ppgao", "frpm", "imef", "imti"] }),
+        expect.objectContaining({ kind: "derived-equation", key: "ppgai", inputs: ["aiout", "aipi", "aiptcm"] }),
+        expect.objectContaining({ kind: "derived-equation", key: "ppgr", inputs: ["pop", "ppgao", "ppgai", "frpm", "imef", "imti"] }),
         expect.objectContaining({ kind: "derived-equation", key: "le", inputs: ["lmhs", "lmc", "len"] }),
       ]),
     );

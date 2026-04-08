@@ -113,6 +113,11 @@ function createBuffers(length: number): World3SimulationBuffers {
     pfr: makeSeries(),
     ai: makeSeries(),
     mtf: makeSeries(),
+    aiofrac: makeSeries(),
+    aiout: makeSeries(),
+    aipi: makeSeries(),
+    aiptcm: makeSeries(),
+    ppgai: makeSeries(),
   };
 }
 
