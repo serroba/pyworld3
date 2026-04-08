@@ -126,7 +126,7 @@
           "preset": {
             "type": "string",
             "description": "Named scenario to use as the base. Constants from the preset are applied first, then any explicit constant overrides.",
-            "enum": ["standard-run", "doubled-resources", "optimistic-technology", "population-stability", "comprehensive-policy", "recalibration-2023"]
+            "enum": ["standard-run", "doubled-resources", "optimistic-technology", "population-stability", "comprehensive-policy", "recalibration-2023", "ai-scaling"]
           },
           "year_min": {
             "type": "number",
