@@ -309,6 +309,6 @@
   "action.copied": "Đã sao chép!",
   "intro.ack.item_9_html": "Guliyeva, N., Bhardwaj, E. & Becker, C. — <a href=\"https://arxiv.org/abs/2510.07634\" target=\"_blank\" rel=\"noopener\"><em>Exploring the Viability of the Updated World3 Model for Examining the Impact of Computing on Planetary Boundaries</em></a> (2025)",
   "preset.ai-scaling.name": "AI scaling",
-  "preset.ai-scaling.description": "AI-augmented scenario (Guliyeva et al. 2025) — data-center CO₂ and e-waste added to persistent pollution.",
+  "preset.ai-scaling.description": "Models AI data-center CO₂ and e-waste as extra persistent pollution (Guliyeva et al. 2025, arXiv:2510.07634). Limitation: AI productivity gains are not modelled. Compare against Standard run to see the effect.",
   "model.references.items.7": "Guliyeva, N., Bhardwaj, E. & Becker, C. — Exploring the Viability of the Updated World3 Model for Examining the Impact of Computing on Planetary Boundaries (2025)"
 }

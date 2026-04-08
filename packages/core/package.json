@@ -1,6 +1,6 @@
 {
   "name": "@world3/core",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "World3 system dynamics simulation engine from The Limits to Growth",
   "type": "module",
   "main": "dist/index.js",

@@ -218,7 +218,7 @@
   "preset.recalibration-2023.name": "Recalibration 2023",
   "preset.recalibration-2023.description": "Nebel et al. 2023 recalibration — constants fitted to 1970–2020 empirical data.",
   "preset.ai-scaling.name": "AI scaling",
-  "preset.ai-scaling.description": "AI-augmented scenario (Guliyeva et al. 2025) — data-center CO₂ and e-waste added to persistent pollution.",
+  "preset.ai-scaling.description": "Models AI data-center CO₂ and e-waste as extra persistent pollution (Guliyeva et al. 2025, arXiv:2510.07634). Limitation: AI productivity gains are not modelled. Compare against Standard run to see the effect.",
   "preset.standard-run.name": "Standard run",
   "preset.standard-run.description": "Business as usual — all World3 defaults with no policy changes.",
   "variable.aiph": "Agricultural inputs per hectare",
