@@ -6,7 +6,7 @@ import { ModelData } from "../ts/model-data.ts";
 import type { SimulationResult } from "../ts/simulation-contracts.ts";
 import { createWorld3Core } from "../ts/core/world3-core.ts";
 import type { RawLookupTable } from "../ts/core/world3-tables.ts";
-import { resolveApiRequest } from "../ts/worker.ts";
+import { resolveApiRequest, getBaseRoute, injectRouteMeta } from "../ts/worker.ts";
 
 /**
  * Tests for the Worker API handler logic.
@@ -206,6 +206,95 @@ describe("Worker API: /api/simulate", () => {
     for (const val of parsed.series.pop!.values) {
       expect(Number.isFinite(val)).toBe(true);
     }
+  });
+});
+
+describe("getBaseRoute", () => {
+  test("returns path unchanged for English routes", () => {
+    expect(getBaseRoute("/")).toBe("/");
+    expect(getBaseRoute("/model")).toBe("/model");
+    expect(getBaseRoute("/explore")).toBe("/explore");
+    expect(getBaseRoute("/compare")).toBe("/compare");
+  });
+
+  test("strips known locale prefix", () => {
+    expect(getBaseRoute("/fr/model")).toBe("/model");
+    expect(getBaseRoute("/ja/compare")).toBe("/compare");
+    expect(getBaseRoute("/zh-CN/explore")).toBe("/explore");
+    expect(getBaseRoute("/pt-BR/advanced")).toBe("/advanced");
+    expect(getBaseRoute("/ar/faq")).toBe("/faq");
+  });
+
+  test("returns root for locale-only path", () => {
+    expect(getBaseRoute("/fr")).toBe("/");
+    expect(getBaseRoute("/ja/")).toBe("/");
+  });
+
+  test("does not strip unknown path segments", () => {
+    expect(getBaseRoute("/unknown/model")).toBe("/unknown/model");
+    expect(getBaseRoute("/en/model")).toBe("/en/model"); // 'en' is not a prefix
+  });
+});
+
+const SAMPLE_HTML = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>World3 Simulator — Will civilization collapse by 2100?</title>
+  <meta name="description" content="Original description.">
+  <meta property="og:title" content="Original OG title">
+  <meta property="og:description" content="Original OG description">
+  <meta property="og:url" content="https://limits.world/">
+  <meta name="twitter:title" content="Original Twitter title">
+  <meta name="twitter:description" content="Original Twitter description">
+  <link rel="canonical" href="https://limits.world/">
+</head>
+<body></body>
+</html>`;
+
+describe("injectRouteMeta", () => {
+  const meta = {
+    title: "How World3 Works | World3 Simulator",
+    description: "Deep dive into the model.",
+    ogDescription: "Explore the World3 model in depth.",
+  };
+  const canonicalUrl = "https://limits.world/model";
+
+  test("replaces title", () => {
+    const result = injectRouteMeta(SAMPLE_HTML, meta, canonicalUrl);
+    expect(result).toContain("<title>How World3 Works | World3 Simulator</title>");
+    expect(result).not.toContain("Will civilization collapse");
+  });
+
+  test("replaces meta description", () => {
+    const result = injectRouteMeta(SAMPLE_HTML, meta, canonicalUrl);
+    expect(result).toContain('name="description" content="Deep dive into the model."');
+    expect(result).not.toContain("Original description");
+  });
+
+  test("replaces og:title and og:description", () => {
+    const result = injectRouteMeta(SAMPLE_HTML, meta, canonicalUrl);
+    expect(result).toContain('og:title" content="How World3 Works | World3 Simulator"');
+    expect(result).toContain('og:description" content="Explore the World3 model in depth."');
+  });
+
+  test("replaces og:url and canonical with the provided URL", () => {
+    const result = injectRouteMeta(SAMPLE_HTML, meta, canonicalUrl);
+    expect(result).toContain('og:url" content="https://limits.world/model"');
+    expect(result).toContain('rel="canonical" href="https://limits.world/model"');
+    expect(result).not.toContain('content="https://limits.world/"');
+    expect(result).not.toContain('href="https://limits.world/"');
+  });
+
+  test("replaces twitter:title and twitter:description", () => {
+    const result = injectRouteMeta(SAMPLE_HTML, meta, canonicalUrl);
+    expect(result).toContain('twitter:title" content="How World3 Works | World3 Simulator"');
+    expect(result).toContain('twitter:description" content="Deep dive into the model."');
+  });
+
+  test("leaves unrelated HTML untouched", () => {
+    const result = injectRouteMeta(SAMPLE_HTML, meta, canonicalUrl);
+    expect(result).toContain('<html lang="en">');
+    expect(result).toContain("<body></body>");
   });
 });
 
