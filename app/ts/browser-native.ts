@@ -15,6 +15,7 @@ import {
   createOwidDataProvider,
   createValidationCore,
   createCalibrationCore,
+  type OwidDataset,
 } from "./core/index.js";
 import {
   createI18n,
@@ -41,7 +42,7 @@ declare global {
 
 const LOCAL_OWID_DATA_URL = new URL("../data/owid-world-data.json", import.meta.url)
   .toString();
-let localOwidDatasetPromise: Promise<import("./core/index.js").OwidDataset> | null = null;
+let localOwidDatasetPromise: Promise<OwidDataset> | null = null;
 
 async function loadLocalOwidDataset() {
   if (!localOwidDatasetPromise) {
@@ -50,7 +51,7 @@ async function loadLocalOwidDataset() {
         if (!response.ok) {
           throw new Error(`Failed to load local OWID data (${response.status})`);
         }
-        return response.json() as Promise<import("./core/index.js").OwidDataset>;
+        return response.json() as Promise<OwidDataset>;
       })
       .catch((error: unknown) => {
         localOwidDatasetPromise = null;

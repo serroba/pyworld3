@@ -17,6 +17,8 @@
     "typecheck:cli": "tsc -p tsconfig.cli.json --noEmit",
     "typecheck:test": "tsc -p tsconfig.test.json --noEmit",
     "lint:locales": "node scripts/check-locales.js",
+    "lint:app": "eslint ts/*.ts",
+    "prelint:app": "npm run sync:core",
     "lint:core": "eslint ts/core/",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage"

@@ -80,6 +80,38 @@ export default [
     },
   },
 
+  // ─── App-level TypeScript (recommended + type-checked) ─────
+  ...tseslint.config({
+    files: ["ts/*.ts"],
+    extends: [
+      ...tseslint.configs.recommendedTypeChecked,
+    ],
+    languageOptions: {
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+    rules: {
+      // Allow `== null` / `!= null` (catches both null and undefined intentionally)
+      eqeqeq: ["error", "always", { null: "ignore" }],
+      "prefer-const": "error",
+      "no-var": "error",
+      "@typescript-eslint/no-non-null-assertion": "warn",
+      "@typescript-eslint/consistent-type-imports": ["error", { prefer: "type-imports" }],
+      "@typescript-eslint/no-floating-promises": "error",
+      "@typescript-eslint/await-thenable": "error",
+      // Chart.js and other browser globals surface as `any` — same pragmatic
+      // suppression that the core section applies for its numeric patterns.
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-unsafe-argument": "off",
+      "@typescript-eslint/no-unsafe-assignment": "off",
+      "@typescript-eslint/no-unsafe-call": "off",
+      "@typescript-eslint/no-unsafe-member-access": "off",
+      "@typescript-eslint/no-unsafe-return": "off",
+    },
+  }),
+
   // ─── Core TypeScript (strict) ───────────────────────────────
   ...tseslint.config({
     files: ["ts/core/**/*.ts"],

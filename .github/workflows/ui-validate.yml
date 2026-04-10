@@ -119,6 +119,10 @@ jobs:
         working-directory: app
         run: npm run lint:core
 
+      - name: Lint app TypeScript
+        working-directory: app
+        run: npm run lint:app
+
       - name: Check referenced assets exist
         run: |
           cd app

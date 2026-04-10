@@ -573,7 +573,7 @@ export function renderNormalized(
       label: UI.labelVariable(key, meta.full_name ?? key),
       varKey: key,
       yAxisID: "y",
-      data: time.map((t, j) => ({ x: t, y: raw[j] != null ? raw[j]! / max : null })),
+      data: time.map((t, j) => ({ x: t, y: raw[j] != null ? raw[j] / max : null })),
       _rawData: raw,
       _max: max,
       borderColor: color,
@@ -613,7 +613,7 @@ export function renderNormalizedCompare(
     datasets.push({
       label: `${metaName} (${labelA})`,
       varKey: key, yAxisID: "y",
-      data: resultA.time.map((t, j) => ({ x: t, y: rawA[j] != null ? rawA[j]! / max : null })),
+      data: resultA.time.map((t, j) => ({ x: t, y: rawA[j] != null ? rawA[j] / max : null })),
       _rawData: rawA, _max: max,
       borderColor: color, backgroundColor: color + "22",
       borderWidth: 2, pointRadius: 0, pointHoverRadius: 4, tension: 0.1,
@@ -621,7 +621,7 @@ export function renderNormalizedCompare(
     datasets.push({
       label: `${metaName} (${labelB})`,
       varKey: key, yAxisID: "y",
-      data: resultB.time.map((t, j) => ({ x: t, y: rawB[j] != null ? rawB[j]! / max : null })),
+      data: resultB.time.map((t, j) => ({ x: t, y: rawB[j] != null ? rawB[j] / max : null })),
       _rawData: rawB, _max: max,
       borderColor: color, backgroundColor: color + "22",
       borderWidth: 2, borderDash: [6, 3],

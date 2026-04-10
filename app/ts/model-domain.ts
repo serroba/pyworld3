@@ -1,5 +1,4 @@
 import { ModelData } from "./model-data.js";
-import type { SimulationRequest } from "./simulation-contracts.js";
 import type { World3ConstantKey, World3VariableKey } from "./core/world3-keys.js";
 import {
   WORLD3_SCENARIO_CONTROL_REGISTRY,
@@ -7,7 +6,6 @@ import {
 } from "./scenario-controls.js";
 
 type VariableMeta = (typeof ModelData.variableMeta)[World3VariableKey];
-type ConstantMeta = (typeof ModelData.constantMeta)[World3ConstantKey];
 type RequestFieldKey = ScenarioControlKey;
 
 export type ModelVariableReference = {
