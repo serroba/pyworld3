@@ -115,9 +115,13 @@ const ROUTE_META: Record<string, RouteMeta> = {
   },
 };
 
-/** Locale prefixes that appear in the URL path (English is the default, no prefix). */
+/**
+ * All locale codes the SPA router recognises as a URL prefix, including "en"
+ * (which is valid as an explicit locale prefix even though English is the default).
+ * Must stay in sync with LOCALE_CODES in app/js/router.js.
+ */
 const LOCALE_PREFIXES = new Set([
-  "es", "pt-BR", "pt-PT", "fr", "de", "it", "nl", "hu", "pl", "tr",
+  "en", "es", "pt-BR", "pt-PT", "fr", "de", "it", "nl", "hu", "pl", "tr",
   "ru", "uk", "ar", "fa", "hi", "bn", "id", "vi", "th", "ja", "zh-CN", "zh-TW",
 ]);
 
@@ -131,17 +135,34 @@ export function getBaseRoute(pathname: string): string {
   return baseParts.length > 0 ? `/${baseParts.join("/")}` : "/";
 }
 
+/** Normalize a pathname for use as a canonical URL path (strip trailing slash except root). */
+export function normalizePathname(pathname: string): string {
+  return pathname !== "/" && pathname.endsWith("/") ? pathname.slice(0, -1) : pathname;
+}
+
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
 /** Replace per-page meta in the index.html HTML string. */
 export function injectRouteMeta(html: string, meta: RouteMeta, canonicalUrl: string): string {
+  const title = escapeHtml(meta.title);
+  const desc = escapeHtml(meta.description);
+  const ogDesc = escapeHtml(meta.ogDescription);
+  const canonical = escapeHtml(canonicalUrl);
   return html
-    .replace(/<title>[^<]*<\/title>/, `<title>${meta.title}</title>`)
-    .replace(/(<meta name="description" content=")[^"]*(")/,  `$1${meta.description}$2`)
-    .replace(/(<meta property="og:title" content=")[^"]*(")/,  `$1${meta.title}$2`)
-    .replace(/(<meta property="og:description" content=")[^"]*(")/,  `$1${meta.ogDescription}$2`)
-    .replace(/(<meta property="og:url" content=")[^"]*(")/,  `$1${canonicalUrl}$2`)
-    .replace(/(<meta name="twitter:title" content=")[^"]*(")/,  `$1${meta.title}$2`)
-    .replace(/(<meta name="twitter:description" content=")[^"]*(")/,  `$1${meta.description}$2`)
-    .replace(/(<link rel="canonical" href=")[^"]*(")/,  `$1${canonicalUrl}$2`);
+    .replace(/<title>[^<]*<\/title>/, `<title>${title}</title>`)
+    .replace(/(<meta name="description" content=")[^"]*(")/,  `$1${desc}$2`)
+    .replace(/(<meta property="og:title" content=")[^"]*(")/,  `$1${title}$2`)
+    .replace(/(<meta property="og:description" content=")[^"]*(")/,  `$1${ogDesc}$2`)
+    .replace(/(<meta property="og:url" content=")[^"]*(")/,  `$1${canonical}$2`)
+    .replace(/(<meta name="twitter:title" content=")[^"]*(")/,  `$1${title}$2`)
+    .replace(/(<meta name="twitter:description" content=")[^"]*(")/,  `$1${desc}$2`)
+    .replace(/(<link rel="canonical" href=")[^"]*(")/,  `$1${canonical}$2`);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -340,7 +361,7 @@ export default {
       const baseRoute = getBaseRoute(url.pathname);
       const meta = ROUTE_META[baseRoute];
       if (meta) {
-        const canonicalUrl = new URL(url.pathname, BASE_URL).toString();
+        const canonicalUrl = new URL(normalizePathname(url.pathname), BASE_URL).toString();
         const html = await response.text();
         const transformed = injectRouteMeta(html, meta, canonicalUrl);
         headers.set("Content-Type", "text/html; charset=utf-8");

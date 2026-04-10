@@ -6,7 +6,7 @@ import { ModelData } from "../ts/model-data.ts";
 import type { SimulationResult } from "../ts/simulation-contracts.ts";
 import { createWorld3Core } from "../ts/core/world3-core.ts";
 import type { RawLookupTable } from "../ts/core/world3-tables.ts";
-import { resolveApiRequest, getBaseRoute, injectRouteMeta } from "../ts/worker.ts";
+import { resolveApiRequest, getBaseRoute, injectRouteMeta, normalizePathname } from "../ts/worker.ts";
 
 /**
  * Tests for the Worker API handler logic.
@@ -224,6 +224,7 @@ describe("getBaseRoute", () => {
     expect(getBaseRoute("/pt-BR/advanced")).toBe("/advanced");
     expect(getBaseRoute("/ar/faq")).toBe("/faq");
     expect(getBaseRoute("/fa/model")).toBe("/model"); // Persian (was missing)
+    expect(getBaseRoute("/en/model")).toBe("/model"); // explicit English prefix is valid
   });
 
   test("returns root for locale-only path", () => {
@@ -239,7 +240,22 @@ describe("getBaseRoute", () => {
 
   test("does not strip unknown path segments", () => {
     expect(getBaseRoute("/unknown/model")).toBe("/unknown/model");
-    expect(getBaseRoute("/en/model")).toBe("/en/model"); // 'en' is not a prefix
+  });
+});
+
+describe("normalizePathname", () => {
+  test("strips trailing slash from non-root paths", () => {
+    expect(normalizePathname("/model/")).toBe("/model");
+    expect(normalizePathname("/explore/")).toBe("/explore");
+  });
+
+  test("preserves root slash", () => {
+    expect(normalizePathname("/")).toBe("/");
+  });
+
+  test("leaves paths without trailing slash unchanged", () => {
+    expect(normalizePathname("/model")).toBe("/model");
+    expect(normalizePathname("/fr/model")).toBe("/fr/model");
   });
 });
 
@@ -302,6 +318,19 @@ describe("injectRouteMeta", () => {
     const result = injectRouteMeta(SAMPLE_HTML, meta, canonicalUrl);
     expect(result).toContain('<html lang="en">');
     expect(result).toContain("<body></body>");
+  });
+
+  test("HTML-escapes special characters in meta values", () => {
+    const specialMeta = {
+      title: 'A & B — "Test" <World3>',
+      description: 'Desc with & and "quotes"',
+      ogDescription: 'OG with <tags> & ampersands',
+    };
+    const result = injectRouteMeta(SAMPLE_HTML, specialMeta, canonicalUrl);
+    expect(result).toContain("<title>A &amp; B — &quot;Test&quot; &lt;World3&gt;</title>");
+    expect(result).toContain('content="Desc with &amp; and &quot;quotes&quot;"');
+    expect(result).not.toContain('"Test"');
+    expect(result).not.toContain("<World3>");
   });
 });
 
